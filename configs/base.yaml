@@ -1,6 +1,8 @@
 project_name: masked-diffusion-thesis
 seed: 42
+deterministic: false
 
 paths:
   logs_dir: logs
   results_dir: results
+  
