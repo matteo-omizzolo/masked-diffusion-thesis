@@ -1,0 +1,18 @@
+# ReMDM run config (initial)
+project_name: masked-diffusion-thesis
+seed: 42
+deterministic: false
+
+paths:
+  logs_dir: logs
+  results_dir: results
+
+model:
+  checkpoint_path: null     # TODO: path to pretrained MDLM checkpoint (later)
+  device: cpu               # start with cpu for toy run; later set "cuda"
+
+remdm:
+  toy_mode: true            # start true; later false when wired to real ReMDM
+  steps: 32
+  strategy: conf            # conf / loop later
+  sigma: 0.05
