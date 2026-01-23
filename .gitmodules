@@ -1,0 +1,6 @@
+[submodule "external/remdm"]
+	path = external/remdm
+	url = https://github.com/kuleshov-group/remdm
+[submodule "external/PRISM"]
+	path = external/PRISM
+	url = https://github.com/SeunggeunKimkr/PRISM
