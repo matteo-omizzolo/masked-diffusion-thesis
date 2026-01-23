@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Environments
+.venv/
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Output artifacts (do not commit)
+logs/
+results/
+
+# Data & checkpoints (keep paths/configs, not the files)
+data/
+checkpoints/
+
+# OS
+.DS_Store
