@@ -1,0 +1,6 @@
+project_name: masked-diffusion-thesis
+seed: 42
+
+paths:
+  logs_dir: logs
+  results_dir: results
