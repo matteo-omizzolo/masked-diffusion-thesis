@@ -34,20 +34,54 @@ def main() -> None:
 
     save_json(results_dir / "meta.json", {"git_commit": commit, "config": cfg})
     logger.info(f"Git commit: {commit}")
+    logger.info(f"Results directory: {results_dir}")
 
     model_cfg = MDLMConfig(**cfg.get("model", {}))
     model = BaseMDLM.from_checkpoint(model_cfg).to(model_cfg.device).eval()
 
     remdm_cfg = ReMDMRunConfig(**cfg.get("remdm", {}))
-    runner = ReMDMAdapter(model=model, cfg=remdm_cfg)
+    runner = ReMDMAdapter(model=model, cfg=remdm_cfg, run_output_dir=results_dir)
 
+    logger.info(f"Running ReMDM (toy_mode={remdm_cfg.toy_mode}, dry_run={remdm_cfg.dry_run})")
+    
     with torch.no_grad():
         out = runner.sample()
 
+    # Save full output
     torch.save(out, results_dir / "samples.pt")
     logger.info(f"Saved samples to {results_dir / 'samples.pt'}")
-    logger.info(f"Meta: {out.get('meta')}")
+    
+    # Save summary JSON pointing to external outputs
+    summary = {
+        "run_dir": str(results_dir),
+        "toy_mode": remdm_cfg.toy_mode,
+        "dry_run": remdm_cfg.dry_run,
+        "strategy": remdm_cfg.strategy,
+        "steps": remdm_cfg.steps,
+        "meta": out.get("meta", {}),
+    }
+    
+    # Add external run info if present
+    if "external_run_dir" in out:
+        summary["external_run_dir"] = out["external_run_dir"]
+        summary["artifacts"] = out.get("artifacts", {})
+    
+    # Add command if dry_run
+    if out.get("dry_run"):
+        summary["command"] = out.get("command")
+    
+    save_json(results_dir / "summary.json", summary)
+    logger.info(f"Saved summary to {results_dir / 'summary.json'}")
+    
+    if out.get("dry_run"):
+        logger.warning("DRY RUN completed. No actual execution occurred.")
+        logger.info(f"Command that would run:\n{' '.join(out.get('command', []))}")
+    elif not remdm_cfg.toy_mode:
+        logger.info(f"External ReMDM completed. Outputs in: {out.get('external_run_dir')}")
+    else:
+        logger.info("Toy mode completed successfully.")
 
 
 if __name__ == "__main__":
     main()
+

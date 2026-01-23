@@ -9,7 +9,7 @@ import torch.nn as nn
 
 @dataclass
 class MDLMConfig:
-    checkpoint_path: Optional[str] = None
+    base_checkpoint_path: Optional[str] = None
     device: str = "cpu"
 
 
