@@ -7,7 +7,7 @@ name = "masked-diffusion-thesis"
 version = "0.1.0"
 description = "MSc thesis repo: masked diffusion models (ReMDM, PRISM) with reproducible experiments."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [{name = "Matteo Mizzolo"}]
 dependencies = [
