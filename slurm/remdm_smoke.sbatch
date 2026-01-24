@@ -17,7 +17,7 @@ set -euo pipefail
 # 1) Activate conda environment
 # IMPORTANT: use the environment you will install deps into (not your Mac venv).
 # Example name below; change it to your actual env.
-source activate masked-diffusion
+conda activate masked-diffusion
 
 # 2) Move into your thesis repo (change path to where you cloned it)
 cd ~/masked-diffusion-thesis

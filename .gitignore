@@ -16,6 +16,8 @@ venv/
 # Output artifacts (do not commit)
 logs/
 results/
+out/
+err/
 
 # Data & checkpoints (keep paths/configs, not the files)
 data/
