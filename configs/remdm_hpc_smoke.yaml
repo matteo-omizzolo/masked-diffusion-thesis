@@ -1,0 +1,36 @@
+project_name: remdm-hpc-smoke
+seed: 42
+
+paths:
+  logs_dir: logs
+  results_dir: results
+
+remdm:
+  toy_mode: false
+  dry_run: false
+
+  mode: sample_eval
+  seed: 1
+
+  data: openwebtext-split
+  model_size: small
+  backbone: dit
+  parameterization: subs
+  sequence_length: 1024
+
+  upstream_checkpoint_path: /ABS/PATH/TO/mdlm.ckpt
+
+  T: 0
+  time_conditioning: false
+
+  steps: 64
+  strategy: remdm-conf
+  nucleus_p: 0.9
+  num_sample_batches: 2
+
+  batch_size: 1
+  eval_batch_size: 1
+  perplexity_batch_size: 1
+
+  generated_seqs_path: null
+  wandb_offline: true
