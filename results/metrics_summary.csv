@@ -1,5 +1,0 @@
-run_name,strategy,steps,num_samples,avg_length_tokens,avg_length_chars,distinct_1,distinct_2,gen_ppl,mauve,entropy
-20260125_142727_remdm,remdm-rescale,16,1,711.0,4025.0,0.6048,0.9662,153.47,0.0041,5.65
-20260125_143439_remdm,remdm-loop,64,2,762.0,4460.0,0.5367,0.9468,66.35,0.0041,5.57
-20260125_143805_remdm,remdm-rescale,64,2,786.0,4542.0,0.5254,0.9465,66.18,0.0041,5.57
-20260125_145111_remdm,mdlm,64,2,786.0,4542.0,0.5254,0.9465,66.18,0.0041,5.57

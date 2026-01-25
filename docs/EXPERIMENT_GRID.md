@@ -32,6 +32,12 @@ Systematic comparison of MDLM baseline vs ReMDM variants for thesis research.
 **Run command**:
 ```bash
 bash scripts/run_experiment_grid.sh mini
+
+# Monitor jobs
+watch -n 5 'squeue -u $USER'
+
+# Check results
+ls -lt results/ | head
 ```
 
 ### Production (Thesis Results)
@@ -51,6 +57,9 @@ bash scripts/run_experiment_grid.sh mini
 **Run command**:
 ```bash
 bash scripts/run_experiment_grid.sh prod
+
+# Monitor (4 jobs × ~15-20 min = 60-80 min total)
+watch -n 10 'squeue -u $USER'
 ```
 
 ## Metrics to Compare
@@ -63,11 +72,40 @@ Each experiment outputs:
 
 ## Analysis Plan
 
+### Running Experiments
+
+**Quick validation** (recommended first):
+```bash
+bash scripts/run_experiment_grid.sh mini
+```
+
+**Production run**:
+```bash
+bash scripts/run_experiment_grid.sh prod
+```
+
+**Individual job** (optional):
+```bash
+sbatch slurm/remdm_smoke.sbatch configs/mdlm_hpc_owt_prod.yaml
+```
+
+### Evaluation Workflow
+
 1. **Run experiments**: Use grid runner script
-2. **Evaluate metrics**: `python scripts/evaluate_text.py results/`
-3. **Export data**: `python scripts/evaluate_text.py results/ --output metrics.csv`
-4. **Compare strategies**: Analyze perplexity, diversity, MAUVE
-5. **Text quality**: Manual inspection of generated samples
+2. **Wait for completion**: `squeue -u $USER` (empty = done)
+3. **Evaluate metrics**:
+```bash
+# Print table
+python scripts/evaluate_text.py results/
+
+# Export CSV for thesis
+python scripts/evaluate_text.py results/ --output thesis_metrics.csv
+```
+
+4. **Inspect text quality**:
+```bash
+cat results/*/external_remdm/generated_sequences.json | python3 -m json.tool | less
+```
 
 ### Evaluation Metrics
 

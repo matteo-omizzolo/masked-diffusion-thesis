@@ -111,3 +111,4 @@ cat results/<timestamp>_remdm/external_remdm/generated_sequences.json | python3 
 ---
 **Last updated**: 2026-01-25  
 **Environment**: HPC cluster (dsba partition, RTX 2080 Ti, CUDA 12.4.0)
+**See also**: [EXPERIMENT_GRID.md](EXPERIMENT_GRID.md) for full experiment workflow

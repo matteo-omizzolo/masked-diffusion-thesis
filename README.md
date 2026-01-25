@@ -139,7 +139,7 @@ cat results/<timestamp>_*/summary.json | python3 -m json.tool
 **Module Errors**: Reinstall `pip install -e . --no-deps`  
 **remdm-conf dtype bug**: See [docs/STRATEGY_TEST_RESULTS.md](docs/STRATEGY_TEST_RESULTS.md#failed-strategy-remdm-conf) for fix options
 
-See [docs/HPC_SETUP.md](docs/HPC_SETUP.md) and [docs/STRATEGY_TEST_RESULTS.md](docs/STRATEGY_TEST_RESULTS.md) for detailed documentation.
+See [docs/HPC_SETUP.md](docs/HPC_SETUP.md) and [docs/EXPERIMENT_GRID.md](docs/EXPERIMENT_GRID.md) for detailed documentation.
 
 ## Citation
 
