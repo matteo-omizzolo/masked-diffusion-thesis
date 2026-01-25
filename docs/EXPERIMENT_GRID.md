@@ -63,10 +63,25 @@ Each experiment outputs:
 
 ## Analysis Plan
 
-1. **Baseline establishment**: What is MDLM's performance?
-2. **ReMDM improvements**: Do any variants beat baseline?
-3. **Strategy comparison**: Which ReMDM variant performs best?
-4. **Trade-offs**: Perplexity vs diversity vs quality
+1. **Run experiments**: Use grid runner script
+2. **Evaluate metrics**: `python scripts/evaluate_text.py results/`
+3. **Export data**: `python scripts/evaluate_text.py results/ --output metrics.csv`
+4. **Compare strategies**: Analyze perplexity, diversity, MAUVE
+5. **Text quality**: Manual inspection of generated samples
+
+### Evaluation Metrics
+
+**Automatic metrics** (computed by `evaluate_text.py`):
+- **Perplexity** (gen_ppl): Lower is better (fluency)
+- **MAUVE**: 0-1, higher is better (similarity to reference)
+- **Distinct-1/2**: Vocabulary diversity (unique unigrams/bigrams)
+- **Entropy**: Sample diversity measure
+- **Length**: Average tokens/chars per sample
+
+**Manual evaluation**:
+- Coherence: Does text make sense?
+- Quality: Grammar, factuality, relevance
+- Creativity: Novel vs repetitive content
 
 ## Results Summary
 
@@ -92,17 +107,21 @@ Each experiment outputs:
 
 ## Notes
 
+- **remdm-conf excluded**: Dtype bug in upstream (BFloat16/Float32 mismatch)
+  - Policy: Do NOT modify upstream submodule
+  - Alternative: Use working strategies (rescale/cap/loop)
+  - See STRATEGY_TEST_RESULTS.md for details
 - Mini experiments validated: all 4 strategies working (Jan 25, 2026)
 - Production experiments: run after validating mini grid
-- remdm-conf excluded due to dtype bug (see STRATEGY_TEST_RESULTS.md)
 - All experiments use streaming dataset to avoid 40GB download
+- Evaluation: `python scripts/evaluate_text.py results/` for metrics table
 
 ## Next Steps
 
 1. ✅ Create experiment configs (done)
 2. ✅ Test mini grid (done)
-3. ⏳ Run production grid
-4. ⏳ Collect metrics from summary.json files
-5. ⏳ Analyze text quality
-6. ⏳ Create comparison plots
+3. ✅ Create evaluation script (done)
+4. ⏳ Run production grid
+5. ⏳ Evaluate with `python scripts/evaluate_text.py results/ -o thesis_metrics.csv`
+6. ⏳ Analyze results and create comparison plots
 7. ⏳ Write thesis results section

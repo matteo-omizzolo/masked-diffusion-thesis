@@ -104,12 +104,29 @@ remdm:
 
 ## Experiment Results
 
-All experiments generate:
-- **summary.json** - Metrics (perplexity, entropy, MAUVE)
+After running experiments, evaluate results:
+
+```bash
+# Generate metrics table
+python scripts/evaluate_text.py results/
+
+# Export to CSV
+python scripts/evaluate_text.py results/ --output thesis_metrics.csv
+```
+
+**Metrics computed**:
+- Perplexity (lower = better fluency)
+- MAUVE (higher = closer to reference)
+- Distinct-1/2 (vocabulary diversity)
+- Entropy (sample diversity)
+- Text length statistics
+
+Each run generates:
+- **summary.json** - Upstream metrics (perplexity, entropy, MAUVE)
 - **samples.pt** - Generated token sequences
 - **external_remdm/generated_sequences.json** - Decoded text samples
 
-View results:
+View individual run:
 ```bash
 ls -lt results/ | head
 cat results/<timestamp>_*/summary.json | python3 -m json.tool

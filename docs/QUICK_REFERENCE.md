@@ -73,15 +73,31 @@ external_remdm/
 1. Run experiments: `bash scripts/run_experiment_grid.sh prod`
 2. Wait for completion: `squeue -u $USER` (empty = done)
 3. List results: `ls -lt results/ | head -10`
-4. Extract metrics:
+4. **Evaluate all runs**:
 ```bash
-for dir in results/20260125_*/; do
-    echo "=== $(basename $dir) ==="
-    cat "$dir/summary.json" | python3 -m json.tool | grep -E '"strategy"|"steps"|"gen_ppl"|"MAUVE"'
-done
+# Print metrics table
+python scripts/evaluate_text.py results/
+
+# Export to CSV for thesis
+python scripts/evaluate_text.py results/ --output thesis_metrics.csv
+
+# Quiet mode (CSV only)
+python scripts/evaluate_text.py results/ -o metrics.csv --quiet
 ```
 
-5. Compare text quality: `cat results/*/external_remdm/generated_sequences.json | python3 -m json.tool | less`
+5. Compare strategies: Open CSV in Excel/pandas for analysis
+6. Inspect text quality:
+```bash
+cat results/*/external_remdm/generated_sequences.json | python3 -m json.tool | less
+```
+
+### Metrics Computed
+
+- **Perplexity** (gen_ppl): Lower = better fluency
+- **MAUVE**: 0-1, higher = closer to reference distribution
+- **Distinct-1/2**: Vocabulary diversity (unique n-grams)
+- **Entropy**: Sample diversity
+- **Length**: Average tokens/chars per sample
 
 ## Troubleshooting
 

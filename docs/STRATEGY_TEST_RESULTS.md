@@ -32,11 +32,11 @@ got BFloat16 for the destination and Float for the source.
 - Line 752: `conf[unmask_mask] = conf_values[unmask_mask]` → dtype mismatch
 
 **Fix Options**:
-1. **Patch wrapper** (recommended): Cast dtypes in our adapter before calling upstream
-2. **Fork upstream**: Modify `external/remdm/diffusion.py` line 752 to cast: `conf[unmask_mask] = conf_values[unmask_mask].to(conf.dtype)`
-3. **Workaround**: Use working strategies (rescale/cap/loop)
+1. **Current policy (recommended)**: Exclude from experiments, use working strategies
+2. **Runtime monkeypatch**: Patch in wrapper without touching upstream (see remdm_dtype_patch.py)
+3. **Manual upstream edit**: Modify `external/remdm/diffusion.py` line 752 (not recommended)
 
-**Implementing the fix**: See `src/masked_diffusion_thesis/integrations/remdm_dtype_patch.py`
+**For thesis**: Use the 3 working strategies (rescale/cap/loop). No need to fix upstream bug.
 
 ## Successful Results
 
