@@ -15,48 +15,22 @@ Systematic comparison of MDLM baseline vs ReMDM variants for thesis research.
 
 ## Experiment Grid
 
-### Mini Validation (Quick Sanity Check)
+**Purpose**: Generate thesis comparison of MDLM baseline vs 3 ReMDM variants
 
-**Purpose**: Verify all strategies work before scaling up  
-**Parameters**: 64 steps, 2 batches per strategy  
-**Runtime**: ~1 min per experiment  
-**Total samples**: 8 sequences (2 per strategy × 4 strategies)
-
-| Config | Strategy | Status |
-|--------|----------|--------|
-| `mdlm_hpc_owt_mini.yaml` | mdlm (baseline) | ✅ Tested |
-| `remdm_hpc_owt_mini_rescale.yaml` | remdm-rescale | ✅ Tested |
-| `remdm_hpc_owt_mini_cap.yaml` | remdm-cap | ✅ Tested |
-| `remdm_hpc_owt_mini_loop.yaml` | remdm-loop | ✅ Tested |
-
-**Run command**:
-```bash
-bash scripts/run_experiment_grid.sh mini
-
-# Monitor jobs
-watch -n 5 'squeue -u $USER'
-
-# Check results
-ls -lt results/ | head
-```
-
-### Production (Thesis Results)
-
-**Purpose**: Generate meaningful comparison for thesis  
 **Parameters**: 256 steps, 10 batches per strategy  
-**Runtime**: ~15-20 min per experiment  
+**Runtime**: ~15-20 min per experiment (60-80 min total)  
 **Total samples**: 40 sequences (10 per strategy × 4 strategies)
 
-| Config | Strategy | Status |
-|--------|----------|--------|
-| `mdlm_hpc_owt_prod.yaml` | mdlm (baseline) | ⏳ Pending |
-| `remdm_hpc_owt_prod_rescale.yaml` | remdm-rescale | ⏳ Pending |
-| `remdm_hpc_owt_prod_cap.yaml` | remdm-cap | ⏳ Pending |
-| `remdm_hpc_owt_prod_loop.yaml` | remdm-loop | ⏳ Pending |
+| Config | Strategy | Purpose |
+|--------|----------|----------|
+| `mdlm_hpc_owt_prod.yaml` | mdlm (baseline) | Standard MDLM sampling |
+| `remdm_hpc_owt_prod_rescale.yaml` | remdm-rescale | Logit rescaling (most stable) |
+| `remdm_hpc_owt_prod_cap.yaml` | remdm-cap | Probability capping |
+| `remdm_hpc_owt_prod_loop.yaml` | remdm-loop | Iterative refinement |
 
 **Run command**:
 ```bash
-bash scripts/run_experiment_grid.sh prod
+bash scripts/run_experiment_grid.sh
 
 # Monitor (4 jobs × ~15-20 min = 60-80 min total)
 watch -n 10 'squeue -u $USER'
@@ -74,35 +48,27 @@ Each experiment outputs:
 
 ### Running Experiments
 
-**Quick validation** (recommended first):
 ```bash
-bash scripts/run_experiment_grid.sh mini
-```
+# Submit all 4 experiments
+bash scripts/run_experiment_grid.sh
 
-**Production run**:
-```bash
-bash scripts/run_experiment_grid.sh prod
-```
-
-**Individual job** (optional):
-```bash
-sbatch slurm/remdm_smoke.sbatch configs/mdlm_hpc_owt_prod.yaml
+# Monitor progress
+watch -n 10 'squeue -u $USER'
 ```
 
 ### Evaluation Workflow
 
-1. **Run experiments**: Use grid runner script
-2. **Wait for completion**: `squeue -u $USER` (empty = done)
-3. **Evaluate metrics**:
+1. **Wait for completion**: `squeue -u $USER` returns empty
+2. **Evaluate metrics**:
 ```bash
-# Print table
+# Print comparison table
 python scripts/evaluate_text.py results/
 
 # Export CSV for thesis
 python scripts/evaluate_text.py results/ --output thesis_metrics.csv
 ```
 
-4. **Inspect text quality**:
+3. **Inspect text quality**:
 ```bash
 cat results/*/external_remdm/generated_sequences.json | python3 -m json.tool | less
 ```
@@ -123,43 +89,27 @@ cat results/*/external_remdm/generated_sequences.json | python3 -m json.tool | l
 
 ## Results Summary
 
-### Mini Validation Results
+| Strategy | Steps | Batches | PPL | MAUVE | Distinct-1 | Distinct-2 | Status |
+|----------|-------|---------|-----|-------|------------|------------|--------|
+| mdlm | 256 | 10 | - | - | - | - | ⏳ |
+| remdm-rescale | 256 | 10 | - | - | - | - | ⏳ |
+| remdm-cap | 256 | 10 | - | - | - | - | ⏳ |
+| remdm-loop | 256 | 10 | - | - | - | - | ⏳ |
 
-| Strategy | Steps | Batches | Runtime | PPL | MAUVE | Status |
-|----------|-------|---------|---------|-----|-------|--------|
-| mdlm | 64 | 2 | 46s | TBD | TBD | ✅ |
-| remdm-rescale | 64 | 2 | 48s | TBD | TBD | ✅ |
-| remdm-cap | 64 | 2 | 46s | TBD | TBD | ✅ |
-| remdm-loop | 64 | 2 | 72s | TBD | TBD | ✅ |
-
-### Production Results
-
-| Strategy | Steps | Batches | Runtime | PPL | MAUVE | Status |
-|----------|-------|---------|---------|-----|-------|--------|
-| mdlm | 256 | 10 | - | - | - | ⏳ |
-| remdm-rescale | 256 | 10 | - | - | - | ⏳ |
-| remdm-cap | 256 | 10 | - | - | - | ⏳ |
-| remdm-loop | 256 | 10 | - | - | - | ⏳ |
-
-**Update this table after running production experiments.**
+**Update this table after running experiments.**
 
 ## Notes
 
-- **remdm-conf excluded**: Dtype bug in upstream (BFloat16/Float32 mismatch)
-  - Policy: Do NOT modify upstream submodule
-  - Alternative: Use working strategies (rescale/cap/loop)
-  - See STRATEGY_TEST_RESULTS.md for details
-- Mini experiments validated: all 4 strategies working (Jan 25, 2026)
-- Production experiments: run after validating mini grid
-- All experiments use streaming dataset to avoid 40GB download
+- **remdm-conf excluded**: Dtype bug in upstream (see STRATEGY_TEST_RESULTS.md)
+- **Only production configs**: Smoke/mini configs removed (validated, not needed for thesis)
+- All experiments use streaming OpenWebText (no 40GB download)
 - Evaluation: `python scripts/evaluate_text.py results/` for metrics table
 
 ## Next Steps
 
-1. ✅ Create experiment configs (done)
-2. ✅ Test mini grid (done)
-3. ✅ Create evaluation script (done)
-4. ⏳ Run production grid
-5. ⏳ Evaluate with `python scripts/evaluate_text.py results/ -o thesis_metrics.csv`
-6. ⏳ Analyze results and create comparison plots
-7. ⏳ Write thesis results section
+1. ✅ Environment setup complete
+2. ✅ Configs validated (mini runs successful)
+3. ✅ Repository cleaned
+4. ⏳ **Run production**: `bash scripts/run_experiment_grid.sh`
+5. ⏳ **Evaluate**: `python scripts/evaluate_text.py results/ -o thesis_metrics.csv`
+6. ⏳ Analyze results and write thesis section

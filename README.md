@@ -22,38 +22,23 @@ sbatch slurm/remdm_smoke.sbatch
 # Generated samples saved to results/<timestamp>_remdm/
 ```
 
-### 3. Run Experiments
-
-**Quick validation (64 steps, ~1 min each)**:
+### 3. Run Production Experiments
 ```bash
-# Test baseline MDLM
-sbatch slurm/remdm_smoke.sbatch configs/mdlm_hpc_owt_mini.yaml
+# Run complete thesis comparison (4 experiments, ~60-80 min total)
+bash scripts/run_experiment_grid.sh
 
-# Or run full mini grid (baseline + 3 ReMDM variants)
-bash scripts/run_experiment_grid.sh mini
-```
-
-**Production experiments (256 steps, ~15-20 min each)**:
-```bash
-# Run complete comparison grid
-bash scripts/run_experiment_grid.sh prod
-
+# Monitor: watch -n 10 'squeue -u $USER'
 # This submits 4 jobs:
-#   - MDLM baseline (standard sampling)
-#   - ReMDM rescale (logit rescaling)
-#   - ReMDM cap (probability capping)
-#   - ReMDM loop (iterative refinement)
+#   - MDLM baseline
+#   - ReMDM rescale, cap, loop variants
 ```
 
 ## Repository Structure
 
 ```
 ├── configs/                    # Experiment configurations
-│   ├── remdm_hpc_smoke.yaml   # Smoke test (wikitext2, 16 steps)
-│   ├── mdlm_hpc_owt_mini.yaml # MDLM baseline (64 steps)
 │   ├── mdlm_hpc_owt_prod.yaml # MDLM baseline (256 steps)
-│   ├── remdm_hpc_owt_mini_*.yaml  # ReMDM variants (64 steps)
-│   └── remdm_hpc_owt_prod_*.yaml  # ReMDM variants (256 steps)
+│   └── remdm_hpc_owt_prod_*.yaml  # ReMDM variants (rescale/cap/loop)
 ├── external/                   # Upstream submodules (DO NOT MODIFY)
 │   ├── remdm/                 # ReMDM codebase
 │   └── PRISM/                 # PRISM codebase
@@ -75,32 +60,19 @@ bash scripts/run_experiment_grid.sh prod
 - **Python**: 3.9, **Conda env**: masked-diffusion
 - **PyTorch**: 2.2.2+cu121, **Lightning**: 2.2.1, **flash-attn**: 2.5.6
 
-## Configuration Examples
+## Production Configurations
 
-### Experiment Grid (for thesis)
+All configs use:
+- Dataset: openwebtext-streaming
+- Steps: 256
+- Batches: 10  
+- Model: kuleshov-group/mdlm-no_flashattn-fp32-owt
 
-**Mini validation** (64 steps, 2 batches, ~1 min each):
-- `mdlm_hpc_owt_mini.yaml` - MDLM baseline
-- `remdm_hpc_owt_mini_rescale.yaml` - ReMDM rescale
-- `remdm_hpc_owt_mini_cap.yaml` - ReMDM cap
-- `remdm_hpc_owt_mini_loop.yaml` - ReMDM loop
-
-**Production** (256 steps, 10 batches, ~15-20 min each):
-- `mdlm_hpc_owt_prod.yaml` - MDLM baseline
-- `remdm_hpc_owt_prod_rescale.yaml` - ReMDM rescale
-- `remdm_hpc_owt_prod_cap.yaml` - ReMDM cap
-- `remdm_hpc_owt_prod_loop.yaml` - ReMDM loop
-
-### Config Structure
-
-**Smoke Test** (configs/remdm_hpc_smoke.yaml):
-```yaml
-remdm:
-  data: wikitext2           # Tiny dataset for fast validation
-  steps: 16                 # Minimal sampling steps
-  num_sample_batches: 1     # Single batch
-  strategy: remdm-rescale   # Stable strategy
-```
+**Strategies**:
+- `mdlm_hpc_owt_prod.yaml` - MDLM baseline (standard sampling)
+- `remdm_hpc_owt_prod_rescale.yaml` - Logit rescaling (most stable)
+- `remdm_hpc_owt_prod_cap.yaml` - Probability capping
+- `remdm_hpc_owt_prod_loop.yaml` - Iterative refinement
 
 ## Experiment Results
 
