@@ -22,23 +22,27 @@ sbatch slurm/remdm_smoke.sbatch
 # Generated samples saved to results/<timestamp>_remdm/
 ```
 
-### 3. Run Production Experiments
-```bash
-# Mini production test (64 steps, ~1 min)
-sbatch slurm/remdm_smoke.sbatch configs/remdm_hpc_owt_mini_rescale.yaml
+### 3. Run Experiments
 
-# Full production with 256 steps
-python scripts/run_remdm.py --config configs/remdm_hpc_owt.yaml
+**Quick validation (64 steps, ~1 min each)**:
+```bash
+# Test baseline MDLM
+sbatch slurm/remdm_smoke.sbatch configs/mdlm_hpc_owt_mini.yaml
+
+# Or run full mini grid (baseline + 3 ReMDM variants)
+bash scripts/run_experiment_grid.sh mini
 ```
 
-### 4. Compare ReMDM Strategies
+**Production experiments (256 steps, ~15-20 min each)**:
 ```bash
-# Test all working strategies (rescale, cap, loop)
-for strategy in rescale cap loop; do
-    sbatch slurm/remdm_smoke.sbatch configs/remdm_hpc_owt_mini_${strategy}.yaml
-done
+# Run complete comparison grid
+bash scripts/run_experiment_grid.sh prod
 
-# See docs/STRATEGY_TEST_RESULTS.md for comparison
+# This submits 4 jobs:
+#   - MDLM baseline (standard sampling)
+#   - ReMDM rescale (logit rescaling)
+#   - ReMDM cap (probability capping)
+#   - ReMDM loop (iterative refinement)
 ```
 
 ## Repository Structure
@@ -46,8 +50,10 @@ done
 ```
 ├── configs/                    # Experiment configurations
 │   ├── remdm_hpc_smoke.yaml   # Smoke test (wikitext2, 16 steps)
-│   ├── remdm_hpc_owt.yaml     # Full production (256 steps)
-│   └── remdm_hpc_owt_mini_*.yaml  # Mini production tests (64 steps)
+│   ├── mdlm_hpc_owt_mini.yaml # MDLM baseline (64 steps)
+│   ├── mdlm_hpc_owt_prod.yaml # MDLM baseline (256 steps)
+│   ├── remdm_hpc_owt_mini_*.yaml  # ReMDM variants (64 steps)
+│   └── remdm_hpc_owt_prod_*.yaml  # ReMDM variants (256 steps)
 ├── external/                   # Upstream submodules (DO NOT MODIFY)
 │   ├── remdm/                 # ReMDM codebase
 │   └── PRISM/                 # PRISM codebase
@@ -71,6 +77,22 @@ done
 
 ## Configuration Examples
 
+### Experiment Grid (for thesis)
+
+**Mini validation** (64 steps, 2 batches, ~1 min each):
+- `mdlm_hpc_owt_mini.yaml` - MDLM baseline
+- `remdm_hpc_owt_mini_rescale.yaml` - ReMDM rescale
+- `remdm_hpc_owt_mini_cap.yaml` - ReMDM cap
+- `remdm_hpc_owt_mini_loop.yaml` - ReMDM loop
+
+**Production** (256 steps, 10 batches, ~15-20 min each):
+- `mdlm_hpc_owt_prod.yaml` - MDLM baseline
+- `remdm_hpc_owt_prod_rescale.yaml` - ReMDM rescale
+- `remdm_hpc_owt_prod_cap.yaml` - ReMDM cap
+- `remdm_hpc_owt_prod_loop.yaml` - ReMDM loop
+
+### Config Structure
+
 **Smoke Test** (configs/remdm_hpc_smoke.yaml):
 ```yaml
 remdm:
@@ -80,20 +102,18 @@ remdm:
   strategy: remdm-rescale   # Stable strategy
 ```
 
-**Production** (configs/remdm_hpc_owt.yaml):
-```yaml
-remdm:
-  data: openwebtext-streaming  # Large dataset, streaming mode
-  steps: 256                   # Full sampling
-  num_sample_batches: 100      # Production batch count
-```
+## Experiment Results
 
-## Output Files
-
-Each run creates `results/<timestamp>_remdm/`:
+All experiments generate:
 - **summary.json** - Metrics (perplexity, entropy, MAUVE)
 - **samples.pt** - Generated token sequences
-- **external_remdm/generated_sequences.json** - Full text samples
+- **external_remdm/generated_sequences.json** - Decoded text samples
+
+View results:
+```bash
+ls -lt results/ | head
+cat results/<timestamp>_*/summary.json | python3 -m json.tool
+```
 
 ## Troubleshooting
 

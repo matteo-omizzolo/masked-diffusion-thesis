@@ -1,0 +1,52 @@
+# ============================================
+# Production Config: ReMDM Cap (256 steps)
+# ============================================
+# Purpose: Thesis experiments - capping strategy
+# Strategy: remdm-cap (probability capping)
+# Expected runtime: ~15-20 min on RTX 2080 Ti
+#
+# Usage:
+#   sbatch slurm/remdm_smoke.sbatch configs/remdm_hpc_owt_prod_cap.yaml
+# ============================================
+
+project_name: remdm-hpc-owt-prod-cap
+seed: 42
+
+paths:
+  logs_dir: logs
+  results_dir: results
+
+remdm:
+  toy_mode: false
+  dry_run: false
+
+  mode: sample_eval
+  seed: 1
+
+  data: openwebtext-streaming
+  model_size: small
+  backbone: hf_dit
+  parameterization: subs
+  sequence_length: 1024
+
+  upstream_checkpoint_path: kuleshov-group/mdlm-no_flashattn-fp32-owt
+
+  T: 0
+  time_conditioning: false
+
+  steps: 256                    # Full production steps
+  strategy: remdm-cap           # Probability capping
+  nucleus_p: 0.9
+  num_sample_batches: 10        # Modest sample count for meaningful results
+
+  batch_size: 1
+  eval_batch_size: 1
+  perplexity_batch_size: 1
+
+  generated_seqs_path: null
+  wandb_offline: true
+
+  precision: 32
+
+  env_patch: true
+  require_optional_backbones: false
