@@ -1,83 +1,99 @@
-# Masked Diffusion Thesis - HPC Setup
+# Masked Diffusion Models - HPC Thesis Repository
 
-MSc thesis repository for masked diffusion models (ReMDM, PRISM) with reproducible HPC experiments.
+Reproducible HPC environment for masked discrete diffusion models research, integrating upstream ReMDM and PRISM codebases.
 
 ## Quick Start
 
+### 1. One-Time Setup (on GPU node)
 ```bash
-# 1. Create conda environment (once)
-conda create -n masked-diffusion python=3.9 -y
-conda activate masked-diffusion
-
-# 2. Run setup on GPU node (once, ~30-45 min)
+# Submit setup job (installs all dependencies including flash-attn, mamba-ssm)
 sbatch slurm/setup_env_once.sbatch
 
-# 3. Verify installation
-python scripts/preflight_check.py
-
-# 4. Run experiments
-sbatch slurm/remdm_smoke.sbatch
+# Monitor: squeue -u $USER
+# Takes ~45 minutes, installs to conda env: masked-diffusion
 ```
 
-## Documentation
+### 2. Run Smoke Test
+```bash
+# Quick validation (~1 min, uses tiny wikitext2 dataset)
+sbatch slurm/remdm_smoke.sbatch
 
-- **[HPC_SETUP.md](docs/HPC_SETUP.md)** - Complete setup guide with troubleshooting
-- **[REMDM_INTEGRATION.md](docs/REMDM_INTEGRATION.md)** - ReMDM integration details
+# Check results in out/remdm_smoke_<JOBID>.out
+# Generated samples saved to results/<timestamp>_remdm/
+```
 
-## Key Files
-
-### Setup & Validation
-- `scripts/setup_hpc_env.sh` - Main installer (installs all dependencies + CUDA extensions)
-- `scripts/preflight_check.py` - Environment validator
-- `scripts/debug_env.py` - Diagnostic tool
-
-### Slurm Jobs
-- `slurm/setup_env_once.sbatch` - One-time setup job
-- `slurm/remdm_smoke.sbatch` - Smoke test job
-
-### Experiment Scripts
-- `scripts/run_remdm.py` - ReMDM experiment runner
-- `configs/*.yaml` - Experiment configurations
+### 3. Run Production Experiments
+```bash
+# Use production config with streaming OpenWebText
+python scripts/run_remdm.py --config configs/remdm_hpc_owt.yaml
+```
 
 ## Repository Structure
 
 ```
-├── configs/           # Experiment configurations
-├── docs/              # Documentation
-├── external/          # Git submodules (ReMDM, PRISM) - DO NOT MODIFY
-├── logs/              # Experiment and setup logs
-├── results/           # Experiment results
-├── scripts/           # Setup and experiment scripts
-├── slurm/             # Slurm batch job scripts
-└── src/               # Main package code
-    └── masked_diffusion_thesis/
-        ├── integrations/  # Wrappers for upstream repos
-        ├── models/        # Model implementations
-        └── utils/         # Utilities
+├── configs/                    # Experiment configurations
+│   ├── remdm_hpc_smoke.yaml   # Smoke test (wikitext2, 16 steps)
+│   └── remdm_hpc_owt.yaml     # Production (openwebtext-streaming)
+├── external/                   # Upstream submodules (DO NOT MODIFY)
+│   ├── remdm/                 # ReMDM codebase
+│   └── PRISM/                 # PRISM codebase
+├── scripts/
+│   ├── setup_hpc_env.sh       # Main installation script
+│   ├── preflight_check.py     # Pre-run validation
+│   └── run_remdm.py           # ReMDM wrapper
+├── slurm/
+│   ├── setup_env_once.sbatch  # One-time environment setup
+│   └── remdm_smoke.sbatch     # Example job script
+└── docs/                       # Documentation
 ```
 
-## Requirements
+## HPC Cluster Configuration
 
-- Python 3.9
-- CUDA 12.1/12.4
-- GCC 12
-- Conda environment
-- GPU: RTX 2080 Ti (or compatible)
+- **Partition**: dsba, **GPU**: RTX 2080 Ti (11.5GB), **CUDA**: 12.4.0, **GCC**: 12
+- **Python**: 3.9, **Conda env**: masked-diffusion
+- **PyTorch**: 2.2.2+cu121, **Lightning**: 2.2.1, **flash-attn**: 2.5.6
 
-## Notes
+## Configuration Examples
 
-- Upstream repos (external/remdm, external/PRISM) are git submodules - never modify them
-- All dependencies including compiled CUDA extensions are installed by `scripts/setup_hpc_env.sh`
-- Environment snapshots saved in `logs/env_snapshots/` for reproducibility
-- Use `scripts/debug_env.py` if you encounter issues
+**Smoke Test** (configs/remdm_hpc_smoke.yaml):
+```yaml
+remdm:
+  data: wikitext2           # Tiny dataset for fast validation
+  steps: 16                 # Minimal sampling steps
+  num_sample_batches: 1     # Single batch
+  strategy: remdm-rescale   # Stable strategy
+```
+
+**Production** (configs/remdm_hpc_owt.yaml):
+```yaml
+remdm:
+  data: openwebtext-streaming  # Large dataset, streaming mode
+  steps: 256                   # Full sampling
+  num_sample_batches: 100      # Production batch count
+```
+
+## Output Files
+
+Each run creates `results/<timestamp>_remdm/`:
+- **summary.json** - Metrics (perplexity, entropy, MAUVE)
+- **samples.pt** - Generated token sequences
+- **external_remdm/generated_sequences.json** - Full text samples
 
 ## Troubleshooting
 
-If setup fails:
-1. Check logs in `logs/slurm/`
-2. Run diagnostic: `python scripts/debug_env.py`
-3. See troubleshooting guide: [docs/HPC_SETUP.md](docs/HPC_SETUP.md)
+**Out of Memory**: Use streaming datasets, reduce batch size  
+**Dataset Timeout**: Clean cache `rm -rf ~/.cache/huggingface/datasets/`  
+**Module Errors**: Reinstall `pip install -e . --no-deps`
 
-## Author
+See [docs/HPC_SETUP.md](docs/HPC_SETUP.md) for detailed documentation.
 
-Matteo Mizzolo - MSc Thesis 2026
+## Citation
+
+```bibtex
+@article{wang2025remasking,
+  title={Remasking Discrete Diffusion Models with Inference-Time Scaling},
+  author={Wang, Guanghan and Schiff, Yair and Sahoo, Subham and Kuleshov, Volodymyr},
+  journal={arXiv preprint arXiv:2503.00307},
+  year={2025}
+}
+```

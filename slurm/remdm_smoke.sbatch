@@ -92,8 +92,7 @@ echo ""
 echo "Running ReMDM smoke test..."
 echo ""
 
-srun --cpu-bind=cores --hint=nomultithread python -u scripts/run_remdm.py \
-  --config configs/remdm_hpc_smoke.yaml
+python -u scripts/run_remdm.py --config configs/remdm_hpc_smoke.yaml
 
 ################################################################################
 # Done

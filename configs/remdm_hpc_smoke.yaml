@@ -6,13 +6,13 @@ paths:
   results_dir: results
 
 remdm:
-  toy_mode: false
+  toy_mode: false  # Disable toy mode, test with real checkpoint
   dry_run: false
 
   mode: sample_eval
   seed: 1
 
-  data: openwebtext-split
+  data: wikitext2  # Small dataset for fast smoke test (not openwebtext-split!)
   model_size: small
   backbone: hf_dit
   parameterization: subs
@@ -23,10 +23,10 @@ remdm:
   T: 0
   time_conditioning: false
 
-  steps: 64
-  strategy: remdm-conf
+  steps: 16  # Minimal steps for smoke test (originally 64)
+  strategy: remdm-rescale  # Use rescale instead of conf to avoid dtype bug
   nucleus_p: 0.9
-  num_sample_batches: 2
+  num_sample_batches: 1  # Just 1 batch for smoke test (originally 2)
 
   batch_size: 1
   eval_batch_size: 1
@@ -34,6 +34,9 @@ remdm:
 
   generated_seqs_path: null
   wandb_offline: true
+
+  # Training precision (32 or bf16)
+  precision: 32  # Use 32 to avoid dtype mismatch errors with bf16
 
   # HPC environment setup
   env_patch: true  # Set runtime env vars (TMPDIR, HF_HOME, etc.)

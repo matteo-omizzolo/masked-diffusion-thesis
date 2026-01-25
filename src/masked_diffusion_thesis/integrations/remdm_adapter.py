@@ -46,6 +46,9 @@ class ReMDMRunConfig:
     nucleus_p: float = 0.9
     num_sample_batches: int = 5000
     
+    # Training parameters
+    precision: int = 32  # 32 or bf16 (use 32 to avoid dtype mismatch errors)
+    
     # Batch sizes
     batch_size: int = 1
     eval_batch_size: int = 1
@@ -133,8 +136,11 @@ class ReMDMAdapter:
         external_output_dir = self.run_output_dir / "external_remdm"
         external_output_dir.mkdir(parents=True, exist_ok=True)
         
+        # Convert to absolute path for subprocess (runs from external/remdm)
+        external_output_dir_abs = external_output_dir.resolve()
+        
         # 2. Build Hydra overrides from config
-        overrides = self._build_hydra_overrides(external_output_dir)
+        overrides = self._build_hydra_overrides(external_output_dir_abs)
         
         # 3. Build command (run from upstream repo root for Hydra config discovery)
         # Use python -u -m main (relative) since cwd=external/remdm
@@ -253,6 +259,11 @@ class ReMDMAdapter:
         overrides.append(f"backbone={cfg.backbone}")
         overrides.append(f"model.length={cfg.sequence_length}")
         
+        # Data cache directory (override hardcoded /share path)
+        if cfg.env_patch:
+            data_cache_dir = Path.home() / ".cache" / "huggingface" / "datasets"
+            overrides.append(f"data.cache_dir={data_cache_dir}")
+        
         # Checkpoint
         if cfg.upstream_checkpoint_path:
             overrides.append(f"eval.checkpoint_path={cfg.upstream_checkpoint_path}")
@@ -261,6 +272,9 @@ class ReMDMAdapter:
         
         # Time parameterization
         overrides.append(f"time_conditioning={str(cfg.time_conditioning).lower()}")
+        
+        # Precision (trainer.precision)
+        overrides.append(f"trainer.precision={cfg.precision}")
         
         # Wandb
         overrides.append(f"+wandb.offline={str(cfg.wandb_offline).lower()}")
