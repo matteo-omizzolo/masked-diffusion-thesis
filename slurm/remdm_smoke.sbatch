@@ -40,9 +40,6 @@ conda activate masked-diffusion
 
 cd ~/masked-diffusion-thesis
 
-# Keep submodule in sync (optional but OK)
-git submodule update --init --recursive
-
 # Set threading environment variables
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
@@ -88,11 +85,14 @@ fi
 # Run ReMDM
 ################################################################################
 
+# Accept config file as argument, default to smoke test
+CONFIG="${1:-configs/remdm_hpc_smoke.yaml}"
+
 echo ""
-echo "Running ReMDM smoke test..."
+echo "Running ReMDM with config: $CONFIG"
 echo ""
 
-python -u scripts/run_remdm.py --config configs/remdm_hpc_smoke.yaml
+python -u scripts/run_remdm.py --config "$CONFIG"
 
 ################################################################################
 # Done

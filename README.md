@@ -24,8 +24,21 @@ sbatch slurm/remdm_smoke.sbatch
 
 ### 3. Run Production Experiments
 ```bash
-# Use production config with streaming OpenWebText
+# Mini production test (64 steps, ~1 min)
+sbatch slurm/remdm_smoke.sbatch configs/remdm_hpc_owt_mini_rescale.yaml
+
+# Full production with 256 steps
 python scripts/run_remdm.py --config configs/remdm_hpc_owt.yaml
+```
+
+### 4. Compare ReMDM Strategies
+```bash
+# Test all working strategies (rescale, cap, loop)
+for strategy in rescale cap loop; do
+    sbatch slurm/remdm_smoke.sbatch configs/remdm_hpc_owt_mini_${strategy}.yaml
+done
+
+# See docs/STRATEGY_TEST_RESULTS.md for comparison
 ```
 
 ## Repository Structure
@@ -33,7 +46,8 @@ python scripts/run_remdm.py --config configs/remdm_hpc_owt.yaml
 ```
 ├── configs/                    # Experiment configurations
 │   ├── remdm_hpc_smoke.yaml   # Smoke test (wikitext2, 16 steps)
-│   └── remdm_hpc_owt.yaml     # Production (openwebtext-streaming)
+│   ├── remdm_hpc_owt.yaml     # Full production (256 steps)
+│   └── remdm_hpc_owt_mini_*.yaml  # Mini production tests (64 steps)
 ├── external/                   # Upstream submodules (DO NOT MODIFY)
 │   ├── remdm/                 # ReMDM codebase
 │   └── PRISM/                 # PRISM codebase
@@ -45,6 +59,8 @@ python scripts/run_remdm.py --config configs/remdm_hpc_owt.yaml
 │   ├── setup_env_once.sbatch  # One-time environment setup
 │   └── remdm_smoke.sbatch     # Example job script
 └── docs/                       # Documentation
+    ├── HPC_SETUP.md           # Detailed setup guide
+    └── STRATEGY_TEST_RESULTS.md  # Strategy comparison & results
 ```
 
 ## HPC Cluster Configuration
@@ -83,9 +99,10 @@ Each run creates `results/<timestamp>_remdm/`:
 
 **Out of Memory**: Use streaming datasets, reduce batch size  
 **Dataset Timeout**: Clean cache `rm -rf ~/.cache/huggingface/datasets/`  
-**Module Errors**: Reinstall `pip install -e . --no-deps`
+**Module Errors**: Reinstall `pip install -e . --no-deps`  
+**remdm-conf dtype bug**: See [docs/STRATEGY_TEST_RESULTS.md](docs/STRATEGY_TEST_RESULTS.md#failed-strategy-remdm-conf) for fix options
 
-See [docs/HPC_SETUP.md](docs/HPC_SETUP.md) for detailed documentation.
+See [docs/HPC_SETUP.md](docs/HPC_SETUP.md) and [docs/STRATEGY_TEST_RESULTS.md](docs/STRATEGY_TEST_RESULTS.md) for detailed documentation.
 
 ## Citation
 
