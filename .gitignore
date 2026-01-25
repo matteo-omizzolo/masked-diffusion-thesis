@@ -1,27 +1,59 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
 *.egg-info/
 dist/
 build/
 
-# Environments
-.venv/
-venv/
-.env
+# Conda
+.conda/
 
 # Jupyter
 .ipynb_checkpoints/
+*.ipynb
 
-# Output artifacts (do not commit)
-logs/
-results/
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs and temporary files
+logs/**/*.log
+logs/**/*.err
+!logs/.gitkeep
+!logs/env_snapshots/.gitkeep
+!logs/slurm/.gitkeep
+*.tmp
+
+# Results (keep structure, ignore data)
+results/**/
+!results/.gitkeep
+
+# HPC specific
 out/
 err/
+.tmp/
 
-# Data & checkpoints (keep paths/configs, not the files)
-data/
-checkpoints/
+# Cache
+.cache/
+*.cache
 
-# OS
-.DS_Store
+# Large files
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+
+# Environment snapshots (too large)
+logs/env_snapshots/*.txt
+!logs/env_snapshots/.gitkeep
+
+# Archived files
+logs/archive/
+results/archive/

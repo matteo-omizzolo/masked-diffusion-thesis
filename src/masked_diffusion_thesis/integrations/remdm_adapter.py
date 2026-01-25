@@ -64,6 +64,12 @@ class ReMDMRunConfig:
     t_off: float = 0.05
     alpha_on: float = 0.9
     
+    # Environment patching (HPC setup)
+    env_patch: bool = True  # Set runtime env vars (TMPDIR, HF_HOME, etc.)
+    
+    # Dependency requirements
+    require_optional_backbones: bool = False  # If True, require causal_conv1d + mamba-ssm
+    
     # Advanced
     extra_overrides: List[str] = field(default_factory=list)
 
@@ -135,12 +141,17 @@ class ReMDMAdapter:
         # -u = unbuffered output (matches upstream scripts)
         cmd = [sys.executable, "-u", "-m", "main"] + overrides
         
+        # 4. Prepare environment variables
+        env = self._build_subprocess_env(remdm_path)
+        
         logger.info(f"Running upstream ReMDM from: {remdm_path}")
         logger.info(f"External output dir: {external_output_dir}")
         logger.info(f"Command: {' '.join(cmd)}")
         logger.info(f"Working directory: {remdm_path}")
+        if self.cfg.env_patch:
+            logger.info(f"Environment patching: enabled")
         
-        # 4. Dry run mode: only print, don't execute
+        # 5. Dry run mode: only print, don't execute
         if self.cfg.dry_run:
             logger.warning("DRY RUN MODE: Command above would be executed on Linux/CUDA.")
             return {
@@ -148,6 +159,7 @@ class ReMDMAdapter:
                 "command": cmd,
                 "working_directory": str(remdm_path),
                 "external_run_dir": str(external_output_dir),
+                "environment": dict(env) if self.cfg.env_patch else {},
                 "meta": {
                     "dry_run": True,
                     "remdm_path": str(remdm_path),
@@ -155,11 +167,12 @@ class ReMDMAdapter:
                 },
             }
         
-        # 5. Execute subprocess
+        # 6. Execute subprocess
         try:
             result = subprocess.run(
                 cmd,
                 cwd=remdm_path,
+                env=env,
                 check=True,
                 capture_output=True,
                 text=True,
@@ -176,8 +189,45 @@ class ReMDMAdapter:
             logger.error(f"STDERR:\n{e.stderr}")
             raise RuntimeError(f"ReMDM subprocess failed: {e}") from e
         
-        # 6. Collect outputs
+        # 7. Collect outputs
         return self._collect_outputs(external_output_dir, result)
+
+    def _build_subprocess_env(self, remdm_path: Path) -> Dict[str, str]:
+        """
+        Build environment variables for subprocess.
+        
+        Ensures PYTHONPATH includes external/remdm and optionally
+        patches runtime environment (TMPDIR, HF_HOME, etc.).
+        """
+        import os
+        
+        # Start with current environment
+        env = os.environ.copy()
+        
+        # Add external/remdm to PYTHONPATH (critical for imports)
+        pythonpath = str(remdm_path)
+        if "PYTHONPATH" in env:
+            pythonpath = f"{pythonpath}:{env['PYTHONPATH']}"
+        env["PYTHONPATH"] = pythonpath
+        
+        # Apply environment patches if requested
+        if self.cfg.env_patch:
+            # HuggingFace cache
+            if "HF_HOME" not in env:
+                env["HF_HOME"] = str(Path.home() / ".cache" / "huggingface")
+            
+            # Temp directory (avoid cross-device link errors)
+            if "TMPDIR" not in env:
+                tmpdir = Path.home() / ".tmp"
+                tmpdir.mkdir(exist_ok=True)
+                env["TMPDIR"] = str(tmpdir)
+                env["TEMP"] = str(tmpdir)
+                env["TMP"] = str(tmpdir)
+            
+            # Disable tokenizers parallelism warnings
+            env["TOKENIZERS_PARALLELISM"] = "false"
+        
+        return env
 
     def _build_hydra_overrides(self, output_dir: Path) -> List[str]:
         """

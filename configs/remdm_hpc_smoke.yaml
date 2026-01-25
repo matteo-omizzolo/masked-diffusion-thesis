@@ -14,11 +14,11 @@ remdm:
 
   data: openwebtext-split
   model_size: small
-  backbone: dit
+  backbone: hf_dit
   parameterization: subs
   sequence_length: 1024
 
-  upstream_checkpoint_path: /ABS/PATH/TO/mdlm.ckpt
+  upstream_checkpoint_path: kuleshov-group/mdlm-no_flashattn-fp32-owt 
 
   T: 0
   time_conditioning: false
@@ -34,3 +34,7 @@ remdm:
 
   generated_seqs_path: null
   wandb_offline: true
+
+  # HPC environment setup
+  env_patch: true  # Set runtime env vars (TMPDIR, HF_HOME, etc.)
+  require_optional_backbones: false  # Set to true only if using dimamba backbone
