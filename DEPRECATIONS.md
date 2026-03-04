@@ -101,3 +101,7 @@ The following were empty stubs with no real code, now deleted:
 - `src/masked_diffusion_thesis/training/`
 - `src/masked_diffusion_thesi` (stray empty file)
 - `source/` (empty directory)
+
+---
+
+All deprecated shim modules and the `remedi_infer/` package have been removed from the repository. Use `mdm_playground` going forward.
