@@ -1,9 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=remdm_smoke
 #SBATCH --account=3316152
-#SBATCH --partition=dsba
+#SBATCH --partition=stud
+#SBATCH --qos=stud
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:nv-2080:1
+#SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
 #SBATCH --time=02:00:00
@@ -14,27 +15,57 @@
 
 set -euo pipefail
 
-# 1) Activate conda environment
-# IMPORTANT: use the environment you will install deps into (not your Mac venv).
-# Example name below; change it to your actual env.
-source activate masked-diffusion
+echo "=========================================="
+echo "Job ID:    $SLURM_JOB_ID"
+echo "Node:      $SLURM_NODELIST"
+echo "Start:     $(date)"
+echo "=========================================="
 
-# 2) Move into your thesis repo (change path to where you cloned it)
-cd ~/masked-diffusion-thesis
+# 1) Repo location on HPC
+REPO=~/mdm/masked-diffusion-thesis
+cd "$REPO"
 
-# 3) Ensure submodules are present (external/remdm)
+# 2) Activate environment
+# If using conda (recommended on HPC):
+if command -v conda &>/dev/null; then
+    source "$(conda info --base)/etc/profile.d/conda.sh"
+    conda activate remdm
+# Fallback: venv created by hpc/setup_env.sh
+elif [ -d "$REPO/.venv" ]; then
+    source "$REPO/.venv/bin/activate"
+else
+    echo "ERROR: no conda env 'remdm' and no .venv found. Run hpc/setup_env.sh first." >&2
+    exit 1
+fi
+
+echo "Python:  $(which python)"
+echo "PyTorch: $(python -c 'import torch; print(torch.__version__)')"
+echo "CUDA:    $(python -c 'import torch; print(torch.version.cuda)')"
+echo "GPU:     $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
+
+# 3) Ensure submodules are present
 git submodule update --init --recursive
 
-# 4) CPU threading settings (helps avoid oversubscription)
+# 4) CPU threading (avoid oversubscription)
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
-export NUMEXPR_NUM_THREADS=$SLURM_CPUS_PER_TASK
-export OMP_PROC_BIND=close
-export OMP_PLACES=cores
 
-# 5) Run a SMALL ReMDM job via your wrapper (prints logs live because of -u)
-# Use srun so stdout is streamed (useful with tail -f).
-srun --cpu-bind=cores --hint=nomultithread python -u scripts/run_remdm.py \
-  --config configs/remdm_hpc_smoke.yaml
+# 5) Create output dirs
+mkdir -p out err results/remdm_smoke
 
+# 6) Run smoke test: 2 batches of ancestral MDLM sampling (baseline, no remasking)
+#    This verifies the checkpoint loads and the pipeline runs end-to-end.
+#    Expected output: perplexity ~26-28 BPB on OpenWebText.
+srun python -u -m mdm_playground.cli.run \
+    --method remdm \
+    --model_id /home/3316152/mdm/checkpoints/mdlm.ckpt \
+    --strategy remdm_conf \
+    --steps 64 \
+    --remdm_num_batches 2 \
+    --out_dir results/remdm_smoke \
+    --seed 42
+
+echo "=========================================="
+echo "Done: $(date)"
+echo "=========================================="

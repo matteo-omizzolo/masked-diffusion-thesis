@@ -18,7 +18,7 @@ remdm:
   parameterization: subs
   sequence_length: 1024
 
-  upstream_checkpoint_path: /ABS/PATH/TO/mdlm.ckpt
+  upstream_checkpoint_path: /home/3316152/mdm/checkpoints/mdlm.ckpt
 
   T: 0
   time_conditioning: false
