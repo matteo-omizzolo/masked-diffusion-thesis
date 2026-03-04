@@ -32,6 +32,14 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["mdm_playground*"]
+
+[tool.pytest.ini_options]
+addopts = "-m 'not integration'"
+markers = [
+  "integration: requires real model checkpoints / internet access (deselected by default)",
+  "smoke: fast, no-download smoke tests",
+]
 
 [tool.black]
 line-length = 100

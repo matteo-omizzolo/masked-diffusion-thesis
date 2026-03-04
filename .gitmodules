@@ -4,3 +4,6 @@
 [submodule "external/PRISM"]
 	path = external/PRISM
 	url = https://github.com/SeunggeunKimkr/PRISM
+[submodule "external/remedi"]
+	path = external/remedi
+	url = https://github.com/maple-research-lab/RemeDi.git
