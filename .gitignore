@@ -17,9 +17,10 @@ venv/
 logs/
 results/
 
-# Data & checkpoints (keep paths/configs, not the files)
+# Data & checkpoints (keep dir structure, not the files)
 data/
-checkpoints/
+checkpoints/*
+!checkpoints/.gitkeep
 
 # Smoke / run outputs
 runs/
