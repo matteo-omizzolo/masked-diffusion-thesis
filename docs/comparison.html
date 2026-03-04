@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="MSc Thesis Literature Review — Bocconi University" />
-  <title>Remasking in Masked Diffusion Language Models: A Comparative Survey of Key Works</title>
+  <title>Remasking in Masked Diffusion Language Models: A Comparative Survey</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -98,7 +98,7 @@
 <body>
 <header id="title-block-header">
 <h1 class="title">Remasking in Masked Diffusion Language Models: A
-Comparative Survey of Key Works</h1>
+Comparative Survey</h1>
 <p class="author">MSc Thesis Literature Review — Bocconi University</p>
 <p class="date">March 2026</p>
 </header>
@@ -110,6 +110,8 @@ id="toc-remasking-in-masked-diffusion-language-models-a-comparative-survey">Rema
 in Masked Diffusion Language Models: A Comparative Survey</a>
 <ul>
 <li><a href="#preface" id="toc-preface">Preface</a></li>
+<li><a href="#part-i-core-works" id="toc-part-i-core-works">Part I —
+Core Works</a></li>
 <li><a href="#md4-and-mdlm-foundational-masked-diffusion-for-text"
 id="toc-md4-and-mdlm-foundational-masked-diffusion-for-text">1. MD4 and
 MDLM — Foundational Masked Diffusion for Text</a></li>
@@ -131,8 +133,27 @@ Entropy-Bounded Adaptive Unmasking</a></li>
 <li><a href="#error-bounds-lavenant-zanella-2025"
 id="toc-error-bounds-lavenant-zanella-2025">7. Error Bounds — Lavenant
 &amp; Zanella (2025)</a></li>
+<li><a href="#part-ii-essential-background-and-context"
+id="toc-part-ii-essential-background-and-context">Part II — Essential
+Background and Context</a></li>
+<li><a href="#d3pm-structured-denoising-diffusion-in-discrete-spaces"
+id="toc-d3pm-structured-denoising-diffusion-in-discrete-spaces">8. D3PM
+— Structured Denoising Diffusion in Discrete Spaces</a></li>
+<li><a href="#sedd-discrete-diffusion-via-score-entropy"
+id="toc-sedd-discrete-diffusion-via-score-entropy">9. SEDD — Discrete
+Diffusion via Score Entropy</a></li>
+<li><a href="#llada-large-language-diffusion-with-masking"
+id="toc-llada-large-language-diffusion-with-masking">10. LLaDA — Large
+Language Diffusion with mAsking</a></li>
+<li><a href="#discrete-flow-matching"
+id="toc-discrete-flow-matching">11. Discrete Flow Matching</a></li>
+<li><a href="#mask-predict-historical-precursor-to-remasking"
+id="toc-mask-predict-historical-precursor-to-remasking">12. Mask-Predict
+— Historical Precursor to Remasking</a></li>
 <li><a href="#cross-paper-comparison"
 id="toc-cross-paper-comparison">Cross-Paper Comparison</a></li>
+<li><a href="#appendix-repository-index"
+id="toc-appendix-repository-index">Appendix: Repository Index</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -140,814 +161,820 @@ id="toc-cross-paper-comparison">Cross-Paper Comparison</a></li>
 id="remasking-in-masked-diffusion-language-models-a-comparative-survey">Remasking
 in Masked Diffusion Language Models: A Comparative Survey</h1>
 <h2 id="preface">Preface</h2>
-<p>This document reviews seven papers directly relevant to the thesis
+<p>This document reviews twelve papers directly relevant to the thesis
 “Principled Remasking in Masked Diffusion Language Models” (Bocconi
-University, supervised by Prof. Giacomo Zanella). The unifying question
-across all papers is: <em>how can we design sampling algorithms for
-masked diffusion models that produce higher-quality text without
-retraining the model?</em> Remasking — re-masking already committed
-tokens and re-predicting them in a richer context — is the central
-mechanism under study. Each paper is reviewed for its core contribution,
-method details, theoretical results, confidence signal, limitations, and
-relevance to the thesis.</p>
+University, supervised by Prof. Giacomo Zanella). Papers 1–7 are the
+core works read first; Papers 8–12 provide essential background and
+broader context. The unifying question across all papers is: <em>how can
+we design sampling algorithms for masked diffusion models that produce
+higher-quality text without retraining the model?</em> Remasking —
+re-masking already committed tokens and re-predicting them in a richer
+context — is the central mechanism under study.</p>
+<hr />
+<h2 id="part-i-core-works">Part I — Core Works</h2>
 <hr />
 <h2 id="md4-and-mdlm-foundational-masked-diffusion-for-text">1. MD4 and
 MDLM — Foundational Masked Diffusion for Text</h2>
 <p><strong>Citations:</strong> Shi et al. (2024), “Simplified and
 Generalized Masked Diffusion for Discrete Data” (MD4); Sahoo et
 al. (2024), “Simple and Effective Masked Diffusion Language Models”
-(MDLM).</p>
+(MDLM). arXiv:2406.07524.</p>
 <h3 id="a.-summary">A. Summary</h3>
 <p>MD4 and MDLM established the modern framework for masked diffusion
 language models (MDMs). Both papers adapt the diffusion paradigm —
-originally developed for continuous data (images, audio) — to discrete
-token sequences. The key insight is that masking is the natural analogue
-of Gaussian noise for categorical variables: the forward process
-gradually replaces tokens with a special [MASK] token, and the reverse
-process learns to unmask them.</p>
-<p>MD4 provides the general theoretical treatment, deriving the evidence
-lower bound (ELBO) for masked diffusion and showing that the optimal
-reverse process factorises over positions given the masked context at
-each noise level. MDLM simplifies the ELBO into a form that is both
-computationally tractable and competitive with autoregressive language
-models, introducing importance-weighted training and demonstrating
-strong performance on OpenWebText at the 130M parameter scale (MDLM-OWT,
-the primary experimental backbone of this thesis).</p>
+originally developed for continuous data — to discrete token sequences.
+The key insight is that masking is the natural analogue of Gaussian
+noise for categorical variables: the forward process gradually replaces
+tokens with a special [MASK] token, and the reverse process learns to
+unmask them.</p>
+<p>MD4 provides the general theoretical treatment, deriving the ELBO for
+masked diffusion. MDLM simplifies the ELBO into a computationally
+tractable form competitive with autoregressive language models,
+introducing importance-weighted training and demonstrating strong
+performance on OpenWebText at the 130M parameter scale (MDLM-OWT).</p>
 <h3 id="b.-method-details">B. Method Details</h3>
-<p><strong>Forward process.</strong> Given a clean token sequence <span
-class="math inline">\(x \in \mathcal{V}^L\)</span> (<span
-class="math inline">\(\mathcal{V}\)</span> = vocabulary, <span
-class="math inline">\(L\)</span> = sequence length), the forward process
-at noise level <span class="math inline">\(t \in [0, 1]\)</span> is:</p>
+<p><strong>Forward process:</strong></p>
 <p><span class="math display">\[q(z_t \mid x) = \prod_i
 \mathrm{Cat}\!\left(z_t^i;\; \alpha_t \cdot e_{x^i} + (1 - \alpha_t)
 \cdot e_m\right)\]</span></p>
-<p>where <span class="math inline">\(\alpha_t \in [0, 1]\)</span> is the
-token retention probability (a monotonically decreasing function of
-<span class="math inline">\(t\)</span>), <span
-class="math inline">\(e_{x^i}\)</span> is the one-hot vector for token
-<span class="math inline">\(x^i\)</span>, <span
-class="math inline">\(e_m\)</span> is the one-hot vector for the mask
-token [M], and positions are treated independently given <span
-class="math inline">\(x\)</span>. This means <span
-class="math inline">\(z_t^i = x^i\)</span> with probability <span
-class="math inline">\(\alpha_t\)</span>, and <span
-class="math inline">\(z_t^i = [\text{M}]\)</span> with probability <span
-class="math inline">\(1 - \alpha_t\)</span>.</p>
-<p><strong>Noise schedule.</strong> MD4 uses a linear schedule <span
-class="math inline">\(\alpha_t = 1 - t\)</span>. MDLM uses a cosine
-schedule, which is smoother and empirically superior:</p>
-<p><span class="math display">\[\alpha_t = \cos^2\!\left(\frac{\pi
-t}{2}\right)\]</span></p>
-<p><strong>Reverse process (inference).</strong> The generative model
-is:</p>
-<p><span class="math display">\[p_\theta(z_s \mid z_t) = \prod_i
-p_\theta(z_s^i \mid z_t)\]</span></p>
-<p>where each factor is obtained by Bayes’ rule from the predicted clean
-token distribution <span class="math inline">\(p_\theta(x \mid
-z_t)\)</span>. For unmasked positions (<span class="math inline">\(z_t^i
-\neq [\text{M}]\)</span>), the reverse process keeps them fixed. For
-masked positions, it samples from:</p>
+<p>where <span class="math inline">\(\alpha_t \in [0,1]\)</span> is the
+token retention probability, <span class="math inline">\(e_m\)</span> is
+the one-hot mask vector, and positions are independent given <span
+class="math inline">\(x\)</span>.</p>
+<p><strong>Noise schedules.</strong> MD4: linear <span
+class="math inline">\(\alpha_t = 1-t\)</span>. MDLM: cosine <span
+class="math inline">\(\alpha_t = \cos^2(\pi t / 2)\)</span>.</p>
+<p><strong>Reverse kernel:</strong></p>
 <p><span class="math display">\[p_\theta(z_s^i \mid z_t) =
 \frac{\alpha_s}{\alpha_t} \cdot \delta(z_s^i = z_t^i) + \left(1 -
 \frac{\alpha_s}{\alpha_t}\right) \cdot p_\theta(x^i \mid
 z_t)\]</span></p>
-<p>This says: with probability <span class="math inline">\(\alpha_s /
-\alpha_t\)</span>, keep the mask; with probability <span
-class="math inline">\(1 - \alpha_s / \alpha_t\)</span>, commit to the
-model’s prediction.</p>
-<p><strong>Training objective.</strong> MDLM simplifies the ELBO to a
-sum of masked token cross-entropy losses, weighted by importance weights
-<span class="math inline">\(w_t\)</span>:</p>
+<p><strong>Training objective (MDLM):</strong></p>
 <p><span class="math display">\[\mathcal{L} = \mathbb{E}_{t, x,
 z_t}\!\left[ w_t \cdot \sum_{\{i:\, z_t^i = [\text{M}]\}} -\log
 p_\theta(x^i \mid z_t) \right]\]</span></p>
-<p><strong>Sampling algorithm.</strong> Standard sampling proceeds with
-<span class="math inline">\(T\)</span> discrete steps (<span
-class="math inline">\(t_T = 1 \to t_0 = 0\)</span>). At each step, the
-fraction <span class="math inline">\((\alpha_{t-1} - \alpha_t)\)</span>
-of currently masked positions is unmasked by sampling from <span
-class="math inline">\(p_\theta(x^i \mid z_t)\)</span>. Positions to
-unmask are chosen uniformly at random among masked positions (in the
-simplest case).</p>
 <h3 id="c.-theoretical-contributions">C. Theoretical Contributions</h3>
-<p>MD4 derives the ELBO for the masked diffusion process and shows it
-decomposes into per-timestep denoising losses. It proves that the
-optimal reverse kernel is given by the formula above. MDLM additionally
-shows that with the cosine schedule the per-step SNR is approximately
-uniform, which justifies the improved empirical performance. Neither
-paper provides a non-asymptotic error bound on sampling quality.</p>
+<p>ELBO derivation for masked diffusion; optimality of the reverse
+kernel via Bayes’ rule; justification of cosine schedule via
+approximately uniform per-step SNR. No non-asymptotic sampling error
+bounds.</p>
 <h3 id="d.-confidence-signal">D. Confidence Signal</h3>
-<p>MD4 and MDLM do not explicitly use a confidence signal during
-inference. The model produces a full categorical distribution <span
-class="math inline">\(p_\theta(x^i \mid z_t)\)</span> for each masked
-position at each step, but the sampling procedure does not inspect these
-probabilities to decide <em>which</em> positions to unmask or
-<em>whether</em> to remask. The per-token logits are an implicit
-confidence signal available “for free” at every forward pass, but
-standard MDM samplers ignore this information.</p>
+<p>None used at inference. The per-token logits <span
+class="math inline">\(p_\theta(x^i \mid z_t)\)</span> are the implicit
+raw material for all downstream confidence signals.</p>
 <h3 id="e.-limitations">E. Limitations</h3>
 <ol type="1">
-<li><strong>Independence assumption.</strong> The reverse process
-factorises over positions, ignoring dependencies between simultaneously
-unmasked tokens. This is the root cause of <span
-class="math inline">\(E_{\text{fact}}\)</span> in the Lavenant &amp;
-Zanella framework.</li>
-<li><strong>No remasking.</strong> Once a token is committed, it is
-never revisited. Errors made early propagate to the end of
-generation.</li>
-<li><strong>Fixed unmasking schedule.</strong> Positions are unmasked
-uniformly at random, ignoring the model’s uncertainty. This is
-suboptimal when some positions are much harder than others.</li>
-<li><strong>No formal sampling error analysis.</strong> The papers prove
-ELBO bounds on training but do not bound the KL between the true data
-distribution and the distribution induced by finite-step sampling.</li>
+<li>Independence assumption induces <span
+class="math inline">\(E_{\text{fact}}\)</span>.</li>
+<li>No remasking — committed errors propagate.</li>
+<li>Uniform random unmasking order.</li>
+<li>No formal sampling error bound.</li>
 </ol>
 <h3 id="f.-relation-to-this-thesis">F. Relation to This Thesis</h3>
 <p>MDLM-OWT is the primary experimental backbone. The independence
-assumption (limitation 1) motivates the entire thesis: remasking is one
-way to correct errors made by this assumption. The per-token probability
-distribution <span class="math inline">\(p_\theta(x^i \mid z_t)\)</span>
-is the raw material from which all confidence signals in this thesis are
-computed. Understanding the MDLM training objective and noise schedule
-is prerequisite for any theoretical extension.</p>
+assumption motivates the thesis; the logit distribution is the source of
+all training-free confidence signals.</p>
 <hr />
 <h2 id="remdm-remasking-via-a-principled-posterior">2. ReMDM — Remasking
 via a Principled Posterior</h2>
-<p><strong>Citation:</strong> Wang et al. (2025), “ReMDM: Improving
-Masked Diffusion Models with Remasking.”</p>
+<p><strong>Citation:</strong> Wang et al. (2025), “Remasking Discrete
+Diffusion Models with Inference-Time Scaling.” arXiv:2503.00307.</p>
 <h3 id="a.-summary-1">A. Summary</h3>
 <p>ReMDM proposes a principled remasking posterior <span
-class="math inline">\(\sigma_t\)</span> that plays a symmetric role to
-the unmasking posterior in standard MDMs. The key contribution is
-showing that remasking committed tokens and re-predicting them in a
-richer (more unmasked) context is not only valid but improves generation
-quality in a provably monotone way as the number of correction steps
-increases. ReMDM requires no retraining: it wraps a pretrained MDM
-(MDLM-OWT) and adds correction passes at inference time.</p>
+class="math inline">\(\sigma_t\)</span> symmetric to the unmasking
+posterior. Remasking committed tokens and re-predicting in richer
+context improves quality monotonically in the number of correction steps
+<span class="math inline">\(R\)</span>, with no retraining required.</p>
 <h3 id="b.-method-details-1">B. Method Details</h3>
-<p><strong>Remasking posterior.</strong> After unmasking a set of
-positions at time <span class="math inline">\(t\)</span>, ReMDM defines
-the remasking posterior <span class="math inline">\(\sigma_t(z&#39; \mid
-z)\)</span> as the probability of transitioning from a partially
-unmasked state <span class="math inline">\(z\)</span> to a more masked
-state <span class="math inline">\(z&#39;\)</span> by re-masking a subset
-of committed tokens. Specifically:</p>
+<p><strong>Remasking posterior:</strong></p>
 <p><span class="math display">\[\sigma_t(z^{\prime i} = [\text{M}] \mid
-z) = 1 - \frac{\alpha_t}{\alpha_0} \quad \text{(for committed positions
-} z^i \neq [\text{M}]\text{)}\]</span></p>
-<p><span class="math display">\[\sigma_t(z^{\prime i} = z^i \mid z) =
-\frac{\alpha_t}{\alpha_0} \quad \text{(for committed
+z) = 1 - \frac{\alpha_t}{\alpha_0} \quad \text{(committed
 positions)}\]</span></p>
-<p>This says: re-mask each committed token independently with
-probability proportional to the current noise level. At high <span
-class="math inline">\(t\)</span> (early in generation), remasking is
-aggressive; at low <span class="math inline">\(t\)</span> (near
-completion), remasking is rare.</p>
 <p><strong>Inference algorithm:</strong></p>
-<pre><code>Input: pretrained model p_θ, steps T, corrections R per step
-z_T = [M, M, ..., M]   (fully masked)
-for t = T, T−1, ..., 1:
-    # Standard unmasking step
-    z_{t−1} ← sample from p_θ(z_{t−1} | z_t)
-    # Correction loop
-    for r = 1, ..., R:
-        z&#39; ← remask committed tokens using σ_t(z&#39; | z_{t−1})
-        z_{t−1} ← sample from p_θ(z_{t−1} | z&#39;)
+<pre><code>z_T = [M,...,M]
+for t = T,...,1:
+    z_{t-1} ← p_θ(z_{t-1} | z_t)       # standard unmask
+    for r = 1,...,R:
+        z&#39; ← remask via σ_t(z&#39;|z_{t-1})  # correction
+        z_{t-1} ← p_θ(z_{t-1} | z&#39;)
 return z_0</code></pre>
-<p>The number of correction passes <span
-class="math inline">\(R\)</span> is an inference-time hyperparameter.
-Increasing <span class="math inline">\(R\)</span> increases compute cost
-linearly but improves quality.</p>
-<p><strong>Remasking schedule.</strong> The <span
-class="math inline">\(\sigma_t\)</span> schedule is calibrated to match
-the noise level at each step, ensuring that the correction pass “undoes”
-approximately the same amount of information as a single forward step
-added.</p>
+<p>Strategies: <code>remdm-conf</code> (confidence-weighted),
+<code>remdm-cap</code>, <code>remdm-rescale</code>,
+<code>remdm-loop</code> (time-windowed).</p>
 <h3 id="c.-theoretical-contributions-1">C. Theoretical
 Contributions</h3>
-<p>Wang et al. prove that the distribution induced by ReMDM converges to
-the true data distribution as <span class="math inline">\(T \to
-\infty\)</span> and <span class="math inline">\(R \to \infty\)</span>,
-under the assumption that <span class="math inline">\(p_\theta\)</span>
-exactly models the true score. More concretely, they show that the KL
-divergence between the ReMDM distribution and the true distribution is
-monotonically non-increasing in <span class="math inline">\(R\)</span>
-(for fixed <span class="math inline">\(T\)</span>). This is the key
-theoretical result: more correction steps cannot hurt in expectation.
-The proof uses the Markov chain convergence properties of the corrected
-reverse process.</p>
+<p>KL is monotonically non-increasing in <span
+class="math inline">\(R\)</span> for fixed <span
+class="math inline">\(T\)</span> (assuming exact score). Proves
+convergence of the corrected process as <span class="math inline">\(T, R
+\to \infty\)</span>.</p>
 <h3 id="d.-confidence-signal-1">D. Confidence Signal</h3>
-<p>ReMDM’s remasking is <em>not</em> confidence-guided in the baseline
-version: <span class="math inline">\(\sigma_t\)</span> masks positions
-uniformly at random (among committed tokens). However, the paper
-discusses a confidence-weighted variant where the remasking probability
-for position <span class="math inline">\(i\)</span> is modulated by:</p>
-<p><span class="math display">\[\text{remask\_prob}^i \propto
-H\!\left(p_\theta(x^i \mid z_t)\right) \quad \text{(entropy of the
-predicted distribution)}\]</span></p>
-<p>Higher-entropy positions are more likely to be remasked. This variant
-is empirically superior but lacks the same theoretical guarantee as the
-uniform variant. Computational cost: one forward pass per correction
-step, same cost as a standard unmasking step.</p>
+<p>Uniform <span class="math inline">\(\sigma_t\)</span> (theoretically
+grounded) or entropy-weighted <span
+class="math inline">\(\text{remask\_prob}^i \propto H(p_\theta(x^i \mid
+z_t))\)</span> (empirically superior, no formal guarantee).</p>
 <h3 id="e.-limitations-1">E. Limitations</h3>
 <ol type="1">
-<li><strong>Uniform remasking ignores information content.</strong> The
-theoretically grounded variant remasks uniformly, which is suboptimal
-when positions have very different uncertainty levels.</li>
-<li><strong>No formal connection to the information profile.</strong>
-The <span class="math inline">\(\sigma_t\)</span> schedule is
-heuristically calibrated to the noise level but is not derived from
-<span class="math inline">\(I(x) = \sum_i H(x^i \mid x^{\setminus
-i})\)</span>.</li>
-<li><strong>Scales with <span class="math inline">\(T \times
-R\)</span>.</strong> Computational cost is <span
-class="math inline">\(O(T \times R)\)</span> forward passes, which can
-be prohibitive for large models.</li>
-<li><strong>No task-specific evaluation.</strong> The paper evaluates on
-language modelling perplexity but does not demonstrate downstream task
-improvements.</li>
+<li>Uniform remasking ignores information content.</li>
+<li>No connection to <span class="math inline">\(I(x)\)</span> or <span
+class="math inline">\(E_{\text{fact}}\)</span>.</li>
+<li>Cost <span class="math inline">\(O(T \times R)\)</span>.</li>
+<li>No task-specific evaluation.</li>
 </ol>
 <h3 id="f.-relation-to-this-thesis-1">F. Relation to This Thesis</h3>
-<p>ReMDM is the closest existing work to the thesis goal. Its <span
-class="math inline">\(\sigma_t\)</span> posterior is a special case of
-the “remasking kernel” defined in the thesis framework (Chapter 3). The
-thesis extends ReMDM in two directions: (1) theoretically, by connecting
-the remasking kernel to the Lavenant &amp; Zanella <span
-class="math inline">\(E_{\text{fact}}\)</span> term and deriving
-<em>confidence-guided</em> remasking as optimal; (2) experimentally, by
-comparing uniform remasking (ReMDM) against confidence-guided variants
-(max-prob, entropy, margin) on a broader set of benchmarks. The thesis
-can additionally show that the confidence-weighted variant of ReMDM
-reduces <span class="math inline">\(E_{\text{fact}}\)</span> faster than
-the uniform variant, providing a principled explanation for its
-empirical superiority.</p>
+<p>The <span class="math inline">\(\sigma_t\)</span> posterior is a
+special case of the thesis’s remasking kernel. The thesis extends ReMDM
+by connecting it to <span class="math inline">\(E_{\text{fact}}\)</span>
+and deriving confidence-guided remasking as optimal.</p>
 <hr />
 <h2 id="remedi-learned-dual-stream-remasking-with-rl">3. RemeDi —
 Learned Dual-Stream Remasking with RL</h2>
-<p><strong>Citation:</strong> Huang et al. (2025), “RemeDi:
-Reinforcement Learning for Masked Diffusion Models.”</p>
+<p><strong>Citation:</strong> Huang et al. (2025), “Don’t Settle Too
+Early: Self-Reflective Remasking for Diffusion Language Models.”
+arXiv:2509.23653.</p>
 <h3 id="a.-summary-2">A. Summary</h3>
-<p>RemeDi introduces a dual-stream architecture that separates the token
-prediction task (what to predict) from the unmasking policy task (when
-to unmask). A standard transformer backbone (Token Prediction Stream,
-TPS) predicts token identities. A second lightweight stream (Unmasking
-Policy Stream, UPS) is trained via binary cross-entropy and then refined
-with GRPO reinforcement learning to decide which tokens to unmask and
-which to remask. RemeDi learns a policy rather than using a heuristic
-confidence signal, making it the most powerful but also the most
-expensive approach in this landscape.</p>
+<p>RemeDi introduces a dual-stream architecture separating token
+prediction (TPS) from unmasking policy (UPS). UPS is trained via BCE
+then refined with GRPO RL to learn globally optimal unmask/remask
+decisions. Inference-only code and 9B HuggingFace checkpoints
+(RemeDi-RL, RemeDi-Instruct) are publicly available.</p>
 <h3 id="b.-method-details-2">B. Method Details</h3>
-<p><strong>Architecture.</strong> TPS is a standard transformer decoder
-operating on the partially masked sequence. UPS is a lightweight MLP
-head on top of TPS hidden states, producing per-token binary logits:</p>
-<p><span class="math display">\[\psi^i = \text{UPS}(h^i) \in [0,
-1]\]</span></p>
-<p>where <span class="math inline">\(h^i\)</span> is the TPS hidden
-state at position <span class="math inline">\(i\)</span>, and <span
-class="math inline">\(\psi^i\)</span> is the probability that token
-<span class="math inline">\(i\)</span> should be unmasked (committed) at
-this step. Note: <span class="math inline">\(\psi^i\)</span> is
-<em>not</em> the same as the token prediction probability <span
-class="math inline">\(p_\theta(x^i \mid z_t)\)</span>; it is a separate
-signal about <em>when</em> to commit, not <em>what</em> to predict.</p>
-<p><strong>Training procedure (three stages):</strong></p>
-<p><em>Stage 1 — TPS pre-training:</em> standard MDM ELBO training on a
-large corpus. This produces a competent token predictor identical to
-MDLM.</p>
-<p><em>Stage 2 — UPS supervised pre-training:</em> train UPS with BCE
-loss to predict whether each token’s current prediction matches the
-ground truth:</p>
-<p><span class="math display">\[\mathcal{L}_{\text{UPS}} =
--\mathbb{E}\!\left[\sum_i \left[y^i \log \psi^i + (1 - y^i)\log(1 -
-\psi^i)\right]\right]\]</span></p>
-<p>where <span class="math inline">\(y^i = \mathbf{1}[p_\theta(x^i \mid
-z_t) = x^i]\)</span> (1 if the current best prediction is correct, 0
-otherwise). This stage gives UPS a calibrated confidence signal
-correlated with actual prediction accuracy.</p>
-<p><em>Stage 3 — GRPO RL fine-tuning:</em> UPS is refined using Group
-Relative Policy Optimization with a reward signal based on final
-generation quality (e.g., perplexity of completed sequences, or task
-accuracy). This teaches UPS to make globally optimal unmask/remask
-decisions, not just locally greedy ones.</p>
-<p><strong>Inference algorithm:</strong></p>
-<pre><code>z_T = [M, M, ..., M]
-for t = T, T−1, ..., 1:
-    (p^i, ψ^i) ← TPS+UPS(z_t)   for all i
-    unmask_set ← {i : z_t^i = [M] and ψ^i &gt; τ_unmask}
-    z_t^i ← argmax p^i   for i in unmask_set
-    remask_set ← {i : z_t^i ≠ [M] and ψ^i &lt; τ_remask}
-    z_t^i ← [M]   for i in remask_set
-return z_0</code></pre>
-<p><strong>Confidence signal stored at unmasking time.</strong> When
-position <span class="math inline">\(i\)</span> is unmasked at step
-<span class="math inline">\(t^*\)</span>, RemeDi stores <span
-class="math inline">\(\psi^i(t^*)\)</span> as the “decoding probability”
-of that token. This stored value is used in subsequent steps: if <span
-class="math inline">\(\psi^i\)</span> drops significantly below <span
-class="math inline">\(\psi^i(t^*)\)</span>, the token is a candidate for
-remasking.</p>
+<p><strong>Architecture:</strong> UPS produces per-token scores <span
+class="math inline">\(\psi^i \in [0,1]\)</span> from TPS hidden states
+<span class="math inline">\(h^i\)</span> via a lightweight MLP.</p>
+<p><strong>Training stages:</strong> (1) TPS pre-train (ELBO), (2) UPS
+BCE pre-train on <span class="math inline">\(y^i = \mathbf{1}[\hat{y}^i
+= x^i]\)</span>, (3) GRPO RL fine-tune on generation quality reward.</p>
+<p><strong>Inference:</strong></p>
+<pre><code>for t = T,...,1:
+    (p^i, ψ^i) ← TPS+UPS(z_t)
+    unmask {i: z_t^i=[M], ψ^i &gt; τ_unmask}
+    remask  {i: z_t^i≠[M], ψ^i &lt; τ_remask}</code></pre>
 <h3 id="c.-theoretical-contributions-2">C. Theoretical
 Contributions</h3>
-<p>RemeDi does not provide formal sampling error bounds. The theoretical
-justification for UPS is that the BCE-trained <span
-class="math inline">\(\psi^i\)</span> approximates the true conditional
-probability <span class="math inline">\(P(\text{token } i \text{ is
-correctly
-predicted} \mid \text{current context})\)</span>, analogous to the PRISM
-quality head. The paper proves that the UPS BCE minimiser converges to
-the true conditional (same argument as PRISM), but does not connect this
-to any information-theoretic property of the sequence.</p>
+<p>UPS BCE minimiser converges to <span
+class="math inline">\(P(\hat{y}^i = x^i \mid \text{context})\)</span>
+(standard proper-scoring-rule argument). No sampling error bound.</p>
 <h3 id="d.-confidence-signal-2">D. Confidence Signal</h3>
-<p><strong>Signal:</strong> <span class="math inline">\(\psi^i \in [0,
-1]\)</span>, the UPS output — a learned estimate of <span
-class="math inline">\(P(\text{prediction at position } i \text{ is
-correct})\)</span>.</p>
-<p><strong>Computation:</strong> one additional MLP forward pass per
-token per step (cheap given that TPS already computed <span
-class="math inline">\(h^i\)</span>). Total overhead: negligible compared
-to TPS.</p>
-<p><strong>Key advantage over heuristic signals:</strong> <span
-class="math inline">\(\psi^i\)</span> is trained to be calibrated across
-steps and contexts, not just at a single noise level.</p>
-<p><strong>Key disadvantage:</strong> requires UPS training; not
-available for arbitrary pretrained MDMs.</p>
+<p>Learned <span class="math inline">\(\psi^i\)</span> — calibrated
+across steps and noise levels. Free overhead (MLP on existing hidden
+states). Not portable to other models.</p>
 <h3 id="e.-limitations-2">E. Limitations</h3>
 <ol type="1">
-<li><strong>Requires fine-tuning.</strong> UPS must be trained on the
-same model family as TPS.</li>
-<li><strong>RL training instability.</strong> GRPO requires careful
-hyperparameter tuning and can be unstable, especially for the 9B
-parameter models.</li>
-<li><strong>No connection to optimal sampling theory.</strong> The
-learned policy is not shown to be optimal in any theoretical sense.</li>
-<li><strong>Evaluation scope.</strong> The paper focuses on
-instruction-following tasks; unconditional text generation quality is
-less explored.</li>
+<li>Requires fine-tuning.</li>
+<li>GRPO instability at 9B scale.</li>
+<li>No connection to optimal sampling theory.</li>
+<li>Instruction-focused evaluation only.</li>
 </ol>
 <h3 id="f.-relation-to-this-thesis-2">F. Relation to This Thesis</h3>
-<p>RemeDi provides the strongest empirical baseline for remasking. The
-thesis can use RemeDi-RL and RemeDi-Instruct as upper-bound comparators:
-if training-free confidence signals (max-prob, entropy, margin) approach
-the quality of the learned UPS, that is strong evidence that heuristic
-signals are sufficient proxies for the true conditional. Theoretically,
-RemeDi motivates the study of what properties a confidence signal must
-have to be useful for remasking — the thesis answers this for
-training-free signals through the lens of <span
-class="math inline">\(E_{\text{fact}}\)</span> reduction.</p>
+<p>RemeDi is the upper-bound fine-tuned comparator. The thesis asks: how
+close do training-free signals get to the learned UPS? Theoretically,
+RemeDi motivates the “consistent estimator” assumption in the thesis’s
+main theorem.</p>
 <hr />
 <h2 id="prism-plug-and-play-quality-head-for-mdms">4. PRISM —
 Plug-and-Play Quality Head for MDMs</h2>
-<p><strong>Citation:</strong> Kim et al. (2025), “PRISM: A Plug-and-Play
-Quality Head for Masked Diffusion Language Models.”</p>
+<p><strong>Citation:</strong> Kim et al. (2025), “Fine-Tuning Masked
+Diffusion for Provable Self-Correction.” arXiv:2510.01384.</p>
 <h3 id="a.-summary-3">A. Summary</h3>
-<p>PRISM trains a lightweight quality head <span
-class="math inline">\(g_\phi\)</span> on top of a frozen pretrained MDM
-(LLaDA-8B) to predict, for each token position, the probability that the
-model’s current prediction is correct. This quality head is trained with
-binary cross-entropy and can be used at inference time to guide
-unmasking decisions without modifying the base model. PRISM provides a
-formal theoretical guarantee: the BCE minimiser converges to the true
-conditional accuracy <span class="math inline">\(P(x^i_{\text{pred}} =
-x^i \mid \text{context})\)</span>, which is a principled confidence
-signal for remasking.</p>
+<p>PRISM trains a lightweight BCE quality head <span
+class="math inline">\(g_\phi\)</span> on frozen MDM hidden states to
+predict per-token prediction accuracy. The BCE minimiser converges to
+the true conditional accuracy <span class="math inline">\(P(x^i =
+\hat{y}^i \mid y \oplus m^i)\)</span>, giving a theoretically grounded
+confidence signal. Evaluated on Sudoku, MDLM-OWT (170M), and LLaDA-8B
+(MBPP code generation).</p>
 <h3 id="b.-method-details-3">B. Method Details</h3>
-<p><strong>Quality head architecture.</strong> <span
-class="math inline">\(g_\phi\)</span> is a small MLP (typically 2–3
-layers) applied to the frozen hidden states <span
-class="math inline">\(h^i\)</span> of the base MDM:</p>
 <p><span class="math display">\[g_\phi(y)^i =
-\sigma\!\left(\text{MLP}_\phi(h^i)\right) \in [0, 1]\]</span></p>
-<p>where <span class="math inline">\(y = (y^1, \ldots, y^L)\)</span> is
-the partially masked sequence and <span
-class="math inline">\(h^i\)</span> is the hidden state at position <span
-class="math inline">\(i\)</span>.</p>
-<p><strong>Training objective.</strong> For a training sequence <span
-class="math inline">\(x\)</span> and a randomly masked version <span
-class="math inline">\(y\)</span>:</p>
+\sigma(\text{MLP}_\phi(h^i)) \in [0,1]\]</span></p>
 <p><span class="math display">\[\mathcal{L}(\phi) =
--\mathbb{E}_{x,y}\!\left[\sum_{\{i:\, y^i \neq [\text{M}]\}}
-\left[\mathbf{1}[x^i = \hat{y}^i] \log g_\phi(y)^i + \mathbf{1}[x^i \neq
-\hat{y}^i] \log(1 - g_\phi(y)^i)\right]\right]\]</span></p>
-<p>where <span class="math inline">\(\hat{y}^i = \arg\max p_\theta(x^i
-\mid y)\)</span> is the base model’s top-1 prediction.</p>
-<p><strong>Theoretical guarantee.</strong></p>
-<p><em>Proposition.</em> Under suitable regularity conditions, the
-minimiser <span class="math inline">\(\phi^*\)</span> of <span
-class="math inline">\(\mathcal{L}(\phi)\)</span> over the class of
-measurable functions satisfies:</p>
-<p><span class="math display">\[g_{\phi^*}(y)^i = P\!\left(x^i =
-\hat{y}^i \;\middle|\; y \oplus m^i\right)\]</span></p>
-<p>where <span class="math inline">\(y \oplus m^i\)</span> denotes the
-sequence <span class="math inline">\(y\)</span> with position <span
-class="math inline">\(i\)</span> additionally masked. This means the
-optimal quality head provides the Bayes-optimal estimate of whether the
-current prediction at position <span class="math inline">\(i\)</span> is
-correct, given all other available information.</p>
-<p><strong>Inference algorithm:</strong></p>
-<pre><code>z_T = [M, M, ..., M]
-for t = T, T−1, ..., 1:
-    q^i ← p_θ(x^i | z_t)   for all masked i   (base model)
-    g^i ← g_φ(z_t)^i        for all i          (quality head)
-    unmask_set ← top-k masked positions by g^i
-    z_t^i ← argmax q^i   for i in unmask_set
-    # Optional remasking
-    remask_set ← {i : z_t^i ≠ [M] and g^i &lt; τ}
-    z_t^i ← [M]   for i in remask_set
-return z_0</code></pre>
+-\mathbb{E}\!\left[\sum_i \mathbf{1}[x^i=\hat{y}^i]\log g_\phi^i +
+\mathbf{1}[x^i\neq\hat{y}^i]\log(1-g_\phi^i)\right]\]</span></p>
+<p><strong>Guarantee:</strong> <span class="math inline">\(g_{\phi^*}^i
+= P(x^i = \hat{y}^i \mid y \oplus m^i)\)</span>.</p>
+<p><strong>Inference:</strong> unmask/remask guided by <span
+class="math inline">\(g_\phi^i\)</span> scores.</p>
 <h3 id="c.-theoretical-contributions-3">C. Theoretical
 Contributions</h3>
-<p>PRISM’s main theoretical contribution is the Bayes-optimality proof
-for the BCE minimiser. This is significant because it gives a principled
-interpretation of the quality head: it is not just a heuristic, but the
-best possible confidence signal given the information available at each
-step. The proof is a standard result in probability theory (BCE is a
-proper scoring rule), adapted to the MDM setting.</p>
+<p>Bayes-optimality proof for the BCE minimiser (proper scoring rule
+argument). First formal guarantee on quality-signal calibration for
+MDMs.</p>
 <h3 id="d.-confidence-signal-3">D. Confidence Signal</h3>
-<p><strong>Signal:</strong> <span class="math inline">\(g_\phi(y)^i \in
-[0, 1]\)</span> — estimated probability that the base model’s top-1
-prediction at position <span class="math inline">\(i\)</span> is
-correct.</p>
-<p><strong>Computation:</strong> one MLP forward pass per position per
-step (negligible for 9B-parameter bases).</p>
-<p><strong>Key property:</strong> <span
-class="math inline">\(g_\phi\)</span> is trained to be calibrated across
-noise levels, accounting for the difficulty of position <span
-class="math inline">\(i\)</span> at the current masking rate. This makes
-it strictly more principled than max-prob or entropy from raw
-logits.</p>
-<p><strong>Key limitation:</strong> requires training a separate head
-for each base model.</p>
+<p><span class="math inline">\(g_\phi^i \in [0,1]\)</span> —
+Bayes-optimal calibrated quality estimate. One small MLP pass per step
+(negligible overhead). Requires training.</p>
 <h3 id="e.-limitations-3">E. Limitations</h3>
 <ol type="1">
-<li><strong>Requires training.</strong> A new <span
-class="math inline">\(g_\phi\)</span> must be trained for each base
-model.</li>
-<li><strong>Adapter not public.</strong> As of March 2026, the PRISM
-adapter for LLaDA-8B is available only to lab collaborators.</li>
-<li><strong>Out-of-distribution calibration.</strong> <span
-class="math inline">\(g_\phi\)</span> is trained on a specific corpus;
-calibration may degrade out of distribution.</li>
-<li><strong>No sampling quality guarantee.</strong> The optimality
-result is about calibration of <span
-class="math inline">\(g_\phi\)</span>, not about the quality of samples
-generated using <span class="math inline">\(g_\phi\)</span> as a
-guide.</li>
+<li>Training required for each base model.</li>
+<li>LLaDA-8B adapter not publicly released (as of early 2026).</li>
+<li>No sampling quality guarantee (only calibration guaranteed).</li>
+<li>OOD calibration untested.</li>
 </ol>
 <h3 id="f.-relation-to-this-thesis-3">F. Relation to This Thesis</h3>
-<p>PRISM’s theoretical guarantee motivates the thesis’s analysis of
-training-free confidence signals. The thesis asks: if we cannot train
-<span class="math inline">\(g_\phi\)</span> (because we only have a
-pretrained MDM), which training-free signal (max-prob, entropy, margin)
-best approximates <span class="math inline">\(P(x^i = \hat{y}^i \mid
-\text{context})\)</span>? PRISM’s BCE convergence result also provides
-the formal justification for the thesis’s “consistent estimator”
-assumption in the main theorem: a confidence signal <span
-class="math inline">\(c^i\)</span> is consistent if <span
-class="math inline">\(\mathbb{E}[c^i \mid x] \to P(x^i = \hat{y}^i \mid
-\text{context})\)</span> as the model class grows.</p>
+<p>PRISM’s convergence result formally justifies the thesis’s
+“consistent estimator” assumption. The thesis is the training-free
+analogue: under what conditions do max-prob/entropy/margin approximate
+<span class="math inline">\(P(x^i = \hat{y}^i \mid
+\text{context})\)</span> sufficiently well?</p>
 <hr />
 <h2 id="informed-correctors-mcmc-based-token-correction">5. Informed
 Correctors — MCMC-Based Token Correction</h2>
 <p><strong>Citation:</strong> Zhao et al. (2024/2025), “Informed
 Correctors for Discrete Diffusion Models.”</p>
 <h3 id="a.-summary-4">A. Summary</h3>
-<p>Informed Correctors applies Markov Chain Monte Carlo correction steps
-to discrete diffusion models, including MDMs. The key idea is to run
-Gibbs-like updates that resample individual token positions conditioned
-on all other positions, using the per-token marginal log-likelihood as
-the acceptance criterion. The paper provides a theoretical mixing
-analysis showing that the Gibbs corrector converges exponentially fast
-to the target distribution, and that confidence-guided corrections
-converge faster than uniform ones.</p>
+<p>Gibbs-like MCMC correction steps for discrete diffusion, using the
+per-token marginal log-likelihood as the confidence signal. Proves
+exponential KL reduction in the number of correction steps, and that
+confidence-guided corrections converge faster than uniform ones.
+Requires a hollow transformer for efficient computation.</p>
 <h3 id="b.-method-details-4">B. Method Details</h3>
-<p><strong>Gibbs corrector.</strong> At each correction step, a position
-<span class="math inline">\(d\)</span> is selected (randomly or by
-confidence) and resampled:</p>
-<p><span class="math display">\[x^d_{\text{new}} \sim q_t(x^d \mid
-x^{\setminus d})\]</span></p>
-<p>This is exact Gibbs sampling from the MDM’s joint distribution at
-noise level <span class="math inline">\(t\)</span>. Repeated application
-converges to <span class="math inline">\(q_t(x)\)</span>.</p>
-<p><strong>Informed corrector (confidence-guided variant).</strong>
-Select position <span class="math inline">\(d\)</span> with probability
-proportional to the “surprise” at that position:</p>
-<p><span class="math display">\[p(\text{select } d) \propto
-\exp\!\left(-\beta \cdot \log q_t(x^d \mid x^{\setminus
-d})\right)\]</span></p>
-<p>for temperature <span class="math inline">\(\beta &gt; 0\)</span>.
-High surprise (low log-probability) → high selection probability → more
-likely to be corrected.</p>
-<p><strong>Hollow transformer.</strong> Computing <span
-class="math inline">\(q_t(x^d \mid x^{\setminus d})\)</span> exactly
-requires a forward pass with position <span
-class="math inline">\(d\)</span> masked. For efficiency, the paper
-proposes the <em>hollow transformer</em>: a transformer with
-diagonal-masked attention that computes all per-position conditionals in
-a single forward pass. This architecture is not available in standard
-pretrained MDMs.</p>
-<p><strong>Full inference algorithm:</strong></p>
-<pre><code>z_T = [M, M, ..., M]
-# Standard unmasking to z_0
-z_0 ← standard MDM sampler(z_T)
-# Correction loop
-for r = 1, ..., R:
-    for each position d:
-        log_q_d ← log q_0(x^d | x^{∖d})   (hollow transformer)
-        if −log_q_d &gt; threshold:
-            x^d_new ~ q_0(x^d | x^{∖d})
-            x^d ← x^d_new
-return x</code></pre>
+<p><strong>Gibbs corrector:</strong> resample <span
+class="math inline">\(x^d \sim q_t(x^d \mid x^{\setminus
+d})\)</span>.</p>
+<p><strong>Informed variant:</strong> select <span
+class="math inline">\(d\)</span> proportional to <span
+class="math inline">\(\exp(-\beta \log q_t(x^d \mid x^{\setminus
+d}))\)</span> (high surprise first).</p>
+<p><strong>Hollow transformer:</strong> diagonal-masked attention
+computes all per-position conditionals in one forward pass (<span
+class="math inline">\(O(1)\)</span> cost vs. <span
+class="math inline">\(O(L)\)</span>).</p>
 <h3 id="c.-theoretical-contributions-4">C. Theoretical
 Contributions</h3>
-<p><strong>Mixing time bound.</strong> Theorem 3 of Zhao et al. states
-that the Gibbs corrector with <span class="math inline">\(R\)</span>
-steps satisfies:</p>
-<p><span class="math display">\[\mathrm{KL}\!\left(q_0(x) \;\|\;
-p_R(x)\right) \leq e^{-R\lambda} \cdot \mathrm{KL}\!\left(q_0(x) \;\|\;
-p_0(x)\right)\]</span></p>
-<p>where <span class="math inline">\(\lambda &gt; 0\)</span> is the
-spectral gap of the Gibbs chain. This gives a formal guarantee that
-correction improves quality exponentially in <span
-class="math inline">\(R\)</span>.</p>
-<p><strong>Informed corrector acceleration.</strong> The paper proves
-that the informed (confidence-guided) corrector achieves the same KL
-reduction as the uniform corrector but with fewer steps: the effective
-spectral gap satisfies <span
-class="math inline">\(\lambda_{\text{informed}} \geq
-\lambda_{\text{uniform}}\)</span>, with equality only when all positions
-have equal surprise. Concentrating corrections on high-surprise
-positions is strictly more efficient than uniform resampling.</p>
+<p>Mixing time bound: <span class="math display">\[\mathrm{KL}(q_0 \|
+p_R) \leq e^{-R\lambda} \cdot \mathrm{KL}(q_0 \| p_0)\]</span></p>
+<p>Proof that <span class="math inline">\(\lambda_{\text{informed}} \geq
+\lambda_{\text{uniform}}\)</span>, i.e. confidence-guided correction is
+strictly more efficient.</p>
 <h3 id="d.-confidence-signal-4">D. Confidence Signal</h3>
-<p><strong>Signal:</strong> <span class="math inline">\(\log q_t(x^d
-\mid x^{\setminus d})\)</span> — the per-position conditional
-log-probability under the MDM at noise level <span
-class="math inline">\(t\)</span>.</p>
-<p><strong>Computation:</strong> one forward pass per position (naively
-<span class="math inline">\(O(L)\)</span> forward passes) or one pass
-with a hollow transformer (<span class="math inline">\(O(1)\)</span>
-passes). Without a hollow transformer, this signal is very expensive to
-compute exactly.</p>
+<p><span class="math inline">\(\log q_t(x^d \mid x^{\setminus
+d})\)</span> — exact per-position conditional. <span
+class="math inline">\(O(L)\)</span> forward passes without hollow
+transformer; <span class="math inline">\(O(1)\)</span> with it.</p>
 <h3 id="e.-limitations-4">E. Limitations</h3>
 <ol type="1">
-<li><strong>Requires hollow transformer.</strong> Not applicable to
-standard pretrained MDMs (MDLM-OWT, LLaDA-8B) without retraining.</li>
-<li><strong>Post-hoc correction only.</strong> The corrector is applied
-after standard MDM sampling, not integrated into the denoising
-loop.</li>
-<li><strong>Mixing time depends on the spectral gap.</strong> Can be
-slow for sequences with strong long-range dependencies.</li>
-<li><strong>No connection to the information profile.</strong> The
-correction procedure is motivated by MCMC theory but not connected to
-<span class="math inline">\(I(x)\)</span> or <span
+<li>Requires hollow transformer (not compatible with standard
+MDMs).</li>
+<li>Post-hoc only — does not integrate into denoising loop.</li>
+<li>Spectral gap <span class="math inline">\(\lambda\)</span> can be
+small for long-range dependencies.</li>
+<li>No connection to information profile <span
+class="math inline">\(I(x)\)</span> or <span
 class="math inline">\(E_{\text{fact}}\)</span>.</li>
 </ol>
 <h3 id="f.-relation-to-this-thesis-4">F. Relation to This Thesis</h3>
-<p>The Informed Correctors paper provides the strongest theoretical
-framework for correction-based remasking. Its key result — that
-confidence-guided correction converges faster than uniform correction —
-is a specialised version of the thesis’s main claim, but in a different
-theoretical setting (MCMC mixing vs. Riemann approximation error). The
-thesis can cite this as corroborating evidence from a complementary
-angle.</p>
-<p>The hollow transformer requirement is a practical limitation the
-thesis explicitly avoids: all training-free strategies are designed to
-work with any pretrained MDM using only forward-pass logits, without
-architectural modifications.</p>
+<p>Provides MCMC-theoretic corroboration for the thesis’s main claim.
+The thesis avoids the hollow transformer requirement by using only
+forward-pass logits — a key design constraint that distinguishes it from
+Informed Correctors.</p>
 <hr />
 <h2 id="eb-sampler-entropy-bounded-adaptive-unmasking">6. EB-Sampler —
 Entropy-Bounded Adaptive Unmasking</h2>
 <p><strong>Citation:</strong> Ben-Hamu et al. (2025), “EB-Sampler:
 Entropy-Bounded Sampling for Masked Diffusion Models.”</p>
 <h3 id="a.-summary-5">A. Summary</h3>
-<p>The EB-Sampler adapts the number of tokens unmasked at each step
-based on the <em>information content</em> of the positions being
-unmasked, targeting a fixed entropy budget per step. This is the most
-direct existing connection to the information profile <span
-class="math inline">\(I(x)\)</span> in the literature. The key insight
-is that standard MDM samplers with fixed step counts waste compute: they
-either unmask too many easy tokens (wasting steps) or too many hard
-tokens (making large errors) in a single step. The EB-Sampler achieves
-2–3× speedup over fixed-step baselines at the same quality level, or
-significantly better quality at the same step count.</p>
+<p>Adapts the number of tokens unmasked per step to a fixed entropy
+budget <span class="math inline">\(\varepsilon\)</span>, consuming
+information at a constant rate. Achieves 2–3× speedup or better quality
+at fixed compute. Most direct connection to the Lavenant &amp; Zanella
+<span class="math inline">\(E_{\text{fact}}\)</span> framework among
+existing works.</p>
 <h3 id="b.-method-details-5">B. Method Details</h3>
-<p><strong>Information profile.</strong> For a sequence <span
-class="math inline">\(x\)</span>, the information profile is:</p>
-<p><span class="math display">\[I^i(x) = H(x^i \mid x^{\setminus i})
-\quad \text{(conditional entropy at position } i\text{)}\]</span></p>
-<p>with total information <span class="math inline">\(I(x) = \sum_i
-I^i(x)\)</span>. Since <span class="math inline">\(I^i(x)\)</span>
-requires knowing <span class="math inline">\(x\)</span>, it is
-approximated by:</p>
-<p><span class="math display">\[\hat{I}^i(z_t) = H\!\left(p_\theta(x^i
-\mid z_t)\right) \quad \text{(predicted entropy)}\]</span></p>
-<p><strong>Entropy budget.</strong> At each step, the EB-Sampler unmasks
-only as many tokens as needed to consume a fixed entropy budget <span
-class="math inline">\(\varepsilon\)</span>:</p>
-<p><span class="math display">\[\text{unmask\_set}_t = \arg\min_{S:\,
-\sum_{i \in S} \hat{I}^i(z_t) \geq \varepsilon} |S|\]</span></p>
-<p>Solved by a greedy algorithm: sort masked positions by predicted
-entropy (ascending), unmask until budget <span
+<p>Unmask positions greedily in ascending order of predicted entropy
+<span class="math inline">\(\hat{I}^i = H(p_\theta(x^i \mid
+z_t))\)</span> until budget <span
 class="math inline">\(\varepsilon\)</span> is consumed.</p>
-<p><strong>Algorithm:</strong></p>
-<pre><code>z_T = [M, M, ..., M]
-while any z_t^i = [M]:
-    Î^i ← H(p_θ(x^i | z_t))   for all masked i
-    sorted_i ← argsort(Î, ascending)
-    budget = ε;   unmask_set = {}
-    for i in sorted_i:
-        if budget ≥ Î^i:
-            unmask_set ← unmask_set ∪ {i};   budget ← budget − Î^i
-        else: break
-    z ← unmask tokens in unmask_set
-return z</code></pre>
-<h3 id="c.-theoretical-contributions-5">C. Theoretical
-Contributions</h3>
-<p>The EB-Sampler is directly motivated by the Lavenant &amp; Zanella
-framework. Theorem 2 of Ben-Hamu et al. states: with entropy budget
-<span class="math inline">\(\varepsilon\)</span> per step,</p>
 <p><span class="math display">\[E_{\text{fact}}(\text{EB}) \leq
 \varepsilon \cdot \max_i \hat{I}^i\]</span></p>
-<p>The paper also proves that the EB-Sampler is optimal among all
-deterministic unmasking strategies: no deterministic schedule achieves a
-lower <span class="math inline">\(E_{\text{fact}}\)</span> bound with
-the same total number of forward passes. Crucially, this optimality
-applies to <em>unmasking only</em> — remasking is not considered.</p>
+<h3 id="c.-theoretical-contributions-5">C. Theoretical
+Contributions</h3>
+<p>Proves EB-Sampler minimises <span
+class="math inline">\(E_{\text{fact}}\)</span> among all deterministic
+unmasking strategies at equal forward-pass budget. Optimality only for
+unmasking — remasking not considered.</p>
 <h3 id="d.-confidence-signal-5">D. Confidence Signal</h3>
-<p><strong>Signal:</strong> <span class="math inline">\(\hat{I}^i =
-H(p_\theta(x^i \mid z_t))\)</span> — the model’s predicted entropy at
-each masked position.</p>
-<p><strong>Computation:</strong> free — entropy is computed from logits
-returned by the standard forward pass.</p>
-<p><strong>Role:</strong> entropy determines which positions to unmask
-(lowest entropy first) and how many to unmask (until budget <span
-class="math inline">\(\varepsilon\)</span> is consumed).</p>
+<p><span class="math inline">\(\hat{I}^i = H(p_\theta(x^i \mid
+z_t))\)</span> — free from forward-pass logits.</p>
 <h3 id="e.-limitations-5">E. Limitations</h3>
 <ol type="1">
-<li><strong>Unmasking only.</strong> The EB-Sampler does not consider
-remasking; its optimality result does not extend to the correction
-direction.</li>
-<li><strong>Approximation quality.</strong> The bound depends on how
-well <span class="math inline">\(\hat{I}^i\)</span> approximates <span
-class="math inline">\(I^i(x)\)</span>.</li>
-<li><strong>Variable step count.</strong> Adaptive step count
-complicates comparison against fixed-budget baselines.</li>
-<li><strong>No error correction.</strong> Errors made during unmasking
-are not corrected.</li>
+<li>Unmasking only; no remasking.</li>
+<li><span class="math inline">\(\hat{I}^i\)</span> is a noisy proxy for
+true <span class="math inline">\(I^i(x)\)</span>.</li>
+<li>Variable step count complicates benchmarking.</li>
 </ol>
 <h3 id="f.-relation-to-this-thesis-5">F. Relation to This Thesis</h3>
-<p>The EB-Sampler is the closest existing work to the
-<em>theoretical</em> goals of the thesis in the <em>unmasking</em>
-direction. The thesis’s contribution in the <em>remasking</em> direction
-is precisely its analogue: derive a principled,
-information-theoretically motivated strategy for deciding which
-committed tokens to remask. The thesis frames this as:</p>
-<blockquote>
-<p><em>EB-Sampler optimises the unmasking schedule; the thesis optimises
-the remasking schedule.</em></p>
-</blockquote>
-<p>The bound <span class="math inline">\(E_{\text{fact}}(\text{EB}) \leq
-\varepsilon \cdot \max_i
-\hat{I}^i\)</span> is a key reference. The thesis should derive a
-corresponding bound for the corrected process (unmasking + remasking)
-and show that remasking reduces the effective <span
-class="math inline">\(E_{\text{fact}}\)</span> relative to the
-EB-Sampler baseline.</p>
+<p>The unmasking analogue of the thesis’s remasking contribution:
+EB-Sampler : optimal unmasking ↔︎ Thesis : optimal remasking. The thesis
+derives the remasking analogue of the <span
+class="math inline">\(E_{\text{fact}}\)</span> bound and shows
+confidence-guided remasking reduces it.</p>
 <hr />
 <h2 id="error-bounds-lavenant-zanella-2025">7. Error Bounds — Lavenant
 &amp; Zanella (2025)</h2>
 <p><strong>Citation:</strong> Lavenant &amp; Zanella (2025), “Sampling
 Error Analysis for Masked Diffusion Models.”</p>
 <h3 id="a.-summary-6">A. Summary</h3>
-<p>This paper provides the first rigorous non-asymptotic analysis of the
-sampling error of MDM algorithms. It decomposes the KL divergence
-between the true data distribution and the distribution induced by a
-finite-step MDM sampler into two terms: a learning error <span
-class="math inline">\(E_{\text{learn}}\)</span> (due to imperfect model
-training) and a factorization error <span
-class="math inline">\(E_{\text{fact}}\)</span> (due to simultaneous
-unmasking of multiple tokens). <span
-class="math inline">\(E_{\text{fact}}\)</span> is a Riemann
-approximation error of the sequence’s information profile, and the paper
-derives the optimal unmasking schedule that minimises <span
-class="math inline">\(E_{\text{fact}}\)</span>. This is the theoretical
-foundation for the entire thesis.</p>
+<p>First rigorous non-asymptotic KL bound for MDM sampling, decomposed
+into <span class="math inline">\(E_{\text{learn}}\)</span> (model error)
+and <span class="math inline">\(E_{\text{fact}}\)</span> (algorithm
+error). <span class="math inline">\(E_{\text{fact}}\)</span> is a
+Riemann approximation error of the information profile <span
+class="math inline">\(I(x) = \sum_i H(x^i \mid x^{\setminus
+i})\)</span>. Derives the optimal unmasking schedule. The remasking
+direction is explicitly identified as an open problem — the central gap
+this thesis fills.</p>
 <h3 id="b.-method-details-6">B. Method Details</h3>
-<p><strong>KL decomposition.</strong> For a MDM sampler with <span
-class="math inline">\(T\)</span> unmasking steps and learned model <span
-class="math inline">\(p_\theta\)</span>:</p>
-<p><span class="math display">\[\mathrm{KL}(\pi(x) \;\|\;
-p_{\text{alg}}(x)) \leq E_{\text{learn}} + E_{\text{fact}}\]</span></p>
-<p>where <span class="math inline">\(\pi(x)\)</span> is the true data
-distribution and <span class="math inline">\(p_{\text{alg}}(x)\)</span>
-is the algorithmic distribution.</p>
-<p><strong>Learning error:</strong></p>
-<p><span class="math display">\[E_{\text{learn}} = \sum_{t=1}^{T}
-\mathbb{E}_{z_t}\!\left[\mathrm{KL}\!\left(q(x \mid z_t) \;\|\;
-p_\theta(x \mid z_t)\right)\right]\]</span></p>
-<p>This goes to zero as the model approaches perfect training and is not
-affected by the sampling algorithm’s choice of which tokens to
-unmask.</p>
-<p><strong>Factorization error.</strong> For small step sizes <span
-class="math inline">\(\Delta\alpha_t =
-\alpha_{t-1} - \alpha_t\)</span>:</p>
-<p><span class="math display">\[E_{\text{fact}}(t) \approx
-(\Delta\alpha_t)^2 \cdot \sum_i \mathrm{Var}_{x \sim q(x \mid
-z_t)}\!\left[I^i(x)\right]\]</span></p>
-<p>Summing over steps, <span
-class="math inline">\(E_{\text{fact}}\)</span> is a Riemann
-approximation error of the integral <span class="math inline">\(\int
-I(x)\, dt\)</span>.</p>
-<p><strong>Information profile:</strong></p>
-<p><span class="math display">\[I(x) = \sum_i H(x^i \mid x^{\setminus
-i})\]</span></p>
-<p>The Riemann error is minimised when each step releases approximately
-equal information: <span class="math inline">\(\Delta I_t \approx I(x) /
-T\)</span> for all <span class="math inline">\(t\)</span>.</p>
-<p><strong>Optimal unmasking schedule.</strong> The optimal strategy is
-to unmask tokens in order of <em>increasing</em> information content —
-easy tokens (low <span class="math inline">\(I^i\)</span>) first, hard
-tokens last. This is exactly the EB-Sampler algorithm.</p>
-<p><strong>Main bound (informal).</strong> For any unmasking
-schedule:</p>
+<p><span class="math display">\[\mathrm{KL}(\pi \| p_{\text{alg}}) \leq
+E_{\text{learn}} + E_{\text{fact}}\]</span></p>
 <p><span class="math display">\[E_{\text{fact}} \leq C \cdot
 \left(\frac{I(x)}{T}\right)^2\]</span></p>
-<p>for a constant <span class="math inline">\(C\)</span> depending on
-sequence length and vocabulary size. The optimal schedule achieves the
-matching lower bound.</p>
+<p>Optimal schedule: unmask in increasing order of <span
+class="math inline">\(I^i(x)\)</span> (= EB-Sampler).</p>
 <h3 id="c.-theoretical-contributions-6">C. Theoretical
 Contributions</h3>
 <ol type="1">
-<li>First non-asymptotic KL bound for MDM sampling error.</li>
-<li>Decomposition into learnable (<span
-class="math inline">\(E_{\text{learn}}\)</span>) and algorithmic (<span
-class="math inline">\(E_{\text{fact}}\)</span>) components.</li>
-<li>Identification of <span
-class="math inline">\(E_{\text{fact}}\)</span> as a Riemann
-approximation error of <span class="math inline">\(I(x)\)</span>.</li>
-<li>Derivation of the optimal unmasking schedule.</li>
-<li>Proof that simultaneous unmasking of <span
-class="math inline">\(k\)</span> tokens incurs error <span
-class="math inline">\(O(k^2)\)</span> times larger than sequential
-unmasking.</li>
+<li>First non-asymptotic KL bound for MDM sampling.</li>
+<li><span class="math inline">\(E_{\text{fact}}\)</span> as Riemann
+error of <span class="math inline">\(I(x)\)</span>.</li>
+<li>Optimal unmasking schedule derivation.</li>
+<li><span class="math inline">\(O(k^2)\)</span> error for simultaneous
+unmasking of <span class="math inline">\(k\)</span> tokens.</li>
 </ol>
-<p><strong>The explicit open gap</strong> noted by the authors: the
-framework does not yet cover remasking transitions in the reverse
-process. This is the central research question of the thesis.</p>
 <h3 id="d.-confidence-signal-6">D. Confidence Signal</h3>
-<p>The paper does not use a confidence signal in the sampling algorithm.
-However, its analysis implies that the optimal signal for unmasking
-order is <span class="math inline">\(I^i(x)\)</span> — the true
-per-position information content. The model-predicted entropy <span
-class="math inline">\(H(p_\theta(x^i \mid z_t))\)</span> is the natural
-approximation, motivating the thesis’s use of entropy as a confidence
-signal for remasking.</p>
+<p>None (analysis paper). Implies <span
+class="math inline">\(I^i(x)\)</span> is the optimal signal; <span
+class="math inline">\(H(p_\theta(x^i \mid z_t))\)</span> is the
+practical approximation.</p>
 <h3 id="e.-limitations-6">E. Limitations</h3>
 <ol type="1">
-<li><strong>Unmasking only.</strong> The framework does not cover
-remasking transitions. This is the gap the thesis fills.</li>
-<li><strong><span class="math inline">\(E_{\text{learn}}\)</span>
-treated as a black box.</strong> The paper bounds <span
-class="math inline">\(E_{\text{learn}}\)</span> by the model’s training
-error but does not analyse how it depends on architecture or training
-procedure.</li>
-<li><strong>Assumes factored posterior.</strong> The analysis uses the
-factored form of the true posterior at each step, an approximation for
-highly correlated sequences.</li>
-<li><strong>Asymptotic tightness.</strong> The bound becomes tight only
-for small step sizes; constant factors may be large for practical <span
-class="math inline">\(T = 50\)</span>–<span
-class="math inline">\(200\)</span>.</li>
+<li><strong>Remasking not covered</strong> — explicit open problem.</li>
+<li><span class="math inline">\(E_{\text{learn}}\)</span> treated as a
+black box.</li>
+<li>Factored posterior assumption.</li>
+<li>Constant factors may be large for practical <span
+class="math inline">\(T\)</span>.</li>
 </ol>
 <h3 id="f.-relation-to-this-thesis-6">F. Relation to This Thesis</h3>
-<p>This paper <em>is</em> the thesis’s theoretical foundation. Chapter 3
-of the thesis extends the Lavenant &amp; Zanella framework in one
-direction: adding remasking transitions to the reverse process and
-deriving the corresponding modification to <span
-class="math inline">\(E_{\text{fact}}\)</span>. The main theorem of the
-thesis states conditions under which remasking reduces <span
-class="math inline">\(E_{\text{fact}}\)</span> relative to the optimal
-unmasking-only schedule, and connects this to confidence signals.</p>
+<p><em>This is the thesis’s theoretical foundation.</em> Chapter 3
+extends the framework to include remasking transitions and derives
+conditions under which confidence-guided remasking reduces <span
+class="math inline">\(E_{\text{fact}}\)</span>.</p>
+<hr />
+<h2 id="part-ii-essential-background-and-context">Part II — Essential
+Background and Context</h2>
+<hr />
+<h2 id="d3pm-structured-denoising-diffusion-in-discrete-spaces">8. D3PM
+— Structured Denoising Diffusion in Discrete Spaces</h2>
+<p><strong>Citation:</strong> Austin, Johnson, Ho, Tarlow &amp; van den
+Berg (2021), “Structured Denoising Diffusion Models in Discrete
+State-Spaces.” NeurIPS 2021. arXiv:2107.03006.</p>
+<h3 id="a.-summary-7">A. Summary</h3>
+<p>D3PM is the paper that brought diffusion models to discrete state
+spaces with full generality. It defines a family of discrete forward
+Markov chains parametrised by a transition matrix <span
+class="math inline">\(Q_t\)</span>, and derives corresponding
+variational lower bounds for training the reverse process. The three key
+forward processes it introduces are: (1) <strong>absorbing
+diffusion</strong> (the masking process used by all MDMs), where all
+tokens eventually collapse to a single absorbing [MASK] state; (2)
+<strong>uniform diffusion</strong>, where tokens uniformly transition to
+all other tokens; and (3) <strong>embedding-based diffusion</strong>,
+where transitions follow distances in a learned embedding space.</p>
+<p>The absorbing (mask-and-predict) process is the one that MDLM, SEDD,
+LLaDA, and ReMDM all use. Understanding D3PM is prerequisite for
+understanding any subsequent MDM paper.</p>
+<h3 id="b.-method-details-7">B. Method Details</h3>
+<p><strong>General forward process.</strong> For a single token <span
+class="math inline">\(x^i \in \{1, \ldots, V\}\)</span>:</p>
+<p><span class="math display">\[q(z_t^i \mid z_{t-1}^i) =
+\mathrm{Cat}(z_t^i;\; z_{t-1}^i \cdot Q_t^i)\]</span></p>
+<p>where <span class="math inline">\(Q_t \in \mathbb{R}^{V \times
+V}\)</span> is the transition matrix at step <span
+class="math inline">\(t\)</span>.</p>
+<p><strong>Absorbing process</strong> (the MDM special case). Let <span
+class="math inline">\(V+1\)</span> be the mask token [M]. Then:</p>
+<p><span class="math display">\[Q_t = \begin{pmatrix} 1 - \beta_t &amp;
+\beta_t \\ 0 &amp; 1 \end{pmatrix}\]</span> <span
+class="math display">\[\bar{Q}_t = Q_1 Q_2 \cdots Q_t\]</span></p>
+<p>The marginal is:</p>
+<p><span class="math display">\[q(z_t^i \mid x^i) = \alpha_t \cdot
+e_{x^i} + (1 - \alpha_t) \cdot e_m\]</span></p>
+<p>exactly the MDLM forward process with <span
+class="math inline">\(\alpha_t = \prod_{s=1}^t (1-\beta_s)\)</span>.</p>
+<p><strong>Posterior:</strong></p>
+<p><span class="math display">\[q(z_{t-1}^i \mid z_t^i, x^i) \propto
+q(z_t^i \mid z_{t-1}^i) \cdot q(z_{t-1}^i \mid x^i)\]</span></p>
+<p>For the absorbing process this has a closed form: if <span
+class="math inline">\(z_t^i = x^i\)</span>, then <span
+class="math inline">\(z_{t-1}^i = x^i\)</span> with probability 1; if
+<span class="math inline">\(z_t^i = [\text{M}]\)</span>, then <span
+class="math inline">\(z_{t-1}^i = x^i\)</span> with probability <span
+class="math inline">\(\alpha_{t-1} / (1 - \alpha_t)\)</span> and <span
+class="math inline">\(z_{t-1}^i = [\text{M}]\)</span> otherwise.</p>
+<p><strong>Training objective.</strong> D3PM trains the reverse model
+<span class="math inline">\(p_\theta(z_{t-1}
+\mid z_t)\)</span> by minimising the VLB:</p>
+<p><span class="math display">\[\mathcal{L} = \sum_t
+\mathbb{E}\!\left[\mathrm{KL}(q(z_{t-1} \mid z_t, x) \| p_\theta(z_{t-1}
+\mid z_t))\right]\]</span></p>
+<p>D3PM additionally introduces an auxiliary cross-entropy term <span
+class="math inline">\(\lambda \cdot \mathrm{CE}(x,
+p_\theta^{(x0)}(z_t))\)</span> that directly supervises the clean-token
+prediction <span class="math inline">\(p_\theta^{(x0)}\)</span>; MDLM
+later shows that this is essentially the entire training signal.</p>
+<h3 id="c.-theoretical-contributions-7">C. Theoretical
+Contributions</h3>
+<p>D3PM proves that the VLB for discrete diffusion decomposes into a sum
+of per-step KL terms, analogously to the continuous DDPM bound. It
+establishes that the absorbing process achieves lower ELBO than uniform
+diffusion on text, which justifies the design choice of all subsequent
+MDMs. The paper does not provide sampling error bounds.</p>
+<h3 id="d.-confidence-signal-7">D. Confidence Signal</h3>
+<p>D3PM uses ancestral sampling with no confidence signal. The paper
+introduces the concept of <span
+class="math inline">\(x_0\)</span>-parameterisation (predicting the
+clean token directly rather than the reverse kernel), which is the
+parameterisation used by all subsequent MDMs and is the source of the
+per-token logit distribution that confidence signals are derived
+from.</p>
+<h3 id="e.-limitations-7">E. Limitations</h3>
+<ol type="1">
+<li><strong>Absorbing process only proven superior empirically,</strong>
+not derived theoretically as the optimal choice of <span
+class="math inline">\(Q_t\)</span>.</li>
+<li><strong>No remasking.</strong> The ancestral sampler is
+one-directional.</li>
+<li><strong>Slow sampling.</strong> D3PM uses <span
+class="math inline">\(T = 1000\)</span> steps; this is reduced to <span
+class="math inline">\(T = 64\)</span>–<span
+class="math inline">\(1024\)</span> in MDLM and further in ReMDM.</li>
+<li><strong>Text-specific challenges</strong> (long-range coherence,
+variable-length sequences) are noted but not fully addressed.</li>
+</ol>
+<h3 id="f.-relation-to-this-thesis-7">F. Relation to This Thesis</h3>
+<p>D3PM is the origin of the entire MDM framework. The absorbing
+transition matrix <span class="math inline">\(Q_t\)</span> is the source
+of the factorisation error <span
+class="math inline">\(E_{\text{fact}}\)</span>: because <span
+class="math inline">\(Q_t\)</span> masks positions independently, the
+true joint posterior at each step has correlations that are lost when
+the reverse process is factorised. The thesis’s remasking kernel can be
+understood as a “corrective” non-absorbing transition that partially
+undoes this information loss. Citing D3PM is essential to situate the
+thesis in the discrete diffusion literature.</p>
+<hr />
+<h2 id="sedd-discrete-diffusion-via-score-entropy">9. SEDD — Discrete
+Diffusion via Score Entropy</h2>
+<p><strong>Citation:</strong> Lou, Meng &amp; Ermon (2024), “Discrete
+Diffusion Modeling by Estimating the Ratios of the Data Distribution.”
+ICML 2024. arXiv:2310.16834.</p>
+<h3 id="a.-summary-8">A. Summary</h3>
+<p>SEDD introduces an alternative training objective for discrete
+diffusion models based on <em>score entropy</em> — a proper divergence
+for estimating ratios of discrete probability distributions, analogous
+to score matching for continuous diffusion. Rather than directly
+parameterising the reverse Markov kernel, SEDD parameterises the
+<em>concrete score</em> <span class="math inline">\(s_\theta(z_t)_{ij}
+\approx p(x^i = j \mid z_t) / p(z_t^i = j)\)</span> and trains it with a
+provably consistent objective. SEDD achieves state-of-the-art
+unconditional text generation among non-autoregressive models (at the
+time of publication) and introduces predictor-corrector (PC) samplers
+for discrete diffusion that are directly relevant to remasking.</p>
+<h3 id="b.-method-details-8">B. Method Details</h3>
+<p><strong>Score entropy objective.</strong> The concrete score is
+trained by minimising:</p>
+<p><span class="math display">\[\mathcal{L}(\theta) =
+\mathbb{E}_{t,x,z_t}\!\left[\sum_{j \neq z_t}
+\left(s_\theta(z_t)_{z_t,j} - \log\frac{p_t(z_t \oplus j)}{p_t(z_t)} +
+h(s_\theta(z_t)_{z_t,j})\right)\right]\]</span></p>
+<p>where <span class="math inline">\(z_t \oplus j\)</span> denotes the
+sequence <span class="math inline">\(z_t\)</span> with one position
+flipped to <span class="math inline">\(j\)</span>, and <span
+class="math inline">\(h\)</span> is a convex function that makes the
+objective a proper scoring rule. This is a consistent estimator of the
+true score ratios.</p>
+<p><strong>Absorbing SEDD.</strong> For the absorbing (masking) noise
+process, the score simplifies: the model only needs to estimate <span
+class="math inline">\(p(x^i \mid z_t)\)</span> for masked positions,
+which reduces to the same masked language model objective as MDLM. The
+score-entropy and cross-entropy objectives are equivalent for the
+absorbing process, which is why MDLM’s simpler training matches SEDD’s
+performance on text with masking noise.</p>
+<p><strong>Predictor-corrector (PC) sampler.</strong> SEDD introduces a
+PC sampler that alternates between: - <strong>Predictor step:</strong>
+standard reverse-process unmasking. - <strong>Corrector step:</strong> a
+Langevin-like MCMC correction using the score.</p>
+<p>This is the discrete analogue of the continuous diffusion PC sampler
+(Song et al., 2021) and is a principled precursor to the remasking
+strategies in ReMDM and this thesis.</p>
+<p><strong>Tweedie denoiser.</strong> SEDD also derives the discrete
+analogue of Tweedie’s formula: the minimum mean-squared error estimate
+of <span class="math inline">\(x\)</span> given <span
+class="math inline">\(z_t\)</span> can be computed directly from the
+score, without sampling. This is used to initialise the PC sampler.</p>
+<h3 id="c.-theoretical-contributions-8">C. Theoretical
+Contributions</h3>
+<p>SEDD proves: (1) the score-entropy objective is a consistent
+estimator of the true score ratios (analogous to Fisher consistency in
+score matching); (2) the PC sampler converges to the target distribution
+as the number of corrector steps increases, with an explicit convergence
+rate. These are the strongest theoretical results for any MDM sampler
+prior to Lavenant &amp; Zanella (2025).</p>
+<h3 id="d.-confidence-signal-8">D. Confidence Signal</h3>
+<p>SEDD does not use a per-token confidence signal for unmasking order.
+The concrete score <span class="math inline">\(s_\theta(z_t)_{z_t,
+j}\)</span> implicitly encodes token uncertainty but is used for the
+corrector step, not for selective unmasking. The entropy of <span
+class="math inline">\(p_\theta(x^i \mid z_t)\)</span> (derived from the
+score) is a natural downstream confidence signal.</p>
+<h3 id="e.-limitations-8">E. Limitations</h3>
+<ol type="1">
+<li><strong>Score entropy objective is harder to implement</strong> than
+MDLM’s cross-entropy; for the absorbing process the two are equivalent,
+removing the advantage.</li>
+<li><strong>PC sampler requires <span
+class="math inline">\(O(T_{\text{corr}})\)</span> additional
+steps</strong> per denoising step, similar to ReMDM’s correction
+cost.</li>
+<li><strong>No per-token confidence signal</strong> for selective
+correction.</li>
+<li><strong>Uniform noise process</strong> (non-absorbing SEDD)
+underperforms absorbing SEDD on text, suggesting absorbing noise is the
+right inductive bias for language.</li>
+</ol>
+<h3 id="f.-relation-to-this-thesis-8">F. Relation to This Thesis</h3>
+<p>SEDD’s PC sampler is the principled precursor to remasking in MDMs.
+The corrector step in SEDD corresponds to the remasking step in ReMDM,
+but SEDD does not use a confidence signal to select which positions to
+correct. The thesis’s contribution can be framed as: deriving the
+optimal confidence-guided corrector for the absorbing MDM process within
+the Lavenant &amp; Zanella error-bound framework, extending SEDD’s PC
+sampler from a uniform to an information-theoretically optimal one. The
+SEDD repo (<code>louaaron/SEDD</code>) provides a useful secondary
+baseline with its own pre-trained checkpoints on OpenWebText.</p>
+<hr />
+<h2 id="llada-large-language-diffusion-with-masking">10. LLaDA — Large
+Language Diffusion with mAsking</h2>
+<p><strong>Citation:</strong> Nie et al. (2025), “LLaDA: Large Language
+Diffusion with mAsking.” arXiv:2502.09992.</p>
+<h3 id="a.-summary-9">A. Summary</h3>
+<p>LLaDA demonstrates that a masked diffusion model trained at 8B
+parameter scale (LLaDA-8B) can match or exceed LLaMA 3 8B on standard
+instruction-following and reasoning benchmarks, including multi-turn
+dialogue and mathematical reasoning. This is the first masked diffusion
+model to convincingly compete with frontier autoregressive LLMs at the
+same parameter count. LLaDA-8B-Instruct (the instruction-tuned version)
+is the backbone for PRISM’s code generation experiments and is available
+on HuggingFace (<code>GSAI-ML/LLaDA-8B-Instruct</code>).</p>
+<h3 id="b.-method-details-9">B. Method Details</h3>
+<p><strong>Architecture.</strong> LLaDA-8B is a standard transformer
+decoder with bidirectional attention (unlike causal LLMs), trained with
+the masked language model objective on 2.3 trillion tokens. The model
+uses the standard absorbing forward process and the MDLM-style reverse
+process (predict clean token from masked context).</p>
+<p><strong>Pre-training.</strong> Identical to MDLM: the loss is the
+expected negative log-likelihood of masked tokens, weighted by a
+per-step importance weight derived from the noise schedule.</p>
+<p><strong>Instruction tuning.</strong> LLaDA-8B-Instruct is fine-tuned
+with supervised instruction following (SFT) on a standard instruction
+dataset, with the prompt tokens frozen (unmasked) and only the response
+tokens subject to the masking process. This is the first MDM
+instruction-tuning recipe demonstrated to work at 8B scale.</p>
+<p><strong>Sampling.</strong> LLaDA uses a standard uniform remasking
+schedule (each committed token can be re-masked with a fixed probability
+per step). No confidence signal is used. The naive remasking schedule is
+the key weakness that PRISM and the thesis target.</p>
+<h3 id="c.-theoretical-contributions-9">C. Theoretical
+Contributions</h3>
+<p>LLaDA does not provide new theoretical results on MDMs. Its
+contribution is empirical: scaling masked diffusion to 8B parameters and
+demonstrating competitive instruction-following quality. The paper
+provides detailed scaling analysis showing that LLaDA obeys the same
+scaling laws as autoregressive LLMs, which implies that the quality gap
+between MDMs and autoregressive models at this scale is small and may be
+addressable by principled sampling improvements.</p>
+<h3 id="d.-confidence-signal-9">D. Confidence Signal</h3>
+<p>None. LLaDA uses uniform random remasking during sampling. The
+per-token logit distribution <span class="math inline">\(p_\theta(x^i
+\mid z_t)\)</span> is available but not exploited. This is the direct
+motivation for applying the thesis’s confidence-guided remasking
+strategies to LLaDA.</p>
+<h3 id="e.-limitations-9">E. Limitations</h3>
+<ol type="1">
+<li><strong>Naive remasking.</strong> Uniform remasking ignores token
+uncertainty, leaving quality on the table at inference time.</li>
+<li><strong>Bidirectional attention only.</strong> LLaDA-8B cannot be
+used for causal (streaming) generation, limiting deployment
+contexts.</li>
+<li><strong>No formal connection to information profile.</strong> The
+uniform remasking schedule is not derived from any principled
+criterion.</li>
+<li><strong>PRISM adapter not public.</strong> The PRISM quality head
+trained on LLaDA-8B is not publicly released (as of early 2026).</li>
+</ol>
+<h3 id="f.-relation-to-this-thesis-9">F. Relation to This Thesis</h3>
+<p>LLaDA-8B-Instruct is the large-scale experimental backbone for the
+thesis. The key experimental question is: does confidence-guided
+remasking (thesis strategy) improve LLaDA-8B generation quality beyond
+the naive uniform schedule used in the published model? If yes, this
+demonstrates that the thesis’s training-free strategies scale to
+frontier-class MDMs. The uniform remasking in LLaDA is the weakest
+baseline the thesis should beat.</p>
+<hr />
+<h2 id="discrete-flow-matching">11. Discrete Flow Matching</h2>
+<p><strong>Citation:</strong> Gat, Remez, Shaul, Kreuk, Chen, Synnaeve,
+Adi &amp; Lipman (2024), “Discrete Flow Matching.” NeurIPS 2024.
+arXiv:2407.15595.</p>
+<h3 id="a.-summary-10">A. Summary</h3>
+<p>Discrete Flow Matching (DFM) extends continuous flow matching (Lipman
+et al., 2022) to discrete state spaces by defining probability paths
+over categorical distributions that interpolate between a prior and the
+data distribution. The key theoretical insight is that masked diffusion
+is a special case of DFM with a specific probability path (the absorbing
+path), and the MDM training objective (masked cross-entropy) is exactly
+the flow matching objective under this path. DFM provides a cleaner,
+path-integral formulation that subsumes both MDMs and SEDD, and
+introduces the <em>discrete ODE</em> perspective: generation is a
+trajectory in distribution space, and corrector steps correspond to
+time-reversal of this trajectory.</p>
+<h3 id="b.-method-details-10">B. Method Details</h3>
+<p><strong>Probability path.</strong> A discrete probability path <span
+class="math inline">\(p_t\)</span> interpolates between a prior <span
+class="math inline">\(p_0\)</span> (e.g., fully masked distribution) and
+the data distribution <span class="math inline">\(p_1\)</span> via:</p>
+<p><span class="math display">\[p_t(z) = \sum_x p(x) \cdot
+\mathrm{Cat}(z;\; \alpha_t \cdot e_x + (1-\alpha_t) \cdot
+e_m)\]</span></p>
+<p>For the absorbing path, this is identical to the MDLM marginal.</p>
+<p><strong>Discrete velocity field.</strong> The flow matching objective
+trains a velocity field <span class="math inline">\(u_t(z, j)\)</span>
+that specifies the rate of probability flow from token <span
+class="math inline">\(z^i\)</span> to token <span
+class="math inline">\(j\)</span> at time <span
+class="math inline">\(t\)</span>. For the absorbing path:</p>
+<p><span class="math display">\[u_t(z^i \rightarrow j) = \frac{1 -
+\alpha_t}{\alpha_t} \cdot p_\theta(x^i = j \mid z_t) \cdot
+\mathbf{1}[z^i = [\text{M}]]\]</span></p>
+<p><strong>Training objective.</strong> The discrete flow matching
+objective reduces to:</p>
+<p><span class="math display">\[\mathcal{L} = \mathbb{E}_{t, x,
+z_t}\!\left[-\sum_{i:\, z_t^i=[\text{M}]}
+\frac{\dot{\alpha}_t}{\alpha_t} \log p_\theta(x^i \mid
+z_t)\right]\]</span></p>
+<p>which is identical to the MDLM ELBO up to the time-weighting
+factor.</p>
+<p><strong>Corrector steps in DFM.</strong> DFM provides a natural
+framework for corrector steps: a corrector is a flow that maps <span
+class="math inline">\(p_t\)</span> back to itself while reducing
+entropy. In the discrete case, this corresponds to re-masking and
+re-predicting high-entropy tokens — exactly the remasking operation. DFM
+thus provides a <em>continuous-time</em> perspective on remasking that
+complements the Riemann-sum perspective of Lavenant &amp; Zanella.</p>
+<h3 id="c.-theoretical-contributions-10">C. Theoretical
+Contributions</h3>
+<ol type="1">
+<li>Unified framework: MDMs and SEDD are special cases of DFM.</li>
+<li>Proves the DFM objective is equivalent to MDM cross-entropy for the
+absorbing path.</li>
+<li>Derives the optimal probability path for minimising the
+continuous-time KL between the generative trajectory and the true
+data-generating process.</li>
+<li>Shows that corrector steps correspond to score-function-guided
+flows, giving a theoretical foundation for principled correction.</li>
+</ol>
+<h3 id="d.-confidence-signal-10">D. Confidence Signal</h3>
+<p>DFM does not introduce a new confidence signal. The velocity field
+<span class="math inline">\(u_t(z^i \rightarrow j)\)</span> implicitly
+encodes uncertainty: positions with high <span
+class="math inline">\(H(p_\theta(x^i \mid z_t))\)</span> have more
+diffuse velocity distributions and are natural candidates for
+correction. This connects to the thesis’s entropy-based confidence
+signal.</p>
+<h3 id="e.-limitations-10">E. Limitations</h3>
+<ol type="1">
+<li><strong>Continuous-time formulation</strong> is harder to implement
+than discrete-step MDLM; in practice both reduce to the same
+sampler.</li>
+<li><strong>No remasking theory.</strong> The corrector perspective is
+described but not formally analysed in terms of sampling error
+bounds.</li>
+<li><strong>Text experiments are limited</strong> compared to MDLM-OWT
+and LLaDA.</li>
+<li><strong>Absorbing path is not derived as optimal</strong> — it is
+one choice among many.</li>
+</ol>
+<h3 id="f.-relation-to-this-thesis-10">F. Relation to This Thesis</h3>
+<p>DFM provides the cleanest theoretical framework for understanding why
+remasking works: corrector steps are flows that reduce entropy along the
+generative trajectory without changing the marginal distribution. The
+thesis’s main theorem (remasking reduces <span
+class="math inline">\(E_{\text{fact}}\)</span> under consistent
+confidence signals) can be reinterpreted in DFM language as:
+<em>confidence-guided corrector flows reduce the discrete ODE
+discretisation error</em>. Including DFM in the thesis literature review
+strengthens the theoretical framing and connects the Riemann-sum
+perspective of Lavenant &amp; Zanella to the broader flow-matching
+literature.</p>
+<hr />
+<h2 id="mask-predict-historical-precursor-to-remasking">12. Mask-Predict
+— Historical Precursor to Remasking</h2>
+<p><strong>Citation:</strong> Ghazvininejad, Levy, Liu &amp; Zettlemoyer
+(2019), “Mask-Predict: Parallel Decoding of Conditional Masked Language
+Models.” EMNLP 2019. arXiv:1904.09324.</p>
+<h3 id="a.-summary-11">A. Summary</h3>
+<p>Mask-Predict introduces the first iterative masked decoding algorithm
+for non-autoregressive machine translation. Starting from a fully masked
+target sequence, the model iteratively (1) predicts all masked tokens in
+parallel, then (2) re-masks the lowest-confidence predictions (by token
+probability) and repeats. This converges in <span
+class="math inline">\(O(T)\)</span> parallel steps rather than <span
+class="math inline">\(O(n)\)</span> autoregressive steps, achieving a
+4–9× speedup over autoregressive decoding with competitive BLEU
+scores.</p>
+<p>This paper is the direct precursor of modern remasking strategies in
+masked diffusion models. The confidence signal (token probability), the
+iterative unmask/remask loop, and the parallel decoding paradigm are all
+foundational to the MDM remasking literature.</p>
+<h3 id="b.-method-details-11">B. Method Details</h3>
+<p><strong>Algorithm:</strong></p>
+<pre><code>y = [M, M, ..., M]   (fully masked target)
+for t = 1, ..., T:
+    # Predict all masked positions in parallel
+    p^i = P(y^i | x, y\{y^i=[M]})   (BERT-style conditional LM)
+    # Unmask: commit top-p% most confident predictions
+    n_t = ceil(|y| * (T - t) / T)   (linearly decreasing remask count)
+    y^i ← argmax p^i   for all i
+    # Remask: re-mask n_t lowest-confidence committed tokens
+    remask_set ← argsort(max p^i)[:n_t]
+    y^i ← [M]   for i in remask_set
+return y</code></pre>
+<p><strong>Confidence signal:</strong> <span
+class="math inline">\(\max_j p^i_j\)</span> — the probability of the
+top-1 prediction. This is the <em>max-probability</em> signal, the
+simplest of the three training-free signals evaluated in this thesis
+(max-prob, entropy, margin).</p>
+<p><strong>Masking schedule:</strong> linearly decreasing number of
+masked tokens per step. This is the linear schedule of the thesis’s
+<code>schedule</code> strategy.</p>
+<h3 id="c.-theoretical-contributions-11">C. Theoretical
+Contributions</h3>
+<p>Mask-Predict does not provide theoretical guarantees. The algorithm
+is motivated empirically and by the intuition that low-confidence tokens
+benefit most from re-prediction in a richer context (where other tokens
+have been committed). No connection to diffusion processes, information
+profiles, or sampling error bounds.</p>
+<h3 id="d.-confidence-signal-11">D. Confidence Signal</h3>
+<p><span class="math inline">\(\max_j p^i_j\)</span> — the
+max-probability of the conditional LM at position <span
+class="math inline">\(i\)</span>. Cheap to compute (one forward pass).
+Heuristically motivated.</p>
+<h3 id="e.-limitations-11">E. Limitations</h3>
+<ol type="1">
+<li><strong>Heuristic only</strong> — no theoretical justification.</li>
+<li><strong>Designed for machine translation</strong> (fixed-length,
+conditional generation) — not directly applicable to unconditional
+language modelling without adaptation.</li>
+<li><strong>No probabilistic framework</strong> — Mask-Predict is not a
+diffusion model and lacks the noise-schedule, forward process, and ELBO
+of MDMs.</li>
+<li><strong>Max-probability is miscalibrated</strong> at different
+masking rates — the same probability value means different things when
+10% vs. 90% of tokens are masked.</li>
+</ol>
+<h3 id="f.-relation-to-this-thesis-11">F. Relation to This Thesis</h3>
+<p>Mask-Predict is the intellectual ancestor of the thesis. The thesis
+can be described as: <em>providing a rigorous probabilistic and
+information-theoretic foundation for the heuristic remasking procedure
+of Mask-Predict, in the context of masked diffusion models.</em> The
+three training-free confidence signals (max-prob, entropy, margin)
+generalise the max-probability signal of Mask-Predict. The linear remask
+schedule of the thesis’s <code>schedule</code> strategy is a direct
+generalisation of Mask-Predict’s linearly decreasing mask count. Citing
+Mask-Predict situates the thesis in a broader context beyond MDMs and
+shows that principled remasking has implications for the broader
+non-autoregressive text generation literature.</p>
 <hr />
 <h2 id="cross-paper-comparison">Cross-Paper Comparison</h2>
 <h3 id="comparison-table">Comparison Table</h3>
-<table style="width:100%;">
+<table>
 <colgroup>
-<col style="width: 10%" />
-<col style="width: 10%" />
-<col style="width: 10%" />
-<col style="width: 17%" />
-<col style="width: 17%" />
-<col style="width: 10%" />
-<col style="width: 10%" />
-<col style="width: 10%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
 </colgroup>
 <thead>
 <tr>
+<th>#</th>
 <th>Paper</th>
 <th>Backbone</th>
 <th>Confidence Signal</th>
-<th style="text-align: center;">Training Req.?</th>
+<th style="text-align: center;">Training?</th>
 <th style="text-align: center;">Inference-Only?</th>
 <th>Theoretical Guarantee</th>
 <th>Metric</th>
@@ -956,36 +983,40 @@ unmasking-only schedule, and connects this to confidence signals.</p>
 </thead>
 <tbody>
 <tr>
+<td>1</td>
 <td>MD4 / MDLM</td>
 <td>Custom (130M)</td>
 <td>None</td>
 <td style="text-align: center;">Pre-train</td>
 <td style="text-align: center;">Yes</td>
-<td>ELBO bound (training)</td>
+<td>ELBO bound</td>
 <td>Perplexity</td>
 <td>OWT, LM1B</td>
 </tr>
 <tr>
+<td>2</td>
 <td>ReMDM</td>
 <td>MDLM-OWT</td>
-<td>Entropy (optional)</td>
+<td>Entropy (opt.)</td>
 <td style="text-align: center;">No</td>
 <td style="text-align: center;">Yes</td>
-<td>KL monotone in <span class="math inline">\(R\)</span></td>
+<td>KL mono. in <span class="math inline">\(R\)</span></td>
 <td>Perplexity</td>
 <td>OWT</td>
 </tr>
 <tr>
+<td>3</td>
 <td>RemeDi</td>
 <td>TPS+UPS (9B)</td>
 <td>Learned <span class="math inline">\(\psi^i\)</span></td>
-<td style="text-align: center;">Yes (UPS+RL)</td>
+<td style="text-align: center;">Yes (RL)</td>
 <td style="text-align: center;">No</td>
 <td>None (empirical)</td>
 <td>Instruction acc.</td>
 <td>Custom</td>
 </tr>
 <tr>
+<td>4</td>
 <td>PRISM</td>
 <td>LLaDA-8B</td>
 <td>Learned <span class="math inline">\(g_\phi\)</span></td>
@@ -993,31 +1024,33 @@ unmasking-only schedule, and connects this to confidence signals.</p>
 <td style="text-align: center;">No</td>
 <td>BCE <span class="math inline">\(\to\)</span> true cond.</td>
 <td>Gen. quality</td>
-<td>OWT, tasks</td>
+<td>OWT, MBPP</td>
 </tr>
 <tr>
-<td>Informed Corr.</td>
+<td>5</td>
+<td>Inf. Corr.</td>
 <td>Hollow transf.</td>
-<td>Log-margin (exact)</td>
+<td>Log-margin</td>
 <td style="text-align: center;">Retrain</td>
 <td style="text-align: center;">No</td>
-<td>MCMC mixing time</td>
+<td>MCMC mixing</td>
 <td>PPL, diversity</td>
 <td>Text8, OWT</td>
 </tr>
 <tr>
+<td>6</td>
 <td>EB-Sampler</td>
 <td>Any MDM</td>
 <td>Entropy <span class="math inline">\(H(p_\theta)\)</span></td>
 <td style="text-align: center;">No</td>
 <td style="text-align: center;">Yes</td>
-<td><span class="math inline">\(E_{\text{fact}}\)</span> Riemann
-bd.</td>
+<td><span class="math inline">\(E_f\)</span> Riemann bd.</td>
 <td>PPL, speed</td>
 <td>OWT, LM1B</td>
 </tr>
 <tr>
-<td>Lavenant &amp; Z.</td>
+<td>7</td>
+<td>Lav. &amp; Zan.</td>
 <td>Any MDM</td>
 <td>N/A (analysis)</td>
 <td style="text-align: center;">No</td>
@@ -1026,117 +1059,210 @@ bd.</td>
 <td>N/A</td>
 <td>N/A</td>
 </tr>
+<tr>
+<td>8</td>
+<td>D3PM</td>
+<td>Custom</td>
+<td>None</td>
+<td style="text-align: center;">Pre-train</td>
+<td style="text-align: center;">Yes</td>
+<td>VLB decomp.</td>
+<td>NLL</td>
+<td>Text8, image</td>
+</tr>
+<tr>
+<td>9</td>
+<td>SEDD</td>
+<td>GPT-2 scale</td>
+<td>Score ratio</td>
+<td style="text-align: center;">Pre-train</td>
+<td style="text-align: center;">Yes</td>
+<td>PC convergence</td>
+<td>Perplexity</td>
+<td>OWT</td>
+</tr>
+<tr>
+<td>10</td>
+<td>LLaDA</td>
+<td>8B transformer</td>
+<td>None</td>
+<td style="text-align: center;">Pre-train</td>
+<td style="text-align: center;">Yes</td>
+<td>None (empirical)</td>
+<td>Benchmarks</td>
+<td>2.3T tokens</td>
+</tr>
+<tr>
+<td>11</td>
+<td>DFM</td>
+<td>Any MDM</td>
+<td>Velocity field</td>
+<td style="text-align: center;">Pre-train</td>
+<td style="text-align: center;">Yes</td>
+<td>Path integral</td>
+<td>PPL, audio</td>
+<td>OWT, EnCodec</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Mask-Predict</td>
+<td>BERT-scale</td>
+<td>Max-prob</td>
+<td style="text-align: center;">Pre-train</td>
+<td style="text-align: center;">Yes</td>
+<td>None</td>
+<td>BLEU</td>
+<td>WMT MT</td>
+</tr>
 </tbody>
 </table>
-<p><strong>Compute cost notes.</strong> MDLM-OWT (130M): ~10 ms per
-forward pass on A100; all inference-only methods are viable on consumer
-hardware. RemeDi (9B) and LLaDA-8B: ~500 ms per forward pass on A100;
-multi-minute generation per sample. PRISM adds negligible overhead
-(small MLP on frozen hidden states). Informed Correctors with hollow
-transformer: requires full retraining, comparable to MDLM pre-training
-cost.</p>
 <hr />
 <h3 id="narrative-discussion">Narrative Discussion</h3>
-<h4 id="training-free-vs.-fine-tuned-approaches">1. Training-Free
+<h4 id="the-genealogy-of-masked-diffusion">1. The Genealogy of Masked
+Diffusion</h4>
+<p>The MDM literature has a clear ancestry. <strong>D3PM</strong> (Paper
+8) established the absorbing diffusion process in 2021.
+<strong>SEDD</strong> (Paper 9, 2024) introduced the score-entropy
+objective and PC samplers. <strong>MD4/MDLM</strong> (Paper 1, 2024)
+simplified training to masked cross-entropy and scaled to 130M on
+OpenWebText. <strong>LLaDA</strong> (Paper 10, 2025) scaled to 8B and
+demonstrated competitive instruction following. <strong>ReMDM</strong>
+(Paper 2, 2025) added principled remasking on top of MDLM.
+<strong>RemeDi</strong> (Paper 3, 2025) and <strong>PRISM</strong>
+(Paper 4, 2025) added learned confidence heads. <strong>DFM</strong>
+(Paper 11, 2024) provides the continuous-time theoretical
+unification.</p>
+<p>The thesis sits at the intersection of two threads: the
+information-theoretic analysis thread (Lavenant &amp; Zanella →
+EB-Sampler) and the remasking-quality thread (Mask-Predict → MDLM →
+ReMDM → RemeDi/PRISM). Its contribution is to bring the rigour of the
+first thread to the practice of the second.</p>
+<h4 id="training-free-vs.-fine-tuned-approaches">2. Training-Free
 vs. Fine-Tuned Approaches</h4>
-<p>The seven papers span two clearly distinct camps.
-<strong>Training-free</strong> methods (MD4/MDLM baseline, ReMDM,
-EB-Sampler, and the thesis’s contribution) take a pretrained MDM and
-modify only the inference-time sampling procedure.
-<strong>Fine-tuned</strong> methods (RemeDi, PRISM, Informed Correctors)
-require additional training on top of the base model.</p>
-<p>The training-free camp has an important practical advantage: it is
-immediately applicable to any pretrained MDM without access to training
-data or compute. This is critical for the thesis: MDLM-OWT, LLaDA-8B,
-and RemeDi models are all public, and the thesis can test strategies on
-all of them without retraining. The fine-tuned methods can potentially
-achieve higher quality because they directly optimise the remasking
-decision, but they are not portable across model families.</p>
-<p>The key open question — and the thesis’s central contribution — is:
-<em>how close can a training-free, confidence-guided remasking strategy
-get to the performance ceiling set by fine-tuned methods?</em> If the
-answer is “very close,” training is unnecessary; if “far,” the
-bottleneck is the quality of the confidence signal, and training a
-PRISM-like head is the path forward.</p>
-<h4 id="posterior-based-vs.-heuristic-confidence">2. Posterior-Based
-vs. Heuristic Confidence</h4>
-<p>Confidence signals in the literature fall into three tiers:</p>
-<p><strong>Tier 1 — True posterior (theoretically ideal, computationally
-expensive):</strong> <span class="math inline">\(I^i(x) = H(x^i \mid
-x^{\setminus i})\)</span>. Requires knowing <span
-class="math inline">\(x\)</span> or running <span
-class="math inline">\(O(L)\)</span> forward passes. Used in Lavenant
-&amp; Zanella as the theoretical reference. Approximated by Informed
-Correctors’ log-margin (requires hollow transformer).</p>
-<p><strong>Tier 2 — Learned approximation (theoretically grounded,
-requires training):</strong> PRISM’s quality head <span
-class="math inline">\(g_\phi\)</span> and RemeDi’s UPS <span
-class="math inline">\(\psi^i\)</span> both approximate the true
-posterior <span class="math inline">\(P(x^i = \hat{y}^i \mid
-\text{context})\)</span> with formal convergence guarantees (PRISM) or
-empirical calibration (RemeDi). Strictly more principled than heuristic
-signals but require training data and compute.</p>
-<p><strong>Tier 3 — Heuristic signals (no training, no formal
-guarantee):</strong> Max-probability (<span class="math inline">\(\max_v
-p_\theta(x^i = v \mid z_t)\)</span>), entropy (<span
-class="math inline">\(H(p_\theta(x^i \mid z_t))\)</span>), and margin
-(probability gap between top two tokens) are all computable from the
-base model’s output logits at no additional cost. Widely used but lack
-formal guarantees about their relationship to the true per-position
-information content.</p>
-<p>The thesis bridges Tier 1 and Tier 3: it provides formal conditions
-under which Tier 3 signals are <em>sufficient</em> for principled
-remasking (the “consistent estimator” assumption), and empirically tests
-how close they are to the Tier 1 optimum.</p>
-<h4 id="the-eb-samplerlavenant-zanella-connection">3. The
-EB-Sampler—Lavenant &amp; Zanella Connection</h4>
-<p>The EB-Sampler and Lavenant &amp; Zanella are, in a precise sense,
-two sides of the same coin. Lavenant &amp; Zanella prove that <span
-class="math inline">\(E_{\text{fact}}\)</span> is a Riemann
-approximation error of <span class="math inline">\(\int I(x)\,
-dt\)</span>. The EB-Sampler derives the <em>algorithm</em> that
-minimises this Riemann error: unmask in increasing order of <span
-class="math inline">\(H(p_\theta(x^i \mid z_t))\)</span>, consuming a
-fixed entropy budget <span class="math inline">\(\varepsilon\)</span>
-per step. The EB-Sampler’s bound (<span
-class="math inline">\(E_{\text{fact}}(\text{EB}) \leq
-\varepsilon \cdot \max_i \hat{I}^i\)</span>) is a direct instantiation
-of the Lavenant &amp; Zanella bound with the optimal schedule.</p>
-<p>This connection has a concrete implication for the thesis: the
-EB-Sampler is the optimal <em>unmasking</em> algorithm; the thesis
-derives the optimal <em>remasking</em> algorithm in the same framework.
-The analogy is:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Papers</th>
+<th>Advantage</th>
+<th>Disadvantage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Training-free</td>
+<td>ReMDM, EB-Sampler, MD4/MDLM, SEDD, <strong>Thesis</strong></td>
+<td>Portable to any pretrained MDM</td>
+<td>Confidence signal may be miscalibrated</td>
+</tr>
+<tr>
+<td>Head-fine-tuned</td>
+<td>PRISM, RemeDi</td>
+<td>Calibrated, learnable signal</td>
+<td>Not portable; requires training data</td>
+</tr>
+<tr>
+<td>Architecture-retrained</td>
+<td>Informed Correctors</td>
+<td>Exact per-position conditional</td>
+<td>Not compatible with existing models</td>
+</tr>
+</tbody>
+</table>
+<p>The thesis occupies the training-free cell. Its theoretical
+contribution is to characterise when training-free signals are
+<em>sufficient</em> — i.e., when they are consistent estimators of <span
+class="math inline">\(H(x^i \mid \text{context})\)</span> — and to
+derive the <span class="math inline">\(E_{\text{fact}}\)</span>
+reduction achievable under this assumption.</p>
+<h4 id="posterior-based-vs.-heuristic-confidence-three-tiers">3.
+Posterior-Based vs. Heuristic Confidence: Three Tiers</h4>
+<p><strong>Tier 1 — True posterior:</strong> <span
+class="math inline">\(I^i(x) = H(x^i \mid x^{\setminus i})\)</span>.
+Theoretically optimal but requires knowing <span
+class="math inline">\(x\)</span> or <span
+class="math inline">\(O(L)\)</span> forward passes. The reference object
+in Lavenant &amp; Zanella and Informed Correctors.</p>
+<p><strong>Tier 2 — Learned approximation:</strong> PRISM’s <span
+class="math inline">\(g_\phi\)</span> and RemeDi’s <span
+class="math inline">\(\psi^i\)</span> approximate the true conditional
+with formal convergence guarantees (PRISM) or empirical calibration
+(RemeDi). Portable only within a trained model family.</p>
+<p><strong>Tier 3 — Heuristic training-free:</strong> max-probability,
+entropy, margin — all computable from standard forward-pass logits. No
+formal guarantee. The thesis provides formal <em>conditions</em> under
+which Tier 3 is sufficient for principled remasking.</p>
+<h4 id="the-eb-samplerlavenant-zanella-connection">4. The
+EB-Sampler–Lavenant &amp; Zanella Connection</h4>
+<p>These two papers are two sides of the same coin. Lavenant &amp;
+Zanella derive that <span class="math inline">\(E_{\text{fact}}\)</span>
+is a Riemann error of <span class="math inline">\(\int I(x)\,
+dt\)</span>. EB-Sampler derives the algorithm that minimises this error
+for <em>unmasking</em>: consume equal entropy per step by unmasking
+positions in ascending <span
+class="math inline">\(H(p_\theta^i)\)</span> order.</p>
+<p>The thesis’s contribution is the <em>remasking</em> analogue:</p>
 <p><span
-class="math display">\[\underbrace{\text{EB-Sampler}}_{\text{optimal
-unmasking}} \longleftrightarrow \underbrace{\text{Thesis
-result}}_{\text{optimal remasking}}\]</span></p>
-<p>where “optimal remasking” means: given that unmasking has already
-produced a candidate sequence with some committed tokens, which tokens
-should be remasked to maximally reduce the residual <span
-class="math inline">\(E_{\text{fact}}\)</span>?</p>
-<h4 id="the-open-gap-remasking-theory">4. The Open Gap: Remasking
-Theory</h4>
-<p>Despite seven papers spanning the full landscape of MDM sampling, no
-existing work provides a theoretical characterisation of remasking in
-terms of the information profile or the Lavenant &amp; Zanella error
-bound. Specifically:</p>
+class="math display">\[\underbrace{\text{EB-Sampler}}_{\text{minimises }
+E_f \text{ for unmasking}} \longleftrightarrow
+\underbrace{\text{Thesis}}_{\text{minimises } \Delta E_f \text{ for
+remasking}}\]</span></p>
+<p>where <span class="math inline">\(\Delta E_f\)</span> is the
+additional <span class="math inline">\(E_{\text{fact}}\)</span>
+reduction achievable by one correction pass.</p>
+<h4 id="the-role-of-discrete-flow-matching-and-sedd">5. The Role of
+Discrete Flow Matching and SEDD</h4>
+<p>DFM (Paper 11) and SEDD (Paper 9) provide two complementary
+theoretical lenses on the same object:</p>
 <ul>
-<li><strong>ReMDM</strong> proves monotone improvement in KL as <span
-class="math inline">\(R \to \infty\)</span> but does not connect to
-<span class="math inline">\(E_{\text{fact}}\)</span> or <span
-class="math inline">\(I(x)\)</span>.</li>
-<li><strong>RemeDi</strong> learns a remasking policy but provides no
-formal guarantee.</li>
-<li><strong>PRISM</strong> guarantees the quality head’s calibration but
-not the sampling quality of the guided algorithm.</li>
-<li><strong>Informed Correctors</strong> provides MCMC mixing guarantees
-in a different theoretical framework.</li>
-<li><strong>EB-Sampler</strong> and <strong>Lavenant &amp;
-Zanella</strong> cover unmasking only.</li>
+<li><strong>SEDD’s PC sampler</strong> views remasking as a Langevin
+corrector on the discrete score. The convergence guarantee is an
+exponential mixing bound (similar to Informed Correctors).</li>
+<li><strong>DFM’s corrector</strong> views remasking as a time-reversed
+probability flow. The optimality criterion is path-integral KL
+minimisation.</li>
+<li><strong>Lavenant &amp; Zanella</strong> views remasking as local
+Riemann refinement of the information profile integral.</li>
 </ul>
-<p>The thesis fills this gap. The central contribution is:</p>
+<p>All three frameworks agree qualitatively: concentrate corrections on
+high-entropy positions. The thesis works in the Lavenant &amp; Zanella
+framework because it directly connects to the MDM training objective
+(the information profile is related to the ELBO loss) and provides the
+most explicit, computable <span
+class="math inline">\(E_{\text{fact}}\)</span> bounds.</p>
+<h4 id="mask-predict-as-the-historical-anchor">6. Mask-Predict as the
+Historical Anchor</h4>
+<p>Mask-Predict (Paper 12) shows that confidence-based remasking has
+been effective in practice for six years. The thesis provides the
+rigorous theoretical explanation for <em>why</em> it works — and
+<em>when</em> it optimally reduces approximation error — which
+Mask-Predict never attempted to address. This narrative arc (heuristic →
+theory) is a compelling framing for the thesis introduction and
+conclusion.</p>
+<h4 id="the-open-gap-and-the-thesis-contribution">7. The Open Gap and
+the Thesis Contribution</h4>
+<p>Combining all twelve papers, the landscape is:</p>
+<ul>
+<li><strong>Unmasking theory is complete:</strong> D3PM → MDLM →
+Lavenant &amp; Zanella → EB-Sampler form a complete chain from
+foundations to optimal algorithms.</li>
+<li><strong>Remasking practice exists:</strong> Mask-Predict → ReMDM →
+RemeDi/PRISM demonstrate empirically effective remasking, with
+increasingly principled confidence signals.</li>
+<li><strong>Remasking theory is missing:</strong> No paper connects
+remasking to <span class="math inline">\(E_{\text{fact}}\)</span>, the
+information profile <span class="math inline">\(I(x)\)</span>, or the
+Lavenant &amp; Zanella optimality criterion.</li>
+</ul>
+<p>The thesis fills this gap. The central theorem to prove:</p>
 <blockquote>
-<p><em>Under the assumption that the confidence signal <span
+<p><em>Under the assumption that <span
 class="math inline">\(c^i\)</span> is a consistent estimator of <span
 class="math inline">\(H(x^i \mid \text{context})\)</span>,
 confidence-guided remasking with threshold <span
@@ -1145,21 +1271,78 @@ class="math inline">\(E_{\text{fact}}\)</span> by <span
 class="math inline">\(\Delta(\tau, I) \geq 0\)</span>, with <span
 class="math inline">\(\Delta &gt; 0\)</span> whenever the information
 profile is non-uniform and <span class="math inline">\(\tau\)</span> is
-chosen to target the high-<span class="math inline">\(I^i(x)\)</span>
+chosen to target the high-<span class="math inline">\(I^i\)</span>
 positions.</em></p>
 </blockquote>
-<p>This result unifies the literature: ReMDM’s uniform remasking is the
-<span class="math inline">\(\tau = 0\)</span> special case; the
-EB-Sampler’s entropy budget determines the remasking threshold
-implicitly; and RemeDi/PRISM’s trained signals are consistent estimators
-in the sense of the theorem’s assumption.</p>
+<p>This result unifies the entire landscape: ReMDM’s <span
+class="math inline">\(\sigma_t\)</span> is the <span
+class="math inline">\(\tau = 0\)</span> case; EB-Sampler’s entropy
+budget determines <span class="math inline">\(\tau\)</span> implicitly;
+RemeDi/PRISM’s trained signals are consistent estimators under this
+assumption; and Informed Correctors’ spectral gap result is a parallel
+confirmation from a different theoretical framework.</p>
+<hr />
+<h2 id="appendix-repository-index">Appendix: Repository Index</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Repo</th>
+<th>URL</th>
+<th>Role</th>
+<th>Submodule?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>kuleshov-group/remdm</td>
+<td>https://github.com/kuleshov-group/remdm</td>
+<td>ReMDM strategies on MDLM-OWT</td>
+<td>Yes (<code>external/remdm</code>)</td>
+</tr>
+<tr>
+<td>SeunggeunKimkr/PRISM</td>
+<td>https://github.com/SeunggeunKimkr/PRISM</td>
+<td>PRISM quality head</td>
+<td>Yes (<code>external/PRISM</code>)</td>
+</tr>
+<tr>
+<td>maple-research-lab/RemeDi</td>
+<td>https://github.com/maple-research-lab/RemeDi</td>
+<td>RemeDi inference code</td>
+<td>Yes (<code>external/remedi</code>)</td>
+</tr>
+<tr>
+<td>kuleshov-group/mdlm</td>
+<td>https://github.com/kuleshov-group/mdlm</td>
+<td>Original MDLM baseline</td>
+<td>Add (<code>external/mdlm</code>)</td>
+</tr>
+<tr>
+<td>louaaron/Score-Entropy-Discrete-Diffusion</td>
+<td>https://github.com/louaaron/Score-Entropy-Discrete-Diffusion</td>
+<td>SEDD PC-sampler baseline</td>
+<td>Add (<code>external/sedd</code>)</td>
+</tr>
+<tr>
+<td>GSAI-ML/LLaDA</td>
+<td>https://github.com/GSAI-ML/LLaDA</td>
+<td>LLaDA-8B inference</td>
+<td>HF only; no submodule needed</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <p><em>Compiled with:</em></p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pandoc</span> comparison.md <span class="at">-o</span> comparison.pdf <span class="dt">\</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--pdf-engine</span><span class="op">=</span>xelatex <span class="dt">\</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-V</span> mainfont=<span class="st">&quot;Latin Modern Roman&quot;</span> <span class="dt">\</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--toc</span> <span class="at">--toc-depth</span><span class="op">=</span>2 <span class="dt">\</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-V</span> geometry:margin=2.5cm</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pandoc</span> comparison.md <span class="at">-o</span> comparison.pdf <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--pdf-engine</span><span class="op">=</span>xelatex <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-V</span> geometry:margin=2.5cm <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--toc</span> <span class="at">--toc-depth</span><span class="op">=</span>2</span></code></pre></div>
 </body>
 </html>

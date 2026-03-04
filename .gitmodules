@@ -7,3 +7,9 @@
 [submodule "external/remedi"]
 	path = external/remedi
 	url = https://github.com/maple-research-lab/RemeDi.git
+[submodule "external/mdlm"]
+	path = external/mdlm
+	url = https://github.com/kuleshov-group/mdlm
+[submodule "external/sedd"]
+	path = external/sedd
+	url = https://github.com/louaaron/Score-Entropy-Discrete-Diffusion
