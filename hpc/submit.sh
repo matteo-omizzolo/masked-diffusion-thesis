@@ -20,7 +20,7 @@ cd ~/mdm/masked-diffusion-thesis
 echo "Current directory: $(pwd)"
 echo ""
 echo "Submitting job..."
-sbatch hpc/job.sh
+sbatch hpc/remdm_smoke.sbatch
 ENDSSH
 )
 
@@ -41,7 +41,7 @@ if [ -n "$JOB_ID" ]; then
     echo "  squeue -j ${JOB_ID}"
     echo ""
     echo "View logs (once running):"
-    echo "  ssh ${REMOTE_USER}@${REMOTE_HOST} 'tail -f ~/mdm/masked-diffusion-thesis/logs/remdm-${JOB_ID}.out'"
+    echo "  ssh ${REMOTE_USER}@${REMOTE_HOST} 'tail -f ~/mdm/masked-diffusion-thesis/out/remdm_smoke_${JOB_ID}.out'"
     echo ""
     echo "Cancel job:"
     echo "  scancel ${JOB_ID}"
