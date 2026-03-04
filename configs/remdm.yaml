@@ -15,14 +15,14 @@ paths:
 
 model:
   base_checkpoint_path: null
-  device: cpu               # Use "cuda" on Linux HPC
+  device: cuda              # Use "cuda" on Linux HPC
 
 remdm:
   # ============================================================================
   # Execution mode
   # ============================================================================
-  toy_mode: true            # true = mock sampling | false = real ReMDM
-  dry_run: true             # true = print command only (macOS safe) | false = execute
+  toy_mode: false           # true = mock sampling | false = real ReMDM
+  dry_run: false            # true = print command only (macOS safe) | false = execute
   
   # ============================================================================
   # Upstream ReMDM parameters (used when toy_mode=false)
@@ -48,15 +48,15 @@ remdm:
   time_conditioning: false  # Whether to use time conditioning
   
   # Sampling parameters
-  steps: 1024               # sampling.steps (number of diffusion steps)
+  steps: 256                # sampling.steps (number of diffusion steps) - reduced for baseline
   strategy: remdm-conf      # sampling.sampler: remdm-conf | remdm-loop | mdlm | etc.
   nucleus_p: 0.9            # sampling.nucleus_p (top-p sampling, 0.0-1.0)
-  num_sample_batches: 5000  # sampling.num_sample_batches
+  num_sample_batches: 10    # sampling.num_sample_batches - reduced for quick baseline
   
   # Batch sizes (per device)
-  batch_size: 1             # loader.batch_size
-  eval_batch_size: 1        # loader.eval_batch_size
-  perplexity_batch_size: 1  # eval.perplexity_batch_size
+  batch_size: 4             # loader.batch_size - increased for faster baseline
+  eval_batch_size: 4        # loader.eval_batch_size
+  perplexity_batch_size: 4  # eval.perplexity_batch_size
   
   # Output paths
   generated_seqs_path: null # sampling.generated_seqs_path (null = auto-generate)

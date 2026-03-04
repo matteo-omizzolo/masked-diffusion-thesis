@@ -1,3 +1,4 @@
+"""Shared configuration utilities."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -8,6 +9,5 @@ import yaml
 
 def load_yaml(path: str | Path) -> Dict[str, Any]:
     """Load a YAML file into a Python dict."""
-    path = Path(path)
-    with path.open("r", encoding="utf-8") as f:
+    with Path(path).open("r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}

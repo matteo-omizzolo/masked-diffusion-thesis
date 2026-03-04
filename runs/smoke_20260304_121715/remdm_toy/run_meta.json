@@ -1,0 +1,9 @@
+{
+  "git_commit": "41e39601bfcc8dcd0c565f0b69ac37846f04cc74",
+  "method": "remdm",
+  "model_id": "",
+  "seed": null,
+  "steps": 16,
+  "strategy": "remdm_conf",
+  "timestamp": "20260304_121718"
+}

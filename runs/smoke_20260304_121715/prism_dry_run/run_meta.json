@@ -1,0 +1,9 @@
+{
+  "git_commit": "41e39601bfcc8dcd0c565f0b69ac37846f04cc74",
+  "method": "prism",
+  "model_id": "",
+  "seed": null,
+  "steps": 256,
+  "strategy": "remedi_policy",
+  "timestamp": "20260304_121724"
+}
