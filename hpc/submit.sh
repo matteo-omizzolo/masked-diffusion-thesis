@@ -1,12 +1,13 @@
 #!/bin/bash
 # Submit job to Bocconi HPC cluster
-# Usage: bash hpc/submit.sh [smoke|eval|eval-loop]   (default: smoke)
+# Usage: bash hpc/submit.sh [smoke|eval|eval-loop|t1000|t1000-loop]   (default: smoke)
 #
 # Targets:
-#   smoke     — 2-batch smoke test (remdm-conf, no MAUVE)
-#   eval      — full eval array: tasks 0-1 (mdlm + remdm-conf, 100 batches, MAUVE)
-#   eval-loop — single task 2 (remdm-loop); submit after eval jobs complete to stay
-#               within stud QOS limit of 2 submitted jobs at once.
+#   smoke      — 2-batch smoke test (remdm-conf, no MAUVE)
+#   eval       — full eval array: tasks 0-1 (mdlm + remdm-conf, 100 batches, 128 steps, MAUVE)
+#   eval-loop  — single task 2 (remdm-loop); submit after eval jobs complete
+#   t1000      — T=1000 eval array: tasks 0-1 (mdlm + remdm-conf, paper-comparable gen_ppl)
+#   t1000-loop — single task 2 (remdm-loop) at T=1000; submit after t1000 completes
 
 set -euo pipefail
 
@@ -17,11 +18,14 @@ REMOTE_HOST="slogin.hpc.unibocconi.it"
 EXTRA_SBATCH_OPTS=""
 case "$TARGET" in
   smoke)     SBATCH_FILE="hpc/remdm_smoke.sbatch" ;;
-  eval)      SBATCH_FILE="hpc/remdm_full_eval.sbatch" ;;
-  eval-loop) SBATCH_FILE="hpc/remdm_full_eval.sbatch"
-             EXTRA_SBATCH_OPTS="--array=2-2" ;;  # NOTE: sbatch opts must come before script
+  eval)       SBATCH_FILE="hpc/remdm_full_eval.sbatch" ;;
+  eval-loop)  SBATCH_FILE="hpc/remdm_full_eval.sbatch"
+              EXTRA_SBATCH_OPTS="--array=2-2" ;;  # NOTE: sbatch opts must come before script
+  t1000)      SBATCH_FILE="hpc/remdm_t1000_eval.sbatch" ;;
+  t1000-loop) SBATCH_FILE="hpc/remdm_t1000_eval.sbatch"
+              EXTRA_SBATCH_OPTS="--array=2-2" ;;
   *)
-    echo "ERROR: unknown target '$TARGET'. Use 'smoke', 'eval', or 'eval-loop'."
+    echo "ERROR: unknown target '$TARGET'. Use 'smoke', 'eval', 'eval-loop', 't1000', or 't1000-loop'."
     exit 1
     ;;
 esac
@@ -65,6 +69,12 @@ if [ -n "$JOB_ID" ]; then
         echo "  When done: bash hpc/submit.sh eval-loop   (submits remdm-loop as task 2)"
     elif [ "$TARGET" = "eval-loop" ]; then
         echo "  ssh ${REMOTE_USER}@${REMOTE_HOST} 'tail -f ~/mdm/masked-diffusion-thesis/out/remdm_eval_${JOB_ID}_2.out'"
+    elif [ "$TARGET" = "t1000" ]; then
+        echo "  ssh ${REMOTE_USER}@${REMOTE_HOST} 'tail -f ~/mdm/masked-diffusion-thesis/out/remdm_t1000_${JOB_ID}_0.out'"
+        echo "  (array tasks: ${JOB_ID}_0 = mdlm, ${JOB_ID}_1 = remdm-conf)"
+        echo "  When done: bash hpc/submit.sh t1000-loop   (submits remdm-loop as task 2)"
+    elif [ "$TARGET" = "t1000-loop" ]; then
+        echo "  ssh ${REMOTE_USER}@${REMOTE_HOST} 'tail -f ~/mdm/masked-diffusion-thesis/out/remdm_t1000_${JOB_ID}_2.out'"
     else
         echo "  ssh ${REMOTE_USER}@${REMOTE_HOST} 'tail -f ~/mdm/masked-diffusion-thesis/out/remdm_smoke_${JOB_ID}.out'"
     fi
