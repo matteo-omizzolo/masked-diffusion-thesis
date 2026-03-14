@@ -15,7 +15,11 @@ venv/
 
 # Output artifacts (do not commit)
 logs/
-results/
+# In results/, ignore large raw outputs but track summaries
+results/**/generated_sequences.json
+results/**/samples_*.json
+results/**/*.pt
+results/**/*.ckpt
 
 # Data & checkpoints (keep dir structure, not the files)
 data/
