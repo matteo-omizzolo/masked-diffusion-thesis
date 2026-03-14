@@ -99,17 +99,40 @@ For production eval: use a beegfs scratch partition or pre-download on login nod
 
 ---
 
-## Current status (2026-03-06) — SMOKE TEST PASSED ✓
-- **Job 465315 COMPLETED** (exit 0, 3:09 elapsed)
-- Sampling: 2 batches at ~9.7 it/s on A100
-- **gen_ppl: 62.1**, entropy: 5.54
-- Generated coherent English text confirmed
-- `--remdm_no_mauve` flag added to skip MAUVE for smoke tests
-- All env issues resolved; lessons in `tasks/lessons.md`
-- `hpc/pull.sh` needs fix for macOS rsync compatibility
+## Current status (2026-03-15) — T=1000 EVAL COMPLETE ✓
+
+All three strategies evaluated at both T=128 and T=1000 steps. Results in `results/`.
+
+### T=128 results (`results/full_eval/comparison.json`)
+| strategy   | gen_ppl | entropy | MAUVE |
+|------------|---------|---------|-------|
+| mdlm       |  60.914 |  5.507  | 0.170 |
+| remdm-conf |  57.579 |  5.499  | 0.440 |
+| remdm-loop |  59.632 |  5.538  | 0.396 |
+
+### T=1000 results (`results/t1000_eval/comparison.json`) — job 465445, 2h47m
+| strategy   | gen_ppl | entropy | MAUVE |
+|------------|---------|---------|-------|
+| mdlm       |  52.269 |  5.446  | 0.590 |
+| remdm-conf |  37.321 |  5.357  | 0.325 |
+| remdm-loop |  30.296 |  5.390  | 0.684 |
+
+### Key finding: MAUVE inversion at T=1000
+At T=128: remdm-conf best MAUVE. At T=1000: remdm-loop best, remdm-conf drops to worst.
+remdm-conf gen_ppl ~37.3 matches paper Table 1 ✓. MAUVE inversion is a novel thesis finding.
+See `results/combined_comparison.md` for full analysis.
+
+## Submit targets
+```bash
+bash hpc/submit.sh t1000p   # all 3 strategies on 3 GPUs in 1 job (recommended)
+bash hpc/submit.sh smoke    # 2-batch smoke test
+bash hpc/submit.sh eval     # 128-step array (tasks 0-1)
+bash hpc/submit.sh eval-loop  # 128-step task 2
+```
 
 ## Next experiments
-1. ~~Add full eval sweep infrastructure~~ ✓ Done — `hpc/remdm_full_eval.sbatch` (array 0-2), `scripts/aggregate_results.py`
-2. Run full eval: `bash hpc/push.sh && bash hpc/submit.sh eval`
-3. After jobs complete: `bash hpc/pull.sh && python scripts/aggregate_results.py`
-4. Extend to RemeDi and PRISM methods
+1. ~~Full eval (T=128)~~ ✓ `results/full_eval/`
+2. ~~T=1000 eval~~ ✓ `results/t1000_eval/` — matches paper gen_ppl range
+3. Step-sweep: T=256/512/1000 for remdm-conf to characterise MAUVE collapse
+4. RemeDi evaluation: HF model `maple-research-lab/RemeDi-RL`
+5. PRISM: `external/PRISM/` not yet populated — low priority

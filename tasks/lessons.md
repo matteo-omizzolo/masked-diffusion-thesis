@@ -88,6 +88,18 @@
 - **Rule:** Always put sbatch options before the script: `sbatch --array=2-2 script.sh`
 - **Fix applied:** `submit.sh` now uses `EXTRA_SBATCH_OPTS` variable placed before `$SBATCH_FILE`
 
+### W13: Parallel sbatch with CUDA_VISIBLE_DEVICES beats multiple array jobs
+- stud QOS MaxJobsPerUser=1 means only 1 array job runs at a time
+- Backgrounding 3 python processes with CUDA_VISIBLE_DEVICES=0/1/2 in a single job runs all strategies simultaneously on 1 job slot
+- Total time = slowest strategy, not sum; 3× speedup in practice
+- **Rule:** For multi-strategy eval, use `hpc/remdm_t1000_parallel.sbatch` pattern; request `--gres=gpu:N` and background each strategy with explicit GPU assignment
+
+### W14: MAUVE is highly sensitive to number of diffusion steps — check at both T=128 and T=1000
+- At T=128: remdm-conf MAUVE > remdm-loop MAUVE (confidence remasking better)
+- At T=1000: remdm-loop MAUVE > mdlm MAUVE > remdm-conf MAUVE (ranking fully inverts)
+- remdm-conf likely suffers diversity/mode collapse at high step counts; remdm-loop benefits from additional refinement
+- **Rule:** Always report metrics at both low (128) and high (1000) step counts; don't rely on a single step count for MAUVE comparisons
+
 ### W12: MAUVE with wrong reference domain is uninformative
 - MAUVE compares generated text to a reference distribution
 - Using wikitext103 (Wikipedia) as reference for a model trained on OpenWebText → near-zero MAUVE (~0.006-0.008) for all strategies, differences indistinguishable
