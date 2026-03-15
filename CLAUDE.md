@@ -117,10 +117,18 @@ All three strategies evaluated at both T=128 and T=1000 steps. Results in `resul
 | remdm-conf |  37.321 |  5.357  | 0.325 |
 | remdm-loop |  30.296 |  5.390  | 0.684 |
 
-### Key finding: MAUVE inversion at T=1000
-At T=128: remdm-conf best MAUVE. At T=1000: remdm-loop best, remdm-conf drops to worst.
-remdm-conf gen_ppl ~37.3 matches paper Table 1 ✓. MAUVE inversion is a novel thesis finding.
-See `results/combined_comparison.md` for full analysis.
+### Key findings — step sweep (T=128/256/512/1000)
+| strategy   | T=128 MAUVE | T=256 MAUVE | T=512 MAUVE | T=1000 MAUVE |
+|------------|-------------|-------------|-------------|--------------|
+| mdlm       | 0.170       | **0.740**   | 0.592       | 0.590        |
+| remdm-conf | 0.440       | 0.475       | 0.470       | 0.325        |
+| remdm-loop | 0.396       | 0.614       | 0.532       | **0.684**    |
+
+- **mdlm MAUVE peaks sharply at T=256 (0.740)** then drops — optimal diversity window
+- remdm-conf diversity collapse: entropy drops 5.499→5.357 across T=128→1000
+- remdm-loop: only strategy with monotonically improving MAUVE; best gen_ppl at all T≥256
+- mdlm gen_ppl anomaly: slightly worsens T=512→T=1000 (49.0→52.3)
+- Figure: `figures/step_sweep.{pdf,png}` | Full analysis: `results/combined_comparison.md`
 
 ## Submit targets
 ```bash
@@ -132,7 +140,7 @@ bash hpc/submit.sh eval-loop  # 128-step task 2
 
 ## Next experiments
 1. ~~Full eval (T=128)~~ ✓ `results/full_eval/`
-2. ~~T=1000 eval~~ ✓ `results/t1000_eval/` — matches paper gen_ppl range
-3. Step-sweep: T=256/512/1000 for remdm-conf to characterise MAUVE collapse
-4. RemeDi evaluation: HF model `maple-research-lab/RemeDi-RL`
+2. ~~T=1000 eval~~ ✓ `results/t1000_eval/`
+3. ~~Step-sweep T=256/512~~ ✓ `results/sweep/` — MAUVE inversion fully characterised
+4. RemeDi evaluation: HF model `maple-research-lab/RemeDi-RL` ← **IN PROGRESS**
 5. PRISM: `external/PRISM/` not yet populated — low priority

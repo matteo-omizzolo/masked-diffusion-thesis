@@ -5,7 +5,16 @@ Key finding: MAUVE ranking inverts between T=128 and T=1000.
 
 ---
 
-## Priority 1 — Step-sweep: characterise the MAUVE inversion
+## ~~Priority 1 — Step-sweep: characterise the MAUVE inversion~~ ✓ COMPLETE
+
+**Results (job 467809, 2h26m):** See `results/combined_comparison.md` and `figures/step_sweep.{pdf,png}`
+- mdlm MAUVE peaks at T=256 (0.740), drops to 0.590 by T=1000
+- remdm-conf collapses progressively; entropy drop (5.499→5.357) confirms diversity loss
+- remdm-loop monotonically improves; dominates at T≥512
+
+---
+
+## Priority 1 (was 2) — RemeDi evaluation ← CURRENT
 
 **Goal:** Understand when and why remdm-conf MAUVE collapses as T increases.
 Produces a "steps vs metric" curve — strong thesis material.
@@ -37,7 +46,7 @@ high T, that confirms diversity collapse; if entropy is flat, it's a distributio
 
 ---
 
-## Priority 2 — RemeDi evaluation
+## ~~Priority 2 — RemeDi evaluation~~ (renumbered to Priority 1 above)
 
 **Goal:** Add the RL-finetuned RemeDi model to the comparison table.
 HF model: `maple-research-lab/RemeDi-RL`

@@ -26,8 +26,9 @@ case "$TARGET" in
               EXTRA_SBATCH_OPTS="--array=2-2" ;;
   t1000p)     SBATCH_FILE="hpc/remdm_t1000_parallel.sbatch" ;;  # all 3 strategies on 3 GPUs, 1 job
   sweep)      SBATCH_FILE="hpc/remdm_sweep.sbatch" ;;          # T=256 + T=512 step sweep
+  remedi)     SBATCH_FILE="hpc/remedi_eval.sbatch" ;;         # RemeDi-RL: T=32/128/1000
   *)
-    echo "ERROR: unknown target '$TARGET'. Use 'smoke', 'eval', 'eval-loop', 't1000', 't1000-loop', 't1000p', or 'sweep'."
+    echo "ERROR: unknown target '$TARGET'. Use 'smoke', 'eval', 'eval-loop', 't1000', 't1000-loop', 't1000p', 'sweep', or 'remedi'."
     exit 1
     ;;
 esac
