@@ -41,10 +41,12 @@ def load_remedi(ckpt_path: str, device: str):
     from remedi import RemeDiUPMModelLM  # noqa: PLC0415
 
     print(f"Loading tokenizer from {ckpt_path} ...")
-    tokenizer = transformers.AutoTokenizer.from_pretrained(ckpt_path)
+    tokenizer = transformers.AutoTokenizer.from_pretrained(
+        ckpt_path, trust_remote_code=True)
 
     print(f"Loading model from {ckpt_path} ...")
-    model = RemeDiUPMModelLM.from_pretrained(ckpt_path, torch_dtype=torch.bfloat16)
+    model = RemeDiUPMModelLM.from_pretrained(
+        ckpt_path, torch_dtype=torch.bfloat16, trust_remote_code=True)
     model.eval().requires_grad_(False).to(device)
     print("Model loaded.")
     return model, tokenizer

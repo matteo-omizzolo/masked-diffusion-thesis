@@ -7,7 +7,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
-#SBATCH --time=02:00:00
+#SBATCH --time=04:00:00
 #SBATCH --out=out/%x_%j.out
 #SBATCH --error=err/%x_%j.err
 #SBATCH --mail-type=END
@@ -26,25 +26,17 @@ REPO=~/mdm/masked-diffusion-thesis
 cd "$REPO"
 
 # 2) Activate environment
-# If using conda (recommended on HPC):
-if command -v conda &>/dev/null; then
-    source "$(conda info --base)/etc/profile.d/conda.sh"
-    conda activate remdm
-# Fallback: venv created by hpc/setup_env.sh
-elif [ -d "$REPO/.venv" ]; then
-    source "$REPO/.venv/bin/activate"
-else
-    echo "ERROR: no conda env 'remdm' and no .venv found. Run hpc/setup_env.sh first." >&2
-    exit 1
-fi
+# Load conda module and activate env (Python 3.11, created via hpc/setup_env.sh)
+module load miniconda3
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate remdm311
 
 echo "Python:  $(which python)"
 echo "PyTorch: $(python -c 'import torch; print(torch.__version__)')"
 echo "CUDA:    $(python -c 'import torch; print(torch.version.cuda)')"
 echo "GPU:     $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
 
-# 3) Ensure submodules are present
-git submodule update --init --recursive
+# 3) Submodules are pre-synced by push.sh — no git needed
 
 # 4) CPU threading (avoid oversubscription)
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
@@ -64,7 +56,8 @@ srun python -u -m mdm_playground.cli.run \
     --steps 64 \
     --remdm_num_batches 2 \
     --out_dir results/remdm_smoke \
-    --seed 42
+    --seed 42 \
+    --remdm_no_mauve
 
 echo "=========================================="
 echo "Done: $(date)"

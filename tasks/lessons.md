@@ -94,6 +94,12 @@
 - Total time = slowest strategy, not sum; 3× speedup in practice
 - **Rule:** For multi-strategy eval, use `hpc/remdm_t1000_parallel.sbatch` pattern; request `--gres=gpu:N` and background each strategy with explicit GPU assignment
 
+### W15: Check HF model completeness before planning eval around it
+- `maple-research-lab/RemeDi-RL` is missing its custom code files (`configuration_llada.py`, `modeling_llada.py` with `FSDPLLaDAUPMModelLM`) — the class was never published
+- The model is also 8B parameters (vs our 100M MDLM baseline) — not directly comparable
+- **Rule:** Before planning an HF model evaluation, verify: (1) all required files exist in the repo, (2) model scale is comparable, (3) custom code dependencies are resolvable
+- **Alternative:** Use `GSAI-ML/LLaDA-8B-Instruct` (the base model before RemeDi's RL fine-tuning) — has complete code, same architecture
+
 ### W14: MAUVE is highly sensitive to number of diffusion steps — check at both T=128 and T=1000
 - At T=128: remdm-conf MAUVE > remdm-loop MAUVE (confidence remasking better)
 - At T=1000: remdm-loop MAUVE > mdlm MAUVE > remdm-conf MAUVE (ranking fully inverts)

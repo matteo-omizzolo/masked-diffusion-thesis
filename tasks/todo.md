@@ -14,7 +14,7 @@ Key finding: MAUVE ranking inverts between T=128 and T=1000.
 
 ---
 
-## Priority 1 (was 2) — RemeDi evaluation ← CURRENT
+## Priority 1 (was 2) — RemeDi / LLaDa evaluation ← CURRENT (BLOCKED on RemeDi-RL)
 
 **Goal:** Understand when and why remdm-conf MAUVE collapses as T increases.
 Produces a "steps vs metric" curve — strong thesis material.
@@ -50,6 +50,25 @@ high T, that confirms diversity collapse; if entropy is flat, it's a distributio
 
 **Goal:** Add the RL-finetuned RemeDi model to the comparison table.
 HF model: `maple-research-lab/RemeDi-RL`
+
+### BLOCKER — RemeDi-RL HF model is broken + wrong scale
+
+Investigation (2026-03-15) revealed:
+- `maple-research-lab/RemeDi-RL` is **8B parameters** (d_model=4096, 32 layers, vocab=126464)
+  vs our MDLM baseline of ~100M. Not directly comparable.
+- HF model references `FSDPLLaDAUPMModelLM` in auto_map, but this class does NOT exist
+  in the public LLaDa codebase (`GSAI-ML/LLaDA-8B-Instruct/modeling_llada.py`).
+  The model is **unusable for public inference** without the authors' private code.
+
+**Options:**
+A) **LLaDa-8B-Instruct** (`GSAI-ML/LLaDA-8B-Instruct`): the base model before RemeDi RL
+   fine-tuning. Has complete public code, same 8B scale. Evaluates masked diffusion at
+   large scale. Note scale difference prominently in thesis.
+B) **Skip external model comparison** entirely. Thesis contribution = step-sweep findings.
+   Add a discussion section noting RemeDi-RL is blocked and the scale mismatch.
+
+Recommended: Option A (LLaDa-8B) for completeness, with clear scale caveat.
+See `hpc/llada_eval.sbatch` (to be created) using GSAI-ML's generate_block_diffusion.
 
 ### Step 1 — Research RemeDi inference API (subagent task)
 RemeDi has a different interface from ReMDM (it's RL-finetuned, not remasking-based).

@@ -1,0 +1,10 @@
+{
+  "git_commit": "UNKNOWN",
+  "method": "remdm",
+  "model_id": "/home/3316152/mdm/checkpoints/mdlm.ckpt",
+  "remdm_strategy": "mdlm",
+  "seed": 42,
+  "steps": 128,
+  "strategy": "remedi_policy",
+  "timestamp": "20260306_113305"
+}

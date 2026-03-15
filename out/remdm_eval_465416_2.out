@@ -1,0 +1,16 @@
+==========================================
+Job ID:    465416 (array task 2)
+Strategy:  remdm-loop
+Node:      gnode02
+Start:     Fri Mar  6 12:35:21 PM CET 2026
+==========================================
+Python:  /home/3316152/.conda/envs/remdm311/bin/python
+PyTorch: 2.10.0+cu128
+CUDA:    12.8
+GPU:     NVIDIA A100 80GB PCIe
+Running ReMDM (toy=False, dry_run=False)
+Done. Outputs at: /mnt/beegfsstudents/home/3316152/mdm/masked-diffusion-thesis/results/full_eval/remdm-loop/external_remdm
+==========================================
+Done: Fri Mar  6 01:05:43 PM CET 2026
+Outputs at: results/full_eval/remdm-loop
+==========================================

@@ -134,6 +134,8 @@ def make_parser() -> argparse.ArgumentParser:
     p.add_argument("--remdm_model_size", default="small")
     p.add_argument("--remdm_strategy", default="remdm-conf")
     p.add_argument("--remdm_num_batches", type=int, default=10)
+    p.add_argument("--remdm_no_mauve", action="store_true",
+                   help="Skip MAUVE computation (avoids needing reference data)")
 
     return p
 
@@ -153,7 +155,7 @@ def main(argv=None) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Save run metadata
-    save_json(out_dir / "run_meta.json", {
+    meta = {
         "git_commit": get_git_commit_hash(),
         "method": args.method,
         "strategy": args.strategy,
@@ -161,7 +163,10 @@ def main(argv=None) -> None:
         "steps": args.steps,
         "seed": args.seed,
         "timestamp": ts,
-    })
+    }
+    if args.method == "remdm":
+        meta["remdm_strategy"] = args.remdm_strategy
+    save_json(out_dir / "run_meta.json", meta)
 
     # ------------------------------------------------------------------
     # Dispatch by method
@@ -220,6 +225,16 @@ def _run_remedi(args: argparse.Namespace, out_dir: Path) -> None:
 
 def _run_remdm(args: argparse.Namespace, out_dir: Path) -> None:
     """Drive upstream ReMDM via subprocess."""
+    if args.strategy != "remedi_policy":
+        import warnings
+        warnings.warn(
+            f"--strategy '{args.strategy}' is ignored for --method remdm. "
+            "Use --remdm_strategy to control the sampling strategy.",
+            stacklevel=2,
+        )
+    extra = []
+    if getattr(args, 'remdm_no_mauve', False):
+        extra.append('sampling.compute_mauve=false')
     cfg = ReMDMConfig(
         toy_mode=args.toy_mode,
         dry_run=args.dry_run,
@@ -229,6 +244,7 @@ def _run_remdm(args: argparse.Namespace, out_dir: Path) -> None:
         strategy=args.remdm_strategy,
         steps=args.steps,
         num_sample_batches=args.remdm_num_batches,
+        extra_overrides=extra,
     )
     adapter = ReMDMAdapter(cfg=cfg, run_output_dir=out_dir)
     print(f"Running ReMDM (toy={cfg.toy_mode}, dry_run={cfg.dry_run})")

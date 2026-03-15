@@ -36,7 +36,7 @@ run() {
 # ---------------------------------------------------------------------------
 run "remdm_toy" \
     --method remdm \
-    --strategy remdm_conf \
+    --remdm_strategy remdm-conf \
     --steps 16 \
     --toy_mode
 
@@ -45,7 +45,7 @@ run "remdm_toy" \
 # ---------------------------------------------------------------------------
 run "remdm_dry_run" \
     --method remdm \
-    --strategy remdm_conf \
+    --remdm_strategy remdm-conf \
     --steps 256 \
     --dry_run
 
