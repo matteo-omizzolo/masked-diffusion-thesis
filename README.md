@@ -1,200 +1,79 @@
 # Masked Diffusion Thesis
 
-Research code for MSc thesis on masked diffusion models (RemeDi, ReMDM, PRISM)
-with a unified inference playground and reproducible HPC experiments.
+MSc thesis: empirical comparison of remasking strategies for masked diffusion language models
+(MDLM, ReMDM-conf, ReMDM-loop) on OpenWebText across T=128/256/512/1000 diffusion steps.
 
 ---
 
-## Quick start
+## Key results
+
+| strategy   | T=128 MAUVE | T=256 MAUVE | T=512 MAUVE | T=1000 MAUVE | T=1000 gen_ppl |
+|------------|-------------|-------------|-------------|--------------|----------------|
+| mdlm       | 0.170       | **0.740**   | 0.592       | 0.590        | 52.3           |
+| remdm-conf | 0.440       | 0.475       | 0.470       | 0.325        | 37.3           |
+| remdm-loop | 0.396       | 0.614       | 0.532       | **0.684**    | 30.3           |
+
+See `results/combined_comparison.md` and `figures/step_sweep.{pdf,png}` for full analysis.
+
+---
+
+## Repo structure
+
+```
+src/mdm_playground/     # Main package (pip install -e .)
+external/               # Upstream repos (remdm, remedi, PRISM, sedd, mdlm) — rsync'd, NOT cloned
+hpc/                    # Bocconi HPC workflow scripts (push.sh, submit.sh, pull.sh)
+configs/                # YAML experiment configs
+scripts/                # Analysis and plotting scripts
+docs/                   # Study documents
+  comparison.md         # 12-paper literature review + unified notation + research directions
+  empirical_analysis.md # Statistical analysis of step-sweep results
+  output/               # PDF and HTML versions of docs
+results/                # Experiment outputs (gitignored)
+figures/                # Generated plots
+tasks/                  # Planning and lessons learned
+```
+
+---
+
+## Study materials
+
+- `docs/comparison.md` — comprehensive literature review of 12 discrete diffusion papers,
+  unified notation table, 48 study questions, 8 research directions
+- `docs/empirical_analysis.md` — statistical interpretation of step-sweep results,
+  formal metric definitions, 6 research directions
+- PDF/HTML versions in `docs/output/`
+
+---
+
+## HPC workflow (Bocconi cluster)
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+bash hpc/push.sh                # rsync code to HPC (excludes checkpoints, results)
+bash hpc/submit.sh t1000p       # run all 3 strategies in parallel (3 GPUs, 1 job slot)
+# Pull results via SSH (rsync broken on macOS):
+ssh 3316152@slogin.hpc.unibocconi.it "python3 -c 'import json; ...'"
+```
+
+See `CLAUDE.md` for full environment setup, known HPC issues, and fixes.
+
+---
+
+## Main package
+
+```bash
 pip install -e .
-git submodule update --init --recursive      # external/remedi, remdm, PRISM
-
-# Smoke check (no GPU, no download)
-pytest tests/ -q                             # 36 tests
-bash scripts/smoke_all.sh                    # toy + dry-run for all methods
 ```
+
+`src/mdm_playground/` contains the inference runner, model adapters (ReMDM, MDLM),
+strategy implementations (baseline, confidence remasking, loop remasking), and metrics.
 
 ---
 
-## Unified CLI
-
-All three backends are driven through one entry point:
+## Analysis scripts
 
 ```bash
-python -m mdm_playground.cli.run --help
+python scripts/aggregate_results.py --results_dir results/full_eval  # print metrics table
+python scripts/plot_sweep.py                                           # regenerate step-curve figure
+python scripts/stage_owt_reference.py                                  # stage OWT reference on HPC
 ```
-
-### RemeDi (direct HF, CPU or GPU)
-
-Requires `maple-research-lab/RemeDi-RL` (downloaded automatically, ~2 GB):
-
-```bash
-python -m mdm_playground.cli.run \
-    --method remedi \
-    --model_id maple-research-lab/RemeDi-RL \
-    --prompt "Explain masked diffusion in one sentence." \
-    --strategy remedi_policy \
-    --steps 32 --max_len 256 --device cpu \
-    --out_dir results/remedi_policy
-```
-
-### ReMDM (subprocess via Hydra)
-
-```bash
-# Toy mode (local, no checkpoint)
-python -m mdm_playground.cli.run --method remdm --toy_mode --steps 16
-
-# Dry-run (generate command, do not execute)
-python -m mdm_playground.cli.run --method remdm --dry_run --steps 256
-
-# Real run (HPC/CUDA only — needs checkpoint)
-python -m mdm_playground.cli.run \
-    --method remdm \
-    --model_id /path/to/remdm.ckpt \
-    --steps 256 --out_dir results/remdm
-```
-
-### PRISM (subprocess via Hydra)
-
-```bash
-python -m mdm_playground.cli.run --method prism --toy_mode
-python -m mdm_playground.cli.run --method prism --dry_run --steps 256
-```
-
-### Strategies
-
-| `--strategy` | Description |
-|---|---|
-| `baseline` | No remasking — commit once and keep |
-| `remedi_policy` | RemeDi paper default: re-rank all positions each step |
-| `threshold` | Remask committed tokens with confidence < `--tau` |
-| `topk` | Remask `--k` lowest-confidence committed tokens |
-| `schedule` | Decaying remask probability (`--schedule linear\|cosine`) |
-
----
-
-## Output format
-
-Each run writes to `--out_dir/`:
-
-| File | Contents |
-|---|---|
-| `run_meta.json` | git commit, method, strategy, timestamp |
-| `summary.json` | method-specific result summary |
-| `<run_id>/trajectory.jsonl` | one JSON object per diffusion step |
-
-Per-step JSONL fields: `step`, `tokens`, `mask_positions`, `confidence` (UPS in [0,1]),
-`unmask_indices`, `remask_indices`.
-
----
-
-## Python API
-
-```python
-from mdm_playground.models.remedi import RemeDiAdapter
-from mdm_playground.strategies import RemediPolicyStrategy, ConfidenceThresholdRemaskStrategy
-from mdm_playground.samplers import run_block_diffusion
-from mdm_playground.core.logging import TrajectoryLogger
-
-adapter = RemeDiAdapter.load("maple-research-lab/RemeDi-RL", device="cpu")
-
-result = run_block_diffusion(
-    adapter=adapter,
-    messages=[{"role": "user", "content": "What is 2+2?"}],
-    strategy=ConfidenceThresholdRemaskStrategy(tau=0.4),
-    steps=8,
-    max_length=64,
-    seed=42,
-)
-print(result["generated_text"])
-```
-
----
-
-## Project structure
-
-```
-src/mdm_playground/           # Main package (pip install -e .)
-├── core/                     # Shared utilities
-│   ├── config.py             # load_yaml()
-│   ├── utils.py              # seed_everything, save_json, git hash
-│   ├── logging.py            # setup_logger, TrajectoryLogger (JSONL + npy)
-│   ├── masks.py              # make_mask, gather_topk_masked
-│   ├── schedules.py          # transfer_schedule, noise schedules
-│   └── metrics.py            # mask_frac_curve, confidence curves
-├── models/                   # Model adapters
-│   ├── base.py               # ModelAdapter (ABC), ModelMeta, ForwardOutput
-│   ├── remedi.py             # RemeDiAdapter (direct HF forward)
-│   ├── remdm.py              # ReMDMAdapter (subprocess, Hydra)
-│   └── prism.py              # PRISMAdapter (subprocess, Hydra)
-├── strategies/               # Pluggable inference strategies
-│   ├── base.py               # StepState, BaseStrategy
-│   ├── unmask.py             # BaselineUnmaskStrategy
-│   ├── remask.py             # Threshold, TopK, Scheduled
-│   └── hybrid.py             # RemediPolicyStrategy
-├── samplers/
-│   └── block_diffusion.py    # run_block_diffusion() (direct-forward models)
-└── cli/
-    └── run.py                # python -m mdm_playground.cli.run
-
-external/                     # Git submodules (not modified)
-├── remedi/                   # maple-research-lab/RemeDi
-├── remdm/                    # upstream ReMDM
-└── PRISM/                    # upstream PRISM
-
-scripts/
-├── smoke_all.sh              # End-to-end smoke for all methods
-└── smoke_infer_remedi.py     # Real RemeDi inference script
-
-tests/
-├── test_infer.py             # 22 unit tests (no checkpoint required)
-└── test_smoke.py             # 14 smoke tests (toy/dry-run)
-
-hpc/                          # Bocconi HPC workflow
-configs/                      # YAML experiment configs
-```
-
----
-
-## Tests
-
-```bash
-pytest tests/ -q                    # 36 fast tests (no checkpoint)
-pytest -m integration               # Real-model tests (needs HF download)
-```
-
----
-
-## HPC (Bocconi)
-
-```bash
-bash hpc/push.sh        # rsync code to cluster
-bash hpc/submit.sh      # sbatch job
-bash hpc/pull.sh        # fetch results
-```
-
-See [hpc/README.md](hpc/README.md) for the full workflow.
-
----
-
-## Deprecated / removed
-
-See [DEPRECATIONS.md](DEPRECATIONS.md) for a full list of removed scripts and
-their replacement commands.
-
----
-
-## Environment
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .                     # installs mdm_playground
-git submodule update --init --recursive
-```
-
-
-

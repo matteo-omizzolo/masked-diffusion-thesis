@@ -57,6 +57,115 @@ Each paper is reviewed under six headings: (A) Summary, (B) Method Details,
 
 \newpage
 
+# How to Use This Document
+
+## Reading Roadmap
+
+This document covers twelve papers in five thematic parts. The intellectual dependency
+graph is not linear — read in the order below to build concepts progressively:
+
+```
+STEP 1 — Foundation (what problem are we solving?):
+  MDLM (Part II) → understand the forward/reverse process and the training loss
+  D3PM  (Part II) → understand where the independence assumption comes from
+
+STEP 2 — The core error (what exactly goes wrong?):
+  Lavenant & Zanella (Part IV) → definition of E_fact; the information profile I(x)
+  EB-Sampler (Part IV)         → how to minimise E_fact for unmasking
+
+STEP 3 — Remasking approaches (how do we fix committed errors?):
+  ReMDM (Part V)               → principled remasking posterior σ_t
+  Informed Correctors (Part V) → MCMC theory; why confidence-guided > uniform
+  PRISM (Part V)               → learned confidence with formal guarantee
+  RemeDi (Part V)              → RL-finetuned policy (upper bound)
+
+STEP 4 — Theoretical unification:
+  DFM (Part III)               → correctors as Gibbs samplers; velocity field
+  SEDD (Part II)               → score-based view; PC corrector
+
+STEP 5 — Scale and history:
+  LLaDA (Part II)              → MDMs at 8B scale; why uniform schedule is wasteful
+  Mask-Predict (Part I)        → heuristic ancestor; what the thesis formalises
+```
+
+The central question to keep in mind throughout:
+> *Each paper that does remasking has a different answer to: "which tokens should be
+> remasked, and why?" Does the choice have a formal justification?*
+
+## Six Questions That Thread Through the Document
+
+These questions connect all twelve papers. As you read each section, ask:
+
+1. **What is $E_{\text{fact}}$ for this algorithm?** Some papers reduce it explicitly
+   (EB-Sampler, thesis); others reduce it implicitly (ReMDM, Informed Correctors); others
+   ignore it entirely (D3PM, LLaDA).
+
+2. **What confidence signal does this paper use?** Map it to Tier 1/2/3. Tier 1 requires
+   $O(L)$ forward passes; Tier 2 requires training; Tier 3 is free from logits.
+
+3. **Does this paper require training, retraining, or nothing?** The training axis is the
+   primary practical dimension that distinguishes the approaches.
+
+4. **What is the paper's relation to $I(x)$?** The information profile is the theoretical
+   gold standard; papers that ignore it leave $E_{\text{fact}}$ on the table.
+
+5. **What does the paper's confidence signal converge to as $p_\theta \to q$?** At the
+   optimal model, all Tier 3 signals should equal $I^i(x)$. Do they?
+
+6. **What is the compute cost per generated token?** Expressed as number of forward
+   evaluations (NFE) and how it scales with sequence length and correction count.
+
+---
+
+## Unified Notation Reference
+
+All twelve papers use overlapping but inconsistent notation. This table fixes a
+single notation used consistently throughout this document.
+
+| Symbol | Meaning | Defined in |
+|--------|---------|------------|
+| $L$ | Sequence length | — |
+| $\mathcal{V}$ | Token vocabulary (size $V$) | — |
+| $x = (x^1,\ldots,x^L) \in \mathcal{V}^L$ | Clean token sequence | D3PM |
+| $m \notin \mathcal{V}$ | Mask token | D3PM |
+| $z_t \in (\mathcal{V} \cup \{m\})^L$ | Noisy sequence at noise level $t$ | D3PM |
+| $\mathcal{M}_t = \{i : z_t^i = m\}$ | Set of masked positions at time $t$ | MDLM |
+| $T$ | Total number of denoising steps | D3PM |
+| $\alpha_t \in [0,1]$ | Survival probability: $P(z_t^i = x^i)$; $\alpha_T \approx 0$, $\alpha_0 = 1$ | MDLM |
+| $\beta_t = 1 - \alpha_t/\alpha_{t-1}$ | Per-step masking rate | D3PM |
+| $q(z_t \mid x) = \prod_i \mathrm{Cat}(z_t^i;\, \alpha_t e_{x^i} + (1-\alpha_t)e_m)$ | Forward kernel (absorbing) | D3PM / MDLM |
+| $p_\theta(x^i \mid z_t)$ | Model's predicted clean-token distribution at position $i$ | MDLM |
+| $p_\theta(z_{t-1}^i \mid z_t)$ | Reverse kernel for position $i$ | MDLM |
+| $\pi$ | True data distribution | Lav. & Zan. |
+| $p_{\text{alg}}$ | Distribution of algorithm's output sequences | Lav. & Zan. |
+| $I^i(x) = H(x^i \mid x^{\setminus i})$ | True conditional entropy of position $i$ (info. profile) | Lav. & Zan. |
+| $I(x) = \sum_i I^i(x)$ | Total sequence information | Lav. & Zan. |
+| $\hat{I}^i(z_t) = H(p_\theta(x^i \mid z_t))$ | Model's entropy estimate at position $i$ | EB-Sampler |
+| $\Sigma^2 = \mathrm{Var}_i[I^i(x)]$ | Variance of the information profile | Lav. & Zan. |
+| $E_{\text{fact}}$ | Factorization error: KL due to independence assumption | Lav. & Zan. |
+| $E_{\text{learn}}$ | Learning error: KL due to imperfect $p_\theta$ | Lav. & Zan. |
+| $\varepsilon$ | Entropy budget per step (EB-Sampler) | EB-Sampler |
+| $\sigma_t^i = 1 - \alpha_t$ | ReMDM remasking probability for committed token at time $t$ | ReMDM |
+| $R$ | Number of corrector passes per denoising step | ReMDM |
+| $\tau$ | Remasking threshold (remask if $\hat{I}^i > \tau$) | Thesis |
+| $c^i_{\text{mp}} = \max_j p_\theta^{ij}$ | Max-probability confidence (Tier 3) | Mask-Predict |
+| $c^i_H = -H(p_\theta(x^i \mid z_t))$ | Entropy confidence (Tier 3; $= -\hat{I}^i$) | ReMDM / EB-Sampler |
+| $c^i_{\text{mg}} = p_\theta^{(1)} - p_\theta^{(2)}$ | Margin confidence (Tier 3) | — |
+| $g_\phi^i \in [0,1]$ | PRISM quality head output (Tier 2) | PRISM |
+| $\psi^i \in [0,1]$ | RemeDi UPS output (Tier 2) | RemeDi |
+| $s_\theta(z_t)_{ij} \approx p_t(z_t^{(j)})/p_t(z_t)$ | SEDD concrete score at position $i$ | SEDD |
+| $u_t(z^i = m \to j)$ | DFM velocity field for position $i$ | DFM |
+| $\lambda$ | Spectral gap of Gibbs corrector chain | Inf. Corr. |
+| $\mathcal{L}_{\text{MDM}}$ | MDLM training objective (weighted masked cross-entropy) | MDLM |
+
+**Key relations to memorise:**
+$$\hat{I}^i(z_t) \xrightarrow{p_\theta \to q} I^i(x) \quad \text{(at optimality, entropy estimate = true info)}$$
+$$\sigma_t^i = 1 - \alpha_t \quad \text{(ReMDM: remask each committed token with this prob.)}$$
+$$E_{\text{fact}} \leq C \cdot \frac{\Sigma^2}{T} \quad \text{(fewer steps or higher profile variance → larger error)}$$
+$$E_{\text{fact}}(\text{EB}) \leq \varepsilon \cdot \max_i \hat{I}^i \quad \text{(EB-Sampler bound)}$$
+
+\newpage
+
 # Part I — Before Diffusion: Non-Autoregressive Iterative Decoding
 
 ---
@@ -197,6 +306,20 @@ principled remasking. Citing Mask-Predict anchors the thesis in the
 broader NAR generation literature and frames the contribution as
 *formalising a successful heuristic*.
 
+### Study Questions
+
+1. Mask-Predict re-masks the $n_t$ *lowest-confidence* tokens per step. Why lowest and
+   not highest? What would happen if you re-masked the highest-confidence tokens instead?
+2. The number of re-masked tokens follows the linear schedule $n_t = n(T-t)/T$. Is there
+   a principled justification for this schedule, or is it purely heuristic? How does it
+   relate to the EB-Sampler's entropy budget?
+3. Mask-Predict is a conditional model (source → target). For unconditional MDM
+   generation (no source), what replaces the "source context"? Does the confidence
+   signal change interpretation?
+4. The confidence signal $c^i = \max_j p_\theta^j$ (max-probability) is Tier 3. Under
+   what condition does it rank positions in the same order as the true $I^i(x)$? When
+   does the ranking diverge?
+
 \newpage
 
 # Part II — Discrete Diffusion: Foundations and Scaling
@@ -218,6 +341,7 @@ noise, which has no meaningful analogue for categorical variables. D3PM
 solves this by defining a *family* of discrete forward Markov chains
 parametrised by a transition matrix $Q_t$, and deriving a variational
 lower bound (VLB) that can be optimised to train the reverse process.
+*(Markov chain background: Appendix A.4; ELBO/VLB derivation: Appendix A.3.)*
 
 The key design choice is the transition matrix $Q_t$. D3PM explores
 three options: (1) **absorbing diffusion** — tokens eventually collapse
@@ -260,6 +384,7 @@ The cumulative marginal has the clean form:
 $$q(z_t^i \mid x^i) = \bar{\alpha}_t \cdot e_{x^i} + (1 - \bar{\alpha}_t) \cdot e_m, \quad \bar{\alpha}_t = \prod_{s=1}^t (1 - \beta_s)$$
 
 which is exactly the MDLM forward process with $\alpha_t = \bar{\alpha}_t$.
+*(Full derivation of the absorbing marginal and posterior: Appendix A.6.)*
 
 **Posterior (closed form for absorbing diffusion).** Given $z_t^i$ and
 the clean token $x^i$:
@@ -277,7 +402,8 @@ $z_{t-1}^i = x^i$ with probability $\bar{\alpha}_{t-1}/( 1 - \bar{\alpha}_t \cdo
 and $z_{t-1}^i = m$ otherwise. This is the key posterior used by all
 subsequent MDMs.
 
-**VLB training objective.** D3PM minimises:
+**VLB training objective.** D3PM minimises the variational lower bound
+*(ELBO derivation: Appendix A.3; KL divergence: Appendix A.2.3)*:
 
 $$\mathcal{L}_\text{VLB} = \underbrace{\mathbb{E}[\mathrm{KL}(q(z_{T} \mid x) \| p(z_T))]}_{\text{prior matching}} + \sum_{t=2}^{T} \mathbb{E}[\mathrm{KL}(q(z_{t-1} \mid z_t, x) \| p_\theta(z_{t-1} \mid z_t))] + \mathbb{E}[-\log p_\theta(x \mid z_1)]$$
 
@@ -337,6 +463,21 @@ kernel corrects this: by re-masking a high-entropy committed token, the
 model re-predicts it in a context that may have changed since the token
 was first committed, partially recovering the inter-token dependencies
 that the independence assumption discarded.
+
+### Study Questions
+
+1. D3PM evaluates three transition matrices: absorbing, uniform, and embedding-based.
+   Why does absorbing outperform uniform for text? What property of the absorbing
+   process is valuable and what does uniform destroy?
+2. The posterior $q(z_{t-1}^i \mid z_t^i, x^i)$ is tractable in closed form. Write
+   it out for $z_t^i = m$ (masked) and $z_t^i = x^i$ (already committed). What is
+   the probability that a masked token remains masked at the next step?
+3. D3PM uses an auxiliary cross-entropy loss $\lambda \cdot \mathrm{CE}(x, \tilde{p}_\theta(z_t))$.
+   MDLM later shows this term dominates the VLB. Intuitively, why would directly
+   predicting $x$ from $z_t$ be sufficient, without the VLB terms?
+4. D3PM has no remasking. If you wanted to add a single remasking step after standard
+   ancestral sampling, where in the algorithm would you insert it and what would
+   determine which token to remask?
 
 ---
 
@@ -470,6 +611,21 @@ are sufficient for achieving this reduction under a consistency
 assumption. The SEDD submodule (`external/sedd`) provides pretrained
 checkpoints on OpenWebText for baseline comparison.
 
+### Study Questions
+
+1. For the absorbing noise process, the concrete score simplifies to
+   $s_\theta(z_t)_{m,j} \propto p_\theta(x^i = j \mid z_t)$. This means SEDD's
+   objective is equivalent to MDLM's cross-entropy for absorbing noise. Does this mean
+   SEDD and MDLM learn the same model? What differences remain?
+2. SEDD's corrector applies CTMC transitions to *all* positions uniformly. The thesis
+   applies remasking selectively. Formally, what would a "selective SEDD corrector"
+   look like? Would it still have SEDD's convergence guarantee?
+3. SEDD proves the PC sampler converges as $T \to \infty$ and $K \to \infty$. Is there
+   a finite-$T$, finite-$K$ convergence rate? What does it depend on?
+4. The concrete score $s_\theta(z_t)_{ij} = p_t(z_t^{(j)})/p_t(z_t)$ is a ratio of
+   marginals. At what point in the generation process is this ratio most informative?
+   At the beginning (many masked tokens) or the end (few masked tokens)?
+
 ---
 
 ## MD4 and MDLM (2024) — The Practical MDM Framework
@@ -593,6 +749,21 @@ training-free confidence signals. The independence assumption of the
 reverse kernel is the root of $E_{\text{fact}}$, the quantity the
 thesis bounds.
 
+### Study Questions
+
+1. The MDLM reverse kernel reads: "if $z_t^i = m$, unmask with probability $1 - \alpha_s/\alpha_t$".
+   What is the probability when $s = t-1$ and the cosine schedule is used? How does
+   this change between early steps ($t \approx T$) and late steps ($t \approx 1$)?
+2. MDLM commits tokens uniformly at random, ignoring position uncertainty. Using the
+   Lavenant & Zanella bound, what is the $E_{\text{fact}}$ penalty paid by committing
+   a high-entropy token $i$ (with $I^i \gg \bar{I}$) early?
+3. The cosine schedule keeps $\alpha_t$ near 1 for most of $[0,1]$ and drops sharply
+   near $t=1$. How does this affect how many tokens are unmasked per step at different
+   stages? Is there a step count where most tokens are committed?
+4. MDLM's training loss is weighted masked cross-entropy. If you had unlimited data
+   and a perfectly trained model ($p_\theta = q$), would $E_{\text{fact}}$ be zero?
+   Why or why not?
+
 ---
 
 ## LLaDA (2025) — Scaling Masked Diffusion to 8B Parameters
@@ -687,6 +858,22 @@ low-confidence) improve generation quality on standard benchmarks
 contribution generalises beyond the small MDLM-OWT setting. The uniform
 remasking of LLaDA is the weakest baseline the thesis should beat by
 a significant margin.
+
+### Study Questions
+
+1. LLaDA's remasking schedule re-masks committed tokens with probability $\rho(t)$
+   at each step, independent of token confidence. The thesis uses confidence-guided
+   remasking. LLaDA is 8B parameters vs MDLM's 130M. Do you expect the benefit
+   of confidence-guided remasking to be *larger* or *smaller* at 8B scale? Why?
+2. LLaDA uses bidirectional (non-causal) attention. What does this mean for how
+   the model uses context when predicting a masked token? How does it differ from
+   GPT-style causal LLMs?
+3. LLaDA's instruction tuning freezes prompt tokens and only masks response tokens.
+   Is the information profile $I^i(x)$ for response tokens affected by whether the
+   prompt is long or short? What would you expect for very long prompts?
+4. LLaDA achieves competitive performance with LLaMA 3 8B on MMLU and GSM8K. Why
+   might a masked diffusion model be competitive on these tasks despite generating
+   text in a non-autoregressive manner?
 
 \newpage
 
@@ -818,6 +1005,22 @@ has the highest entropy. Including DFM in the literature review
 positions the thesis at the intersection of diffusion theory and flow
 matching, broadening the potential readership and citation impact.
 
+### Study Questions
+
+1. DFM shows the training objective is $\mathcal{L}_{\text{DFM}} \propto
+   \frac{-\dot\alpha_t}{1-\alpha_t}\sum_i -\log p_\theta(x^i \mid z_t)$.
+   Compare this to MDLM's $w_t = \alpha_t'/(1-\alpha_t)$. Are these the same
+   time-weighting? What does the DFM perspective add beyond MDLM?
+2. A DFM corrector is any CTMC that leaves $p_t$ stationary. Is a corrector that
+   *only* re-masks tokens (but never unmasked them) a valid corrector in DFM?
+   What condition would it need to satisfy?
+3. The "optimal probability path" in DFM minimises the continuous-time KL. The
+   absorbing path is one option. Give an intuition for what a "better" path might
+   look like and why it might not be absorbing.
+4. The mixing rate of the Gibbs corrector is the spectral gap $\lambda$. What
+   determines $\lambda$ for a text sequence? How does sequence length affect it?
+   How does dependency structure (e.g., code vs. random text) affect it?
+
 \newpage
 
 # Part IV — The Error-Bound Framework: Why Algorithms Fail and How to Fix Them
@@ -880,7 +1083,7 @@ where $\Delta\alpha_t = \alpha_{t-1} - \alpha_t$ is the step size in
 the noise schedule.
 
 **Information profile.** The key object is the per-position conditional
-entropy:
+entropy *(entropy and conditional entropy defined in Appendix A.2.1–A.2.2)*:
 
 $$I^i(x) = H(x^i \mid x^{\setminus i}) \quad (\text{conditional entropy of position } i \text{ given all others})$$
 
@@ -895,7 +1098,8 @@ approximation error of $\int_0^1 I(x)\, dt$:
 $$E_{\text{fact}} \leq C \cdot \sum_{t=1}^{T} (\Delta\alpha_t)^2 \cdot \Sigma^2 \approx C \cdot \frac{\Sigma^2}{T}$$
 
 where $\Sigma^2 = \mathrm{Var}_{i}[I^i(x)]$ is the variance of the
-information profile across positions. This is minimised when:
+information profile across positions.
+*(Derivation and intuition for this bound: Appendix A.7.)* This is minimised when:
 (1) $T$ is large (many steps), and (2) $\Sigma^2$ is small (information
 is evenly distributed across positions, so no step is much harder
 than another).
@@ -968,6 +1172,20 @@ reverse process and derives:
 
 The central thesis theorem is the remasking analogue of Lavenant &
 Zanella's optimal unmasking result.
+
+### Study Questions
+
+1. The factorization error is $E_{\text{fact}} \leq C \cdot \Sigma^2 / T$ for the
+   uniform schedule. What happens to $E_{\text{fact}}$ as $T \to \infty$? Does this
+   mean infinite steps gives perfect generation? What limits quality as $T \to \infty$?
+2. The bound says $E_{\text{fact}} \propto (\Delta\alpha_t)^2$. Why quadratic, not
+   linear? Intuitively, why does committing $k$ tokens at once cost $k^2$ rather than $k$?
+3. The optimal unmasking schedule is "easy tokens first" (ascending $I^i$). Why easy
+   first and not hard first? Give an intuitive argument — what goes wrong if you
+   commit the hardest token (highest $I^i$) first?
+4. $E_{\text{learn}}$ is the error due to $p_\theta \neq q$. Is $E_{\text{learn}}$
+   reduced by remasking, or only $E_{\text{fact}}$? What would a "remasking that
+   reduces $E_{\text{learn}}$" look like — is it even possible without retraining?
 
 ---
 
@@ -1109,6 +1327,23 @@ $E_{\text{fact}}$ most efficiently is: remask the positions with the
 highest predicted entropy $\hat{I}^i$, using threshold $\tau$ chosen
 to match the remaining entropy budget.
 
+### Study Questions
+
+1. The EB-Sampler sets the entropy budget $\varepsilon$ as the key hyperparameter.
+   How should $\varepsilon$ be chosen in practice? What is the relationship between
+   $\varepsilon$ and the total number of steps $T$?
+2. The EB-Sampler bound is $E_{\text{fact}}(\text{EB}) \leq \varepsilon \cdot \max_i \hat{I}^i$.
+   The uniform bound is $E_{\text{fact}}(\text{uniform}) \leq (I(x)/T) \cdot \max_i I^i$.
+   When does the EB-Sampler give a tighter bound? Is there a case where uniform is better?
+3. The EB-Sampler uses $\hat{I}^i(z_t) = H(p_\theta(x^i \mid z_t))$ which is an estimate
+   of $I^i(x)$ conditioned on the *current noisy* $z_t$. Early in generation (high
+   masking rate), how good is this estimate? Does $\hat{I}^i$ converge to $I^i(x)$
+   as more tokens are committed?
+4. The EB-Sampler commits tokens in ascending entropy order. After applying remasking
+   (re-masking some of the committed tokens), the ordering of the remaining masked
+   tokens may change. Should the EB-Sampler re-sort all masked tokens after each
+   remasking step? What is the computational cost of doing so?
+
 \newpage
 
 # Part V — Principled Remasking: From Heuristic to Learned to Optimal
@@ -1245,6 +1480,21 @@ confidence-guided variant (showing *why* it is better, not just that
 it is); (2) derives the optimal threshold $\tau$ as a function of the
 information profile and entropy budget; (3) provides experiments on
 a broader set of models and benchmarks.
+
+### Study Questions
+
+1. ReMDM's remasking probability is $\sigma_t^i = 1 - \alpha_t$. At step $t = T/2$
+   (halfway through generation), what is $\sigma_t$? Does remasking get more or
+   less aggressive as generation progresses toward completion?
+2. The monotone improvement theorem requires $E_{\text{learn}} = 0$ (perfect model).
+   In practice, $p_\theta \neq q$. Does remasking still help when $E_{\text{learn}} > 0$?
+   Could remasking ever *hurt* quality when the model is imperfect?
+3. ReMDM's `remdm-conf` remasks with probability $\sigma_t(1-c^i)$. Compare this to the
+   thesis's threshold strategy (remask if $\hat{I}^i > \tau$). Are these equivalent?
+   Which one commits to a hard decision and which uses a soft weighting?
+4. Our experiments show remdm-conf MAUVE collapses at T=1000 while remdm-loop improves.
+   Using the ReMDM framework, what is the remasking probability $\sigma_t$ at T=1000
+   near the end of generation ($t \to 0$)? Is this consistent with the collapse hypothesis?
 
 ---
 
@@ -1392,6 +1642,21 @@ while the thesis uses only forward-pass logits (Tier 3 signal, any
 pretrained MDM). The thesis's contribution is to show that Tier 3
 signals are *sufficient* for the efficiency gain — you do not need the
 exact conditional to benefit from confidence-guided correction.
+
+### Study Questions
+
+1. The informed corrector selects position $d^* \propto \exp(\beta \cdot [-\log q_t(z^d \mid z^{\setminus d})])$.
+   At $\beta = 0$ this is uniform; at $\beta \to \infty$ it always picks the most
+   surprised position. What is the optimal $\beta$? How would you tune it?
+2. The hollow transformer computes all $L$ per-position conditionals in a single
+   forward pass by zeroing the attention diagonal. Why does zeroing the diagonal
+   give $q_t(z^d \mid z^{\setminus d})$? Is this exact or approximate?
+3. The spectral gap $\lambda_i \geq \lambda_u$ (informed $\geq$ uniform). The gap
+   grows with the variance of surprises $\mathrm{Var}_d[-\log q_t^d]$. How does this
+   variance relate to the information profile variance $\Sigma^2$?
+4. Informed Correctors applies correction *after* the full generation is done.
+   The thesis integrates remasking *into* the generation loop. What is the qualitative
+   difference? Can you think of a scenario where post-hoc correction is better?
 
 ---
 
@@ -1546,6 +1811,22 @@ training is unnecessary; if large, the gap is explained by the
 difference between Tier 2 (learned) and Tier 3 (heuristic) signals —
 which is itself a contribution.
 
+### Study Questions
+
+1. RemeDi's UPS is trained with BCE on whether the TPS prediction is correct.
+   The BCE minimiser converges to $P(\hat{x}^i = x^i \mid z_t)$. Is this the same
+   as $I^i(x)$? When do they agree and when do they diverge?
+2. RemeDi uses GRPO RL to refine the UPS beyond BCE training. What does GRPO
+   add that BCE training cannot provide? Give an example of a decision that would
+   be suboptimal under BCE but optimal under GRPO.
+3. The RemeDi-RL model on HuggingFace is 8B parameters with an 8B tokenizer.
+   Our MDLM-OWT baseline is 130M. If you wanted to compare RemeDi's remasking
+   strategy (not model scale) to the thesis's strategy, what experimental design
+   would be fair?
+4. RemeDi stores $\psi^i(t^*)$ — the UPS score at the time token $i$ was committed.
+   This gives it memory across steps. Does the thesis's entropy-based remasking
+   have an implicit memory? What would it mean to add explicit memory to a Tier 3 strategy?
+
 ---
 
 ## PRISM (2025) — Provable Quality Head with a Formal Guarantee
@@ -1624,6 +1905,7 @@ for i with z_t^i ≠ m and g^i < τ:
   improves completion accuracy.
 - **MDLM-OWT (170M):** unconditional text generation — improves
   generative perplexity and MAUVE.
+  *(Formal definitions of generative perplexity and MAUVE: Appendix A.8.1–A.8.2.)*
 - **LLaDA-8B (MBPP code):** code generation — improves pass@1 on the
   MBPP benchmark, demonstrating scalability.
 
@@ -1676,6 +1958,22 @@ conditions on $c^i$ (consistency) under which the Tier 3 signal is
 what PRISM would achieve. If these conditions hold for
 max-prob/entropy/margin in practice (which the experiments test), then
 retraining is unnecessary.
+
+### Study Questions
+
+1. PRISM's Proposition 1 says $g_{\phi^*}^i = P(x^i = \hat{x}^i \mid y \oplus m^i)$.
+   The conditioning variable is $y \oplus m^i$ (sequence with position $i$ also masked).
+   Why is it conditioned on $y \oplus m^i$ and not on $y$ itself?
+2. PRISM dramatically improves Sudoku completion accuracy. Why would a discrete
+   diffusion model with PRISM be particularly effective on constraint satisfaction
+   tasks? What does the confidence score capture that matters for Sudoku?
+3. PRISM's quality head $g_\phi$ is a tiny MLP on frozen hidden states. Could you
+   use a different architecture (e.g., a linear probe, or attention over all positions)?
+   What would be gained or lost?
+4. PRISM and RemeDi both use BCE loss and both converge to the true conditional.
+   The difference is that RemeDi also adds RL fine-tuning. Suppose PRISM also added
+   an RL stage on top of $g_\phi$. Would this give the same result as RemeDi?
+   What would be different?
 
 \newpage
 
@@ -1911,9 +2209,1186 @@ This result:
 - **Connects all six remasking papers** (Mask-Predict, ReMDM, Informed
   Correctors, RemeDi, PRISM, EB-Sampler) within a single framework.
 
+\newpage
+
+# Part VII — Research Directions: Principled Rescheduling
+
+The term *rescheduling* refers to the combined problem of deciding, at each
+inference step: (a) *which* tokens to unmask, (b) *how many*, and (c) *which
+committed tokens to remask*. The EB-Sampler solves (a) and (b); the thesis adds
+(c). But the full rescheduling problem has many open directions. This part surveys
+them systematically.
+
+**Context from our experiments.** Our step sweep (T ∈ {128, 256, 512, 1000}) reveals
+phenomena that motivate each direction:
+- MDLM MAUVE peaks at T=256 then drops → diversity window; optimal T is not ∞
+- remdm-conf MAUVE collapses at high T → confidence overconfidence problem
+- remdm-loop MAUVE improves monotonically → loop remasking is robust but slow
+- gen_ppl and MAUVE decouple sharply → mode-seeking vs. coverage tension
+  *(formal definitions and the gen_ppl decomposition into $H(p_\theta) + D_\text{KL}(p_\theta \| q_\text{GPT-2})$: Appendix A.8.1–A.8.2)*
+
 ---
 
-## Appendix: Repository Index
+## R1: Unified EB-Sampler + Confidence-Guided Remasking
+
+### The Gap
+
+The EB-Sampler (optimal unmasking schedule) and ReMDM (principled remasking) were
+developed independently and have never been combined. Their interaction is unknown:
+does entropy-budget unmasking *amplify* or *suppress* the benefit of remasking?
+
+### Formal Setup
+
+Let $\mathcal{A}_{\varepsilon, \tau}$ be the sampler that: (1) uses the EB-Sampler
+with budget $\varepsilon$ for unmasking, and (2) remasks committed tokens with
+$\hat{I}^i > \tau$ after each unmasking step. Define:
+
+$$E_{\text{fact}}(\mathcal{A}_{\varepsilon, \tau}) = E_{\text{fact}}^{\text{unmask}}(\varepsilon) + E_{\text{fact}}^{\text{remask}}(\tau) + E_{\text{interaction}}(\varepsilon, \tau)$$
+
+The first two terms are bounded by the EB-Sampler theorem and the thesis theorem,
+respectively. The interaction term $E_{\text{interaction}}$ is unknown.
+
+**Hypothesis.** The interaction is *negative* (beneficial): after remasking corrects
+high-entropy committed tokens, the EB-Sampler's entropy estimates become more accurate
+for the next unmasking step, reducing $E_{\text{fact}}^{\text{unmask}}$ below its
+standalone value. Remasking and unmasking are *synergistic*.
+
+### Key Questions
+
+- What is the optimal relationship between $\varepsilon$ and $\tau$?
+  - Proposal: $\tau = \varepsilon$ — remask exactly the tokens the EB-Sampler would have
+    committed last, i.e., the ones that barely fit in the entropy budget.
+  - Intuition: tokens just above the budget threshold are the ones where the unmasking
+    decision is most uncertain. Remasking them allows the model to re-evaluate in richer context.
+- Does the order of operations matter? (unmask then remask, vs. remask then unmask,
+  vs. interleaved)?
+- Can the combined sampler be shown to achieve a tighter $E_{\text{fact}}$ bound than
+  either strategy alone?
+
+### Implementation
+
+Modify `external/remdm/main.py` to replace the uniform unmasking step with the EB-Sampler
+step. The entropy budget $\varepsilon$ and remasking threshold $\tau$ become two
+hyperparameters. Run the step sweep for combinations of $(\varepsilon, \tau)$.
+
+---
+
+## R2: Calibrated Confidence — Temperature Scaling for Remasking
+
+### The Problem
+
+Our remdm-conf MAUVE collapse at high T is a **calibration failure**: the model's
+softmax distribution over tokens becomes overconfident at low masking rates (few
+masked positions → rich context → sharply peaked predictions). Overconfident
+predictions produce low entropy $\hat{I}^i$, so high-entropy positions (which need
+correction) are *underdetected*, and the model locks in poor early choices.
+
+**Formal statement.** Define calibration error at noise level $t$ as:
+$$\text{ECE}(t) = \mathbb{E}\!\left[\left|\hat{I}^i(z_t) - I^i(x)\right|\right]$$
+
+Hypothesis: $\text{ECE}(t)$ increases as $t \to 0$ (low masking rate) because the
+model's entropy estimate degrades when context is rich but the model is still
+uncertain about some positions for non-local reasons.
+
+### Temperature Scaling Solution
+
+Replace the entropy estimate with a temperature-scaled version:
+$$\hat{I}^i_\tau(z_t) = H\!\left(\text{softmax}\!\left(\frac{\ell^i}{\tau(t)}\right)\right)$$
+
+where $\ell^i$ are the raw logits and $\tau(t) > 1$ inflates entropy estimates.
+Three schedule options:
+
+1. **Fixed:** $\tau(t) = \tau_0$ (constant inflation)
+2. **Annealed:** $\tau(t) = 1 + (\tau_0 - 1) \cdot (1 - \alpha_t)$
+   where $\alpha_t$ is the survival probability. Since $\alpha_t \approx 0$ at the
+   start (t≈T, high masking rate) and $\alpha_t \approx 1$ at the end (t≈1, low
+   masking rate), this gives $\tau \approx \tau_0$ early (high temperature, diverse)
+   and $\tau \approx 1$ late (no softening, commit to best token).
+3. **Data-adaptive:** $\tau(t)$ chosen so $\mathbb{E}[\hat{I}^i_\tau] = \mathbb{E}[I^i]$
+   using a calibration set (requires a small labelled corpus)
+
+The annealed schedule is the most theoretically motivated: it corrects the systematic
+overconfidence that appears as more tokens are committed (lower masking rate → lower $\alpha_t$).
+
+### Connection to the Diversity Window
+
+The diversity window (MDLM MAUVE peak at T=256) may itself be a calibration artefact.
+At T=1000, the model makes 1000 unmasking decisions, many at very low masking rates
+where $\hat{I}^i$ is underestimated. The model prematurely commits low-entropy tokens,
+accumulating commitment errors. Temperature scaling that inflates $\hat{I}^i$ at low
+$t$ would delay commitment, potentially eliminating the diversity window — or shifting
+it to higher T.
+
+**Testable prediction:** if temperature scaling eliminates (or substantially reduces)
+the remdm-conf MAUVE collapse at T=1000, this result is *consistent with* overconfidence
+being a primary cause — but does not prove it. If collapse persists across a range of
+$\tau_0$, the cause is more likely structural (mode-seeking is intrinsic to the strategy,
+not a calibration artefact), and a fundamentally different remasking policy would be needed.
+
+### Implementation
+
+No retraining required. Add a `--temperature_schedule` flag to `scripts/remedi_eval.py`
+and the ReMDM inference loop. Calibration curves can be estimated by comparing $\hat{I}^i$
+to empirical accuracy on a held-out corpus.
+
+---
+
+## R3: The Remasking-Schedule Co-design Problem
+
+### The Problem
+
+The current framework treats the noise schedule $\alpha_t$ (set during training) and
+the inference-time rescheduling strategy as independent. But they are coupled: the
+optimal remasking threshold $\tau$ depends on $\alpha_t$, and conversely, the optimal
+$\alpha_t$ depends on how much remasking will be used at inference.
+
+**Formal observation.** The EB-Sampler bound $E_{\text{fact}} \leq \varepsilon \cdot \max_i \hat{I}^i$
+depends on $\hat{I}^i$, which depends on $\alpha_t$ through the noise level. A noise
+schedule that makes $\hat{I}^i$ more uniform across positions (lower $\Sigma^2$) will
+reduce $E_{\text{fact}}$ for the same entropy budget $\varepsilon$.
+
+### Research Questions
+
+1. **Optimal schedule given remasking.** The Lavenant & Zanella bound uses a fixed
+   $\alpha_t$ (cosine or linear). If remasking is used, the effective number of
+   "independent" decisions per step changes. Derive the optimal $\alpha_t$ that
+   minimises $E_{\text{fact}}$ given that a confidence-guided corrector will be
+   applied at each step.
+
+2. **Curriculum training.** Train the model with a noise schedule that concentrates
+   on the masking rates where the remasking threshold $\tau$ will be most active.
+   For example, if $\tau$ is set to remask positions with $\hat{I}^i > 0.5$ nats,
+   then training should over-sample $\alpha_t$ corresponding to this entropy level.
+
+3. **Learned vs. fixed schedule.** The noise schedule is a fixed cosine curve in all
+   current MDMs. Could a *learned* schedule (optimised end-to-end with the remasking
+   strategy) outperform the cosine schedule? This is the MDM analogue of continuous
+   diffusion's noise schedule optimisation (e.g., Kingma et al., 2021).
+
+### Difficulty
+
+Noise schedule optimisation requires retraining, making this a combined training +
+inference problem. However, the co-design insight (that schedule and rescheduling
+strategy should be optimised jointly) can be stated and verified empirically by
+testing multiple schedules with the same rescheduling strategy.
+
+---
+
+## R4: Block-Level Rescheduling for Large Models
+
+### The Problem
+
+All current rescheduling work (EB-Sampler, ReMDM, thesis) operates at the
+*token* level: one decision per token per step. For 8B-scale models with sequence
+lengths of 2048 tokens, token-level rescheduling over T=256 steps requires
+$256 \times 2048 = 524,\!288$ individual decisions per sequence. The overhead of
+sorting, thresholding, and remasking at token granularity can be non-negligible.
+
+Block-wise generation (used by LLaDA and RemeDi) groups $B$ tokens into a block
+and generates all $B$ tokens together. This is computationally efficient but uses
+a fixed block size (typically $B = 32$), ignoring the information profile within each block.
+
+### Formal Proposal: Hierarchical EB-Sampler
+
+Define a two-level rescheduling strategy:
+- **Block level:** use the EB-Sampler to decide *which blocks* to unmask at each step,
+  based on the block's average entropy $\bar{I}^b = \frac{1}{B}\sum_{i \in b} \hat{I}^i$.
+- **Token level (within committed blocks):** use confidence-guided remasking to revisit
+  high-entropy tokens within recently committed blocks.
+
+**Block-level entropy budget:**
+$$\varepsilon_B = B \cdot \varepsilon_{\text{token}}$$
+Unmask all blocks whose average entropy $\bar{I}^b \leq \varepsilon_B$ per step.
+This preserves the EB-Sampler's structure but operates at block granularity.
+
+**Interaction between levels:** Token-level remasking within a block changes the block's
+average entropy. Should the block-level schedule be updated after within-block corrections?
+
+### Why This Matters for the Thesis
+
+If the block-level EB-Sampler achieves comparable $E_{\text{fact}}$ reduction to the
+token-level EB-Sampler, then the thesis's contribution scales to 8B models without
+the $O(L)$ overhead of per-token sorting. The key quantity to bound is the error
+introduced by replacing $\hat{I}^i$ with $\bar{I}^b$ — a Jensen's inequality argument.
+
+---
+
+## R5: Multi-Pass Rescheduling and Convergence
+
+### The Problem
+
+The current framework applies one remasking pass per denoising step: unmask (EB-Sampler),
+then remask (thesis strategy). What is the benefit of applying *multiple* remasking
+passes per step, and does the benefit per pass diminish?
+
+### Formal Framework
+
+Define the $k$-pass sampler $\mathcal{A}^{(k)}_{\varepsilon, \tau}$:
+```
+for each denoising step t → t-1:
+    z' ← EB-Sampler(z_t, ε)           # unmask
+    for k = 1, ..., K:
+        z' ← remask_high_entropy(z', τ)  # remask
+        z' ← EB-Sampler(z', ε_k)       # re-unmask (with reduced budget ε_k)
+z_{t-1} ← z'
+```
+
+The budget $\varepsilon_k$ for re-unmasking after the $k$-th remasking pass should
+decrease geometrically: $\varepsilon_k = \varepsilon / r^k$ for $r > 1$ (tighter
+budget each pass, ensuring convergence).
+
+**Question:** Is there a formal convergence guarantee analogous to ReMDM's monotone
+improvement theorem? The ReMDM proof uses the data-processing inequality on the
+Markov chain; the same argument should apply to the combined EB+remask pass.
+
+**Claim:** Under the assumption $E_{\text{learn}} = 0$:
+$$E_{\text{fact}}(\mathcal{A}^{(k+1)}) \leq E_{\text{fact}}(\mathcal{A}^{(k)}) \quad \forall k$$
+
+with the improvement per pass bounded by $\Delta_k \propto \varepsilon_k \cdot \tau$.
+
+### Relationship to Inference-Time Compute Scaling
+
+If the bound on $E_{\text{fact}}$ per pass decreases geometrically, then:
+$$E_{\text{fact}}(\mathcal{A}^{(K)}) \leq E_{\text{fact}}(\mathcal{A}^{(0)}) \cdot r^{-K}$$
+
+This is an *inference-time scaling law*: quality improves as $O(\log K)$ in the
+number of passes. A log-linear quality-compute curve is a practical finding that
+practitioners can use to decide how much inference compute to allocate.
+
+---
+
+## R6: Rescheduling for Conditional Generation
+
+### The Problem
+
+All existing rescheduling work (EB-Sampler, ReMDM, thesis) is evaluated on
+*unconditional* generation (no prompt). For practical use cases, the model generates
+a response $y$ conditioned on a prompt $x$. The information profile $I^i(y)$ of
+the response depends on the prompt: an easy prompt (e.g., "Write: hello") leads to
+a low-entropy response; a hard prompt (e.g., "Write a Shakespearean sonnet") leads
+to a high-entropy response.
+
+**Formal setup.** Conditional generation with masking:
+$$q_\text{cond}(z_t \mid x, y) = \prod_i \mathrm{Cat}(z_t^i;\, \alpha_t e_{y^i} + (1-\alpha_t) e_m)$$
+
+The information profile is now:
+$$I^i_\text{cond}(y \mid x) = H(y^i \mid y^{\setminus i}, x)$$
+
+which includes the prompt as conditioning. The EB-Sampler and remasking strategies
+should use $I^i_\text{cond}$ rather than $I^i$.
+
+### Research Questions
+
+1. **Prompt-adaptive entropy budget.** For easy prompts (low $I^i_\text{cond}$),
+   fewer steps are needed. For hard prompts, more. Design an adaptive budget
+   $\varepsilon(x)$ that scales with the prompt's estimated difficulty. How would
+   you estimate difficulty from $x$ alone (before generating $y$)?
+
+2. **Conditional calibration.** Does the model's entropy estimate $\hat{I}^i(z_t, x)$
+   remain well-calibrated across prompts of different difficulties? A calibration
+   analysis on LAMBADA or HellaSwag (where the prompt is the question and the
+   response is the answer) would test this.
+
+3. **Remasking for instruction following.** In LLaDA-8B-Instruct, the response must
+   follow specific instructions (format, content). Does confidence-guided remasking
+   improve instruction adherence? Hypothesis: instruction-critical tokens (e.g.,
+   format tokens like "1." or "```python") have systematically lower confidence
+   early in generation and benefit most from remasking.
+
+---
+
+## R7: Information Profile Estimation Beyond Entropy
+
+### The Problem
+
+The EB-Sampler and all Tier 3 signals use $\hat{I}^i = H(p_\theta(x^i \mid z_t))$
+as a proxy for $I^i(x) = H(x^i \mid x^{\setminus i})$. This approximation has two
+known failure modes:
+
+1. **Context sparsity.** Early in generation (high masking rate), $z_t$ has few
+   committed tokens. The model predicts $x^i$ in low-context, making $\hat{I}^i$
+   a noisy estimate of $I^i(x)$.
+
+2. **Multimodal uncertainty.** If $p_\theta(x^i \mid z_t)$ is bimodal (e.g., 50% "cat",
+   50% "dog"), the entropy is high but the correct token may be fully determined by
+   context the model hasn't seen yet (masked positions). $\hat{I}^i$ overestimates
+   $I^i(x)$ in this case.
+
+### Alternative Signals
+
+**Mutual information proxy:**
+$$\hat{I}^i_\text{MI}(z_t) = I(x^i;\, x_{\mathcal{M}_t}) \approx H(p_\theta(x^i \mid z_t)) - H(p_\theta(x^i \mid z_t^{\text{full}}))$$
+
+where $z_t^{\text{full}}$ is the sequence with all currently masked positions filled
+in with their MAP estimate. This estimates how much the masked positions would change
+the prediction at position $i$ — a second-order uncertainty signal. Cost: one extra
+forward pass per step (fill in MAPs, then re-evaluate entropy).
+
+**Attention-based proxy:**
+$$\hat{I}^i_\text{attn}(z_t) = \sum_{j \in \mathcal{M}_t} a_{ij} \cdot \hat{I}^j(z_t)$$
+
+where $a_{ij}$ is the attention weight from position $i$ to masked position $j$.
+This estimates how much position $i$ would "care about" the currently masked positions
+if they were revealed. High $\hat{I}^i_\text{attn}$ means position $i$ attends strongly
+to uncertain positions — a good candidate for remasking.
+
+**Ensemble uncertainty:**
+Run the model forward twice with different dropout masks (or token dropout) and compare
+the two distributions at position $i$:
+$$\hat{I}^i_\text{ens} = \mathrm{JSD}(p_\theta^{(1)}(x^i \mid z_t),\, p_\theta^{(2)}(x^i \mid z_t))$$
+
+High Jensen-Shannon divergence indicates epistemic uncertainty (the model is inconsistent
+about this position). Cost: 2 forward passes per step.
+
+### Research Direction
+
+Compare $\hat{I}^i$, $\hat{I}^i_\text{MI}$, $\hat{I}^i_\text{attn}$, and $\hat{I}^i_\text{ens}$
+as remasking signals:
+1. Calibration analysis: which signal best predicts actual prediction error?
+2. Quality at matched compute: which signal achieves better MAUVE/gen_ppl per forward pass?
+3. Regime analysis: which signal is most valuable early vs. late in generation?
+
+---
+
+## R8: Statistical Significance and Evaluation Standards
+
+### The Problem
+
+Every empirical result in this thesis and in the literature is a point estimate.
+At N=100 generated samples, MAUVE estimates carry substantial variance. Some
+"findings" may be noise:
+- MDLM gen_ppl worsening T=512→1000 (49.0→52.3): is this real?
+- remdm-loop T=512 MAUVE dip (0.614→0.532 before 0.684): is the dip real?
+
+### Formal Proposal: Bootstrap CI Framework
+
+For MAUVE at N=100 samples and B=1000 bootstrap resamples:
+$$[\text{MAUVE}^{(2.5\%)}, \text{MAUVE}^{(97.5\%)}] = \text{bootstrap CI at 95\%}$$
+
+For gen_ppl, use a paired Wilcoxon signed-rank test between strategies (non-parametric,
+no normality assumption) to test whether the median per-sequence cross-entropy differs.
+
+**Minimum sample size.** Define $N^*(\delta) = \min\{N : \text{CI width} < \delta\}$
+for target precision $\delta = 0.05$ (5% of the MAUVE scale). Extrapolate from our
+N=100 data using the $O(1/\sqrt{N})$ scaling of standard errors.
+
+**Expected finding.** Based on the variance in our results (MAUVE ranging 0.17–0.74
+across strategies and step counts), N=100 likely gives 95% CIs of width ≈ ±0.10.
+The key differences (remdm-loop 0.684 vs. remdm-conf 0.325 at T=1000, Δ=0.359) are
+almost certainly significant. The small anomalies (gen_ppl 49.0→52.3) may not be.
+
+**Implementation.** Can be run immediately on existing generated sequences in
+`results/*/generated_sequences.json`. Write `scripts/bootstrap_ci.py` to produce
+a table of CIs for the thesis. This requires no new HPC runs.
+
+---
+
+## Summary Table: Research Directions
+
+| Direction | Training needed | New HPC runs | Theoretical | Empirical | Difficulty |
+|-----------|:---:|:---:|:---:|:---:|:---:|
+| R1: EB + Remasking | No | Yes | $E_f$ interaction bound | Sweep over $(\varepsilon, \tau)$ | Medium |
+| R2: Temperature calibration | No | Yes | Calibration analysis | Step sweep + temperature | Low |
+| R3: Schedule co-design | Yes | Yes | Optimal schedule derivation | Train + inference | High |
+| R4: Block-level reschedul. | No | Yes | Jensen's inequality bound | Block EB on LLaDA-8B | Medium |
+| R5: Multi-pass convergence | No | Yes | Geometric bound on passes | K-pass sweep | Medium |
+| R6: Conditional generation | No | Yes | Conditional $I^i_\text{cond}$ | LAMBADA/HellaSwag | Medium |
+| R7: Better info proxy | No | Yes | Calibration theory | Proxy comparison | Medium |
+| R8: Statistical testing | No | No | Bootstrap theory | CIs from existing data | **Low** |
+
+**For the thesis:** R8 (statistical testing) should be done first — it validates or
+refutes existing results. R2 (temperature calibration) is the most tractable novel
+contribution: training-free, one extra hyperparameter, directly motivated by the
+remdm-conf collapse finding. R1 (EB + remasking) is the cleanest theoretical extension
+of the EB-Sampler paper and fills the most important gap in the literature.
+
+---
+
+## The Rescheduling Problem: A Unified View
+
+To close this part, here is the rescheduling problem stated as a single optimisation:
+
+$$\min_{\pi \in \Pi} \mathrm{KL}(\pi_{\text{data}} \| p_{\pi}) \quad \text{subject to} \quad \mathrm{NFE}(\pi) \leq C$$
+
+where:
+- $\Pi$ is the space of all rescheduling policies (which tokens to unmask/remask, in what order, with what probabilities);
+- $p_\pi$ is the distribution of sequences produced by policy $\pi$;
+- $\mathrm{NFE}(\pi)$ is the expected number of forward evaluations (compute budget);
+- $C$ is the compute constraint.
+
+**Known solutions:**
+- $\pi = \text{MDLM}$: uniform random unmasking, no remasking. $E_{\text{fact}} = O(1/T)$.
+- $\pi = \text{EB-Sampler}$: entropy-budget unmasking, no remasking. $E_{\text{fact}} = O(\varepsilon \cdot \max_i \hat{I}^i)$ — optimal for unmasking-only policies.
+- $\pi = \text{thesis}$: EB-Sampler + confidence-guided remasking. $E_{\text{fact}} < E_{\text{EB}}$ when $\Sigma^2 > 0$.
+- $\pi = \text{RemeDi-RL}$: learned policy via RL. Empirically best but requires training.
+
+**Open:** The globally optimal policy in $\Pi$ (minimising KL subject to NFE budget)
+is unknown. The thesis derives the optimal policy within the class of *threshold*
+strategies. The globally optimal policy is presumably learned (RemeDi direction) but
+its form is not characterised theoretically.
+
+---
+
+## Appendix A: Statistical and Mathematical Foundations
+
+This appendix is a self-contained reference for the mathematical background required to
+understand discrete diffusion models. It covers probability theory, information theory,
+variational inference, Markov chains, and the specific structures that arise in masked
+diffusion. Each section includes definitions, key results, and their direct connections
+to the models reviewed in the main document.
+
+---
+
+### B.1 Probability Theory Essentials
+
+#### B.1.1 Random Variables and Distributions
+
+A **random variable** $X$ is a measurable function from a probability space
+$(\Omega, \mathcal{F}, P)$ to a measurable space. For discrete $X$ taking values in
+a countable set $\mathcal{X}$:
+
+- **Probability mass function (PMF):** $p(x) = P(X = x) \geq 0$, $\sum_{x \in \mathcal{X}} p(x) = 1$
+- **Support:** $\text{supp}(p) = \{x : p(x) > 0\}$
+
+**Categorical distribution** $\text{Cat}(\boldsymbol{\pi})$ over $\mathcal{X} = \{1, \ldots, V\}$:
+
+$$P(X = v) = \pi_v, \quad \boldsymbol{\pi} \in \Delta_{V-1}$$
+
+where $\Delta_{V-1} = \{\boldsymbol{\pi} \in \mathbb{R}^V : \pi_v \geq 0,\ \sum_v \pi_v = 1\}$
+is the $(V-1)$-dimensional probability simplex.
+
+**One-hot encoding:** $\mathbf{e}_v \in \{0,1\}^V$ has $(\mathbf{e}_v)_i = \mathbf{1}[i = v]$.
+Then $X \sim \text{Cat}(\boldsymbol{\pi})$ can be written $P(X = v) = \boldsymbol{\pi}^\top \mathbf{e}_v$.
+
+#### B.1.2 Conditional Probability and Bayes' Theorem
+
+$$P(A \mid B) = \frac{P(A \cap B)}{P(B)}, \quad P(B) > 0$$
+
+**Bayes' theorem:**
+
+$$P(A \mid B) = \frac{P(B \mid A)\, P(A)}{P(B)}$$
+
+where $P(B) = \sum_a P(B \mid A=a)\, P(A=a)$ is the normalising constant (marginal likelihood).
+
+In the diffusion context: $P(\mathbf{x}_0 \mid \mathbf{x}_t)$ is the posterior over clean sequences
+given a noisy (masked) observation, computed via Bayes from the forward kernel $P(\mathbf{x}_t \mid \mathbf{x}_0)$
+and the prior $P(\mathbf{x}_0)$.
+
+#### B.1.3 Independence and Conditional Independence
+
+$X$ and $Y$ are **independent** ($X \perp Y$) iff $P(X,Y) = P(X)\,P(Y)$ for all values.
+
+$X$ and $Y$ are **conditionally independent given $Z$** ($X \perp Y \mid Z$) iff
+$P(X, Y \mid Z) = P(X \mid Z)\, P(Y \mid Z)$.
+
+**Why this matters for masked diffusion:** The reverse model $p_\theta(\mathbf{x}_{t-1} \mid \mathbf{x}_t)$
+is typically factored as $\prod_i p_\theta(x^i_{t-1} \mid \mathbf{x}_t)$, i.e., positions are
+treated as conditionally independent given $\mathbf{x}_t$. The true posterior $q(\mathbf{x}_{t-1} \mid \mathbf{x}_t)$
+does **not** factorise this way — tokens are jointly dependent — and this discrepancy is the
+**factorisation error** $E_{\text{fact}}$.
+
+#### B.1.4 Expectation and Variance
+
+$$\mathbb{E}[X] = \sum_x x\, p(x), \qquad \text{Var}(X) = \mathbb{E}[(X - \mathbb{E}[X])^2] = \mathbb{E}[X^2] - \mathbb{E}[X]^2$$
+
+**Law of total expectation:** $\mathbb{E}[X] = \mathbb{E}_Y[\mathbb{E}[X \mid Y]]$
+
+**Law of total variance:** $\text{Var}(X) = \mathbb{E}_Y[\text{Var}(X \mid Y)] + \text{Var}_Y(\mathbb{E}[X \mid Y])$
+
+#### B.1.5 Jensen's Inequality
+
+For a **convex** function $f$ (i.e., $f''(x) \geq 0$):
+
+$$f\!\left(\mathbb{E}[X]\right) \leq \mathbb{E}[f(X)]$$
+
+For a **concave** function ($f''(x) \leq 0$), the inequality reverses:
+$f(\mathbb{E}[X]) \geq \mathbb{E}[f(X)]$.
+
+**Critical application:** $-\log$ is convex, so $-\log(\mathbb{E}[Z]) \leq \mathbb{E}[-\log Z]$,
+which gives the ELBO $\leq$ log-marginal inequality (see Section B.3).
+
+---
+
+### B.2 Information Theory
+
+All logarithms are natural ($\ln$) unless stated; entropy is in **nats**. To convert to bits,
+divide by $\ln 2$.
+
+#### B.2.1 Entropy
+
+The **Shannon entropy** of a discrete random variable $X \sim p$:
+
+$$H(X) = -\sum_{x \in \mathcal{X}} p(x) \ln p(x)$$
+
+(convention: $0 \ln 0 = 0$).
+
+**Key properties:**
+
+| Property | Statement | Proof sketch |
+|---|---|---|
+| Non-negativity | $H(X) \geq 0$ | $p(x) \leq 1 \Rightarrow -\ln p(x) \geq 0$ |
+| Determinism | $H(X) = 0 \iff X$ is deterministic | Only one $p(x) > 0$ |
+| Maximum | $H(X) \leq \ln|\mathcal{X}|$ | Lagrange multipliers; equality iff uniform |
+| Concavity | $H$ is concave in $p$ | Hessian is negative semidefinite |
+
+**Interpretation:** $H(X)$ measures the average uncertainty about $X$ before observing it,
+or equivalently the average code length (in nats) under an optimal code.
+
+**Character perplexity:** $e^{H(X)}$ (or $2^{H(X)}$ in bits) is the *effective alphabet size*
+in the sense that a uniform distribution over $e^{H(X)}$ symbols has the same entropy.
+For a token entropy of $H = 5.5$ nats: character perplexity $= e^{5.5} \approx 245$.
+An entropy change $\Delta H$ corresponds to a character perplexity ratio of $e^{\Delta H}$.
+
+#### B.2.2 Joint and Conditional Entropy
+
+$$H(X, Y) = -\sum_{x,y} p(x,y) \ln p(x,y)$$
+
+$$H(X \mid Y) = -\sum_{x,y} p(x,y) \ln p(x \mid y) = H(X,Y) - H(Y)$$
+
+**Conditioning reduces entropy:** $H(X \mid Y) \leq H(X)$, with equality iff $X \perp Y$.
+
+**Chain rule:** $H(X_1, X_2, \ldots, X_n) = \sum_{i=1}^n H(X_i \mid X_1, \ldots, X_{i-1})$
+
+This is the factorisation of the joint distribution into a product of conditionals:
+$p(x_1, \ldots, x_n) = \prod_i p(x_i \mid x_1, \ldots, x_{i-1})$.
+
+**For sequences:** A language model $p_\theta$ assigns probability
+$p_\theta(\mathbf{x}) = \prod_{i=1}^L p_\theta(x^i \mid x^1, \ldots, x^{i-1})$, computing
+each conditional autoregressively. Masked diffusion models compute all conditionals
+in parallel (one forward pass), which is efficient but introduces the factorisation
+error when tokens are decoded jointly.
+
+#### B.2.3 KL Divergence
+
+The **Kullback-Leibler divergence** from $Q$ to $P$ (read: "$P$ from $Q$" or "KL of $P$ with respect to $Q$"):
+
+$$D_\text{KL}(P \| Q) = \sum_x p(x) \ln \frac{p(x)}{q(x)}$$
+
+**Key properties:**
+
+- **Non-negativity (Gibbs' inequality):** $D_\text{KL}(P \| Q) \geq 0$, with equality iff $P = Q$ a.e.
+  *Proof:* $-D_\text{KL} = \mathbb{E}_P[\ln(q/p)] \leq \ln \mathbb{E}_P[q/p] = \ln 1 = 0$ (Jensen, $\ln$ concave).
+
+- **Asymmetry:** $D_\text{KL}(P \| Q) \neq D_\text{KL}(Q \| P)$ in general.
+
+- **Mode-seeking vs mode-covering:**
+  - Minimising $D_\text{KL}(q \| p)$ w.r.t. $q$: $q$ concentrates on modes of $p$ (mode-seeking, zero-forcing).
+    If $p(x) > 0$ but $q(x) = 0$, the term $q(x) \ln(q(x)/p(x)) = 0$ — no penalty for missing mass.
+  - Minimising $D_\text{KL}(p \| q)$ w.r.t. $q$: $q$ must cover all mass of $p$ (mode-covering, mean-seeking).
+    If $p(x) > 0$ but $q(x) \approx 0$, the term $p(x) \ln(p(x)/q(x)) \to +\infty$ — severe penalty.
+
+**This asymmetry is empirically observable in our results:** remdm-conf at T=1000 achieves
+low gen_ppl (model fits GPT-2 distribution well by mode-seeking) but low MAUVE (fails to
+cover the full OWT distribution). The mode-seeking direction minimises one KL; covering
+diversity requires minimising the other.
+
+#### B.2.4 Cross-Entropy
+
+$$H(P, Q) = -\sum_x p(x) \ln q(x) = H(P) + D_\text{KL}(P \| Q)$$
+
+**Interpretation:** The average code length when data is distributed as $P$ but coded
+under $Q$. Always $H(P, Q) \geq H(P)$, with equality iff $P = Q$.
+
+**Gen-ppl decomposition** (critical for thesis):
+
+$$\text{gen-ppl} = \exp H(p_\theta, q_{\text{GPT-2}}) = \exp[H(p_\theta) + D_\text{KL}(p_\theta \| q_{\text{GPT-2}})]$$
+
+A low gen-ppl can arise from: (a) low entropy $H(p_\theta)$ (mode collapse), (b) low KL
+(distribution aligned with GPT-2), or (c) both. It is **not** a pure measure of distributional
+fit — a degenerate model that generates a single, GPT-2-likely sentence would achieve
+gen-ppl $\approx 1$ while being useless.
+
+#### B.2.5 Mutual Information
+
+$$I(X; Y) = H(X) - H(X \mid Y) = H(Y) - H(Y \mid X) = D_\text{KL}(P_{XY} \| P_X P_Y)$$
+
+- $I(X;Y) \geq 0$, equal to zero iff $X \perp Y$.
+- $I(X;Y) = I(Y;X)$ (symmetric, unlike KL).
+- $I(X;Y) = H(X) + H(Y) - H(X,Y)$ (visualised via the entropy Venn diagram).
+
+**Data processing inequality (DPI):** If $X \to Y \to Z$ is a Markov chain
+(i.e., $Z \perp X \mid Y$), then $I(X; Z) \leq I(X; Y)$.
+
+**DPI in diffusion:** The chain $\mathbf{x}_0 \to \mathbf{x}_t \to \mathbf{x}_T$ means
+$I(\mathbf{x}_0; \mathbf{x}_T) \leq I(\mathbf{x}_0; \mathbf{x}_t)$ for $t \leq T$.
+The forward process monotonically destroys information about $\mathbf{x}_0$.
+As $\alpha_T \to 0$ (all tokens masked), $I(\mathbf{x}_0; \mathbf{x}_T) \to 0$.
+
+#### B.2.6 Information Profile (connection to thesis)
+
+The **information profile** of position $i$ in sequence $\mathbf{x}$ is:
+
+$$I^i(\mathbf{x}) = H(x^i \mid \mathbf{x}^{\setminus i})$$
+
+This is the conditional entropy of position $i$ given all other positions. It measures
+how much uncertainty about $x^i$ remains after observing all other tokens.
+
+- $I^i(\mathbf{x}) = 0$: position $i$ is fully determined by context (e.g., a function word after a fixed phrase).
+- $I^i(\mathbf{x})$ large: position $i$ is highly variable given context (e.g., the first content word of a sentence).
+
+**Lavenant & Zanella (2024)** prove that the optimal unmasking order is increasing in
+$I^i(\mathbf{x})$: unmask positions with **lowest** $I^i$ first (most predictable given context).
+This minimises the factorisation error at each step — you never commit a token that is
+highly uncertain given its neighbours.
+
+---
+
+### B.3 Variational Inference and the ELBO
+
+#### B.3.1 Latent Variable Models
+
+A **latent variable model** defines a joint distribution $p_\theta(\mathbf{x}, \mathbf{z})$
+over observed variables $\mathbf{x}$ and latent variables $\mathbf{z}$:
+
+$$p_\theta(\mathbf{x}, \mathbf{z}) = p_\theta(\mathbf{x} \mid \mathbf{z})\, p(\mathbf{z})$$
+
+The **marginal likelihood** (evidence):
+
+$$p_\theta(\mathbf{x}) = \sum_{\mathbf{z}} p_\theta(\mathbf{x} \mid \mathbf{z})\, p(\mathbf{z})$$
+
+is typically **intractable** (sum over all latent configurations). Maximum likelihood
+training requires maximising $\log p_\theta(\mathbf{x})$, which requires computing this sum.
+
+**In discrete diffusion:** $\mathbf{x}$ is the clean sequence $\mathbf{x}_0$ and
+$\mathbf{z} = (\mathbf{x}_1, \ldots, \mathbf{x}_T)$ is the noisy trajectory.
+$p(\mathbf{z})$ is the forward process (fixed), and $p_\theta(\mathbf{x}_0 \mid \mathbf{z})$
+is the reverse model (learned).
+
+#### B.3.2 The Evidence Lower Bound (ELBO)
+
+Introduce a variational distribution $q_\phi(\mathbf{z} \mid \mathbf{x})$ to approximate the
+intractable posterior $p_\theta(\mathbf{z} \mid \mathbf{x})$. Then:
+
+$$\log p_\theta(\mathbf{x}) = \log \sum_{\mathbf{z}} q_\phi(\mathbf{z} \mid \mathbf{x}) \frac{p_\theta(\mathbf{x}, \mathbf{z})}{q_\phi(\mathbf{z} \mid \mathbf{x})}$$
+
+Applying Jensen's inequality ($\log$ is concave, so $\log \mathbb{E}[Z] \geq \mathbb{E}[\log Z]$):
+
+$$\log p_\theta(\mathbf{x}) \geq \mathbb{E}_{q_\phi}\!\left[\log \frac{p_\theta(\mathbf{x}, \mathbf{z})}{q_\phi(\mathbf{z} \mid \mathbf{x})}\right] =: \mathcal{L}(\theta, \phi; \mathbf{x}) \quad \text{(ELBO)}$$
+
+**Two equivalent forms:**
+
+$$\mathcal{L} = \underbrace{\mathbb{E}_{q_\phi}[\log p_\theta(\mathbf{x} \mid \mathbf{z})]}_{\text{reconstruction}} - \underbrace{D_\text{KL}(q_\phi(\mathbf{z} \mid \mathbf{x}) \| p(\mathbf{z}))}_{\text{regularisation}}$$
+
+$$\log p_\theta(\mathbf{x}) = \mathcal{L}(\theta, \phi; \mathbf{x}) + \underbrace{D_\text{KL}(q_\phi(\mathbf{z} \mid \mathbf{x}) \| p_\theta(\mathbf{z} \mid \mathbf{x}))}_{\geq 0}$$
+
+The second form shows the ELBO is a lower bound on the log-evidence, with the gap equal
+to the KL between the variational posterior and the true posterior. The ELBO is tight
+($= \log p_\theta(\mathbf{x})$) when $q_\phi = p_\theta(\cdot \mid \mathbf{x})$.
+
+#### B.3.3 ELBO for Diffusion Models
+
+In discrete diffusion (MDLM, D3PM), the ELBO expands as:
+
+$$\mathcal{L} = \underbrace{\mathbb{E}_{q(\mathbf{x}_1 \mid \mathbf{x}_0)}\!\left[\log p_\theta(\mathbf{x}_0 \mid \mathbf{x}_1)\right]}_{\text{reconstruction at } t=1}
+- \underbrace{D_\text{KL}(q(\mathbf{x}_T \mid \mathbf{x}_0) \| p(\mathbf{x}_T))}_{\text{prior matching}}
+- \sum_{t=2}^{T} \underbrace{\mathbb{E}_{q(\mathbf{x}_t \mid \mathbf{x}_0)}\!\left[D_\text{KL}(q(\mathbf{x}_{t-1} \mid \mathbf{x}_t, \mathbf{x}_0) \| p_\theta(\mathbf{x}_{t-1} \mid \mathbf{x}_t))\right]}_{\text{denoising terms}}$$
+
+**Key insight:** Each denoising term measures how well $p_\theta(\mathbf{x}_{t-1} \mid \mathbf{x}_t)$
+matches the *true* Bayesian reverse $q(\mathbf{x}_{t-1} \mid \mathbf{x}_t, \mathbf{x}_0)$.
+For the absorbing process, this posterior has an analytic closed form (see Section B.6),
+which is why MDLM training is tractable: the model just needs to learn to predict $\mathbf{x}_0$
+from $\mathbf{x}_t$, and the posterior is computed analytically.
+
+#### B.3.4 Mean-Field Approximation
+
+The **mean-field** variational family assumes full factorisation:
+$q(\mathbf{z}) = \prod_i q_i(z_i)$.
+
+The optimal factor satisfies: $\ln q_j^*(z_j) = \mathbb{E}_{-j}[\ln p(\mathbf{x}, \mathbf{z})] + \text{const}$
+
+**Connection to factorisation error:** The reverse model
+$p_\theta(\mathbf{x}_{t-1} \mid \mathbf{x}_t) = \prod_i p_\theta(x^i_{t-1} \mid \mathbf{x}_t)$
+is a mean-field approximation to the joint reverse posterior. The factorisation error
+is exactly the KL penalty from using this mean-field approximation instead of the
+true joint posterior.
+
+---
+
+### B.4 Markov Chains
+
+#### B.4.1 Definition and Markov Property
+
+A sequence of random variables $(X_0, X_1, X_2, \ldots)$ is a **Markov chain** if:
+
+$$P(X_t = x_t \mid X_0 = x_0, \ldots, X_{t-1} = x_{t-1}) = P(X_t = x_t \mid X_{t-1} = x_{t-1})$$
+
+The future state depends only on the present state, not the past. This is called the
+**Markov property** (memorylessness).
+
+A chain is **time-homogeneous** if the transition kernel $T(x, y) = P(X_t = y \mid X_{t-1} = x)$
+does not depend on $t$.
+
+#### B.4.2 Transition Matrix and Chapman-Kolmogorov
+
+For a finite state space $\mathcal{S}$, the transition kernel is a matrix $\mathbf{T}$ with:
+- $T_{xy} = P(X_t = y \mid X_{t-1} = x) \geq 0$
+- $\sum_y T_{xy} = 1$ (rows sum to one — $\mathbf{T}$ is a **stochastic matrix**)
+
+**$k$-step transition:** $P(X_{t+k} = y \mid X_t = x) = (\mathbf{T}^k)_{xy}$
+
+**Chapman-Kolmogorov:** $\mathbf{T}^{t+s} = \mathbf{T}^t \cdot \mathbf{T}^s$
+
+In the diffusion context, the $t$-step marginal of the forward process $q(\mathbf{x}_t \mid \mathbf{x}_0)$
+is computed by applying $\mathbf{T}^t$ to the one-hot encoding $\mathbf{e}_{x_0}$.
+
+#### B.4.3 Stationary Distribution and Detailed Balance
+
+A distribution $\boldsymbol{\pi}$ is **stationary** for $\mathbf{T}$ if $\boldsymbol{\pi} = \boldsymbol{\pi} \mathbf{T}$,
+i.e., $\pi(y) = \sum_x \pi(x) T(x, y)$.
+
+A chain satisfies **detailed balance** (is **reversible**) if:
+$$\pi(x)\, T(x, y) = \pi(y)\, T(y, x) \quad \forall x, y$$
+
+Detailed balance implies stationarity (but not vice versa). Reversibility means the chain
+looks statistically identical run forwards or backwards in time — a property that diffusion
+models exploit: the forward (noising) and reverse (denoising) processes share the same
+stationary distribution.
+
+**Absorbing state:** State $a$ is absorbing if $T(a, a) = 1$ (and $T(a, y) = 0$ for $y \neq a$).
+For the masking process: $\texttt{[MASK]}$ is absorbing. Once a token is masked, it stays masked
+under the forward process. The reverse process $p_\theta$ must learn to "unmask" it.
+
+#### B.4.4 Continuous-Time Markov Chains (CTMC)
+
+A **CTMC** is a Markov chain with continuous time index $t \in [0, \infty)$. It is
+characterised by a **rate matrix** (generator) $\mathbf{Q}$:
+- $Q_{ij} \geq 0$ for $i \neq j$ (rates of transitioning from $i$ to $j$)
+- $Q_{ii} = -\sum_{j \neq i} Q_{ij}$ (rows sum to zero)
+
+**Transition matrix:** $\mathbf{P}(t) = e^{\mathbf{Q}t} = \sum_{k=0}^\infty \frac{(Qt)^k}{k!}$
+
+**Kolmogorov forward equation:** $\frac{d}{dt} \mathbf{P}(t) = \mathbf{P}(t)\, \mathbf{Q}$
+
+**Connection to discrete diffusion:** SEDD and DFM (Campbell et al.) formulate the
+forward process as a CTMC with $Q_{x, \texttt{MASK}} = \sigma(t)$ for all $x \neq \texttt{MASK}$,
+recovering the absorbing discrete diffusion process in continuous time. The reverse
+CTMC has rate matrix characterised by the score function of the marginal distribution.
+
+#### B.4.5 The Backward Equation and Reverse Process
+
+For a forward CTMC with generator $\mathbf{Q}$ and stationary distribution $\boldsymbol{\pi}$,
+the **time-reversal** is also a CTMC with rates:
+
+$$\tilde{Q}_{ij}(t) = \frac{\pi_j(t)}{\pi_i(t)} Q_{ji}$$
+
+This is the continuous-time analogue of the reversal used in diffusion models. The key
+insight: **learning the reverse process is equivalent to learning the ratios $\pi_j / \pi_i$**,
+which connects to score-based methods.
+
+---
+
+### B.5 Score Functions and Denoising
+
+*(Primarily for continuous-space context; included for completeness and for understanding SEDD.)*
+
+#### B.5.1 Score Function
+
+The **score function** of a distribution $p(\mathbf{x})$ over $\mathbf{x} \in \mathbb{R}^d$:
+
+$$s(\mathbf{x}) = \nabla_{\mathbf{x}} \log p(\mathbf{x})$$
+
+Points in the direction of increasing log-density — toward regions of higher probability mass.
+
+**Example:** For $p(\mathbf{x}) = \mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma})$:
+$s(\mathbf{x}) = -\boldsymbol{\Sigma}^{-1}(\mathbf{x} - \boldsymbol{\mu})$
+
+The score of a Gaussian points back toward the mean — it is a linear "restoring force."
+
+#### B.5.2 Fisher Divergence and Score Matching
+
+The **Fisher divergence** between distributions $p$ and $q$:
+
+$$D_F(p \| q) = \mathbb{E}_p\!\left[\|s_p(\mathbf{x}) - s_q(\mathbf{x})\|^2\right]$$
+
+**Score matching** (Hyvärinen 2005) minimises $D_F(p_{\text{data}} \| p_\theta)$ without
+requiring $p_{\text{data}}$ to be tractable, using integration by parts.
+
+#### B.5.3 Denoising Score Matching
+
+**Denoising score matching** (Vincent 2011) adds Gaussian noise
+$\tilde{\mathbf{x}} = \mathbf{x} + \boldsymbol{\epsilon}$, $\boldsymbol{\epsilon} \sim \mathcal{N}(0, \sigma^2 I)$,
+and trains a denoiser $s_\theta(\tilde{\mathbf{x}})$ to match $\nabla_{\tilde{\mathbf{x}}} \log p(\tilde{\mathbf{x}} \mid \mathbf{x})$:
+
+$$\min_\theta \mathbb{E}_{\mathbf{x} \sim p}\, \mathbb{E}_{\boldsymbol{\epsilon}}\!\left[\left\|s_\theta(\tilde{\mathbf{x}}) + \frac{\boldsymbol{\epsilon}}{\sigma^2}\right\|^2\right]$$
+
+This avoids computing intractable score of $p_{\text{data}}$ directly.
+
+**Tweedie's formula:** For $\tilde{\mathbf{x}} = \mathbf{x}_0 + \sigma \boldsymbol{\epsilon}$:
+
+$$\mathbb{E}[\mathbf{x}_0 \mid \tilde{\mathbf{x}}] = \tilde{\mathbf{x}} + \sigma^2 \nabla_{\tilde{\mathbf{x}}} \log p(\tilde{\mathbf{x}})$$
+
+The posterior mean of the clean signal equals the noisy signal plus a score-weighted correction.
+This underlies the DDPM $\mathbf{x}_0$-prediction parametrisation.
+
+#### B.5.4 Discrete Score Function (SEDD)
+
+For a discrete distribution $p(\mathbf{x})$ over $\mathcal{X}^L$, there is no gradient.
+The **concrete score** (Lou et al., 2023) at position $i$ and value $v$:
+
+$$s_\theta(\mathbf{x})^i_v = \frac{p_\theta([\mathbf{x}^{\setminus i}, v])}{p_\theta(\mathbf{x})}$$
+
+This ratio measures how the probability changes when position $i$ is changed to $v$.
+The model learns these ratios directly, and they are used to define the reverse CTMC.
+SEDD shows this leads to tractable training via a **score-entropy** loss.
+
+---
+
+### B.6 The Absorbing (Masking) Forward Process
+
+This section details the specific Markov chain used in MDLM, D3PM (absorbing), ReMDM, LLaDA.
+
+#### B.6.1 Forward Kernel
+
+Let $\mathcal{V} = \{1, \ldots, V\} \cup \{\texttt{M}\}$ where $\texttt{M}$ is the mask token.
+The **one-step forward kernel** masks each token independently:
+
+$$q(x^i_t \mid x^i_{t-1}) = (1 - \beta_t)\, \mathbf{e}_{x^i_{t-1}} + \beta_t\, \mathbf{e}_\texttt{M}$$
+
+where $\beta_t \in [0,1]$ is the masking probability at step $t$.
+
+**$t$-step marginal** (by composing the one-step kernels):
+
+$$q(x^i_t \mid x^i_0) = \alpha_t\, \mathbf{e}_{x^i_0} + (1 - \alpha_t)\, \mathbf{e}_\texttt{M}$$
+
+where $\alpha_t = \prod_{s=1}^t (1 - \beta_s)$ is the **survival probability** — the
+probability a token remains unmasked at step $t$. $\alpha_0 = 1$ (fully clean),
+$\alpha_T \approx 0$ (fully masked).
+
+**Simplified:** At time $t$, position $i$ is:
+- Unmasked (equals $x^i_0$) with probability $\alpha_t$
+- Masked ($= \texttt{M}$) with probability $1 - \alpha_t$
+
+The positions are masked **independently** — the forward process factorises over positions.
+
+#### B.6.2 Posterior (Reverse Bayesian Update)
+
+The posterior $q(x^i_{t-1} \mid x^i_t, x^i_0)$ is computed by Bayes:
+
+**Case 1: $x^i_t \neq \texttt{M}$ (token is already unmasked):**
+
+$$q(x^i_{t-1} \mid x^i_t \neq \texttt{M}, x^i_0) = \delta(x^i_{t-1} = x^i_t)$$
+
+If a token is visible at time $t$, it was also visible at $t-1$ (absorbing state property).
+The reverse step is deterministic: keep the token.
+
+**Case 2: $x^i_t = \texttt{M}$ (token is masked):**
+
+$$q(x^i_{t-1} \mid x^i_t = \texttt{M}, x^i_0) = \frac{\alpha_{t-1} - \alpha_t}{1 - \alpha_t}\, \mathbf{e}_{x^i_0} + \frac{1 - \alpha_{t-1}}{1 - \alpha_t}\, \mathbf{e}_\texttt{M}$$
+
+**Derivation:** By Bayes, $q(x^i_{t-1} \mid \texttt{M}, x^i_0) \propto q(\texttt{M} \mid x^i_{t-1})\, q(x^i_{t-1} \mid x^i_0)$.
+Two cases for $x^i_{t-1}$:
+- $x^i_{t-1} = x^i_0$ (unmasked): $q(\texttt{M} \mid x^i_0) \cdot \alpha_{t-1} = (1-\alpha_{t-1}) \cdot \alpha_{t-1}$... wait, more carefully:
+  $q(\texttt{M} \mid x^i_{t-1} = x^i_0) = 1 - \alpha_t/\alpha_{t-1}$ (one-step mask probability given unmasked at $t-1$)
+  $q(x^i_{t-1} = x^i_0 \mid x^i_0) = \alpha_{t-1}$
+  Weight: $\propto (1 - \alpha_t/\alpha_{t-1}) \cdot \alpha_{t-1} = \alpha_{t-1} - \alpha_t$
+- $x^i_{t-1} = \texttt{M}$ (masked): $q(\texttt{M} \mid \texttt{M}) = 1$ (absorbing), $q(\texttt{M} \mid x^i_0) = 1 - \alpha_{t-1}$
+  Weight: $\propto 1 \cdot (1-\alpha_{t-1}) = 1 - \alpha_{t-1}$
+
+Normalising by $1 - \alpha_t = (\alpha_{t-1} - \alpha_t) + (1 - \alpha_{t-1})$ gives the formula above.
+
+**Key insight:** Given that a token is masked at time $t$, the posterior says:
+unmask it to $x^i_0$ with probability $(\alpha_{t-1} - \alpha_t)/(1-\alpha_t)$,
+or keep it masked with the complementary probability. The model must learn to predict
+$x^i_0$ from $\mathbf{x}_t$ to implement this reverse step.
+
+#### B.6.3 Masked Cross-Entropy Training Loss
+
+The ELBO denoising term at step $t$:
+
+$$\mathbb{E}_{q(\mathbf{x}_t \mid \mathbf{x}_0)}\!\left[D_\text{KL}(q(\mathbf{x}_{t-1} \mid \mathbf{x}_t, \mathbf{x}_0) \| p_\theta(\mathbf{x}_{t-1} \mid \mathbf{x}_t))\right]$$
+
+reduces (using the closed-form posterior) to a **masked cross-entropy**:
+
+$$\mathcal{L}_t \propto -\sum_{i:\, x^i_t = \texttt{M}} \mathbb{E}\!\left[\ln p_\theta(x^i_0 \mid \mathbf{x}_t)\right]$$
+
+Only masked positions contribute to the loss. The model is trained to predict the original
+token $x^i_0$ at each masked position given the partially-masked sequence $\mathbf{x}_t$.
+
+**This is exactly masked language modelling (BERT-style)**, but with a principled derivation:
+it is the ELBO of the absorbing diffusion model. The difference from BERT: the masking
+schedule $\alpha_t$ is explicit, and the loss is summed over all $t$ during training.
+
+#### B.6.4 Noise Schedule
+
+The noise schedule $\{\alpha_t\}_{t=0}^T$ controls how quickly tokens are masked.
+
+**Linear schedule:** $\alpha_t = 1 - t/T$ — uniform masking across steps.
+
+**Cosine schedule (MDLM):** $\alpha_t = \cos^2(\frac{\pi t}{2T})$ — slow start and end,
+faster masking in the middle. Inspired by the continuous-time flow matching literature.
+
+**Effect on training:** The schedule determines what fraction of tokens are masked at
+each training step. A cosine schedule ensures the model trains on a roughly uniform
+distribution over masking rates, unlike linear which concentrates training at intermediate rates.
+
+---
+
+### B.7 Factorisation Error: Derivation and Bounds
+
+#### B.7.1 Where the Error Comes from
+
+The true joint reverse process:
+$$q(\mathbf{x}_{t-1} \mid \mathbf{x}_t) = \sum_{\mathbf{x}_0} q(\mathbf{x}_{t-1} \mid \mathbf{x}_t, \mathbf{x}_0)\, q(\mathbf{x}_0 \mid \mathbf{x}_t)$$
+
+This is a mixture over all possible clean sequences — intractable, and **does not factorise**
+over positions (the joint distribution of all unmasked tokens is correlated through $\mathbf{x}_0$).
+
+The model approximates:
+$$p_\theta(\mathbf{x}_{t-1} \mid \mathbf{x}_t) = \prod_i p_\theta(x^i_{t-1} \mid \mathbf{x}_t)$$
+
+The error per step is:
+$$\varepsilon_t = D_\text{KL}\!\left(\prod_i q(x^i_{t-1} \mid \mathbf{x}_t, \mathbf{x}_0) \,\Big\|\, q(\mathbf{x}_{t-1} \mid \mathbf{x}_t)\right)$$
+
+Summing over steps: $E_{\text{fact}} = \sum_{t=1}^T \varepsilon_t$.
+
+#### B.7.2 Scaling with T
+
+**Claim:** For smooth models, $E_{\text{fact}} = O(\Sigma^2 / T)$ where $\Sigma^2$ measures
+the covariance between positions in the posteriors.
+
+**Intuition:** At each step, the fraction of newly unmasked tokens is $\Delta\alpha_t = \alpha_{t-1} - \alpha_t \approx 1/T$.
+The cross-correlations between unmasked tokens scale as $O(\Delta\alpha_t^2) = O(1/T^2)$.
+Summing over $T$ steps: $E_{\text{fact}} \sim T \cdot O(1/T^2) = O(1/T)$.
+
+**Consequence:** More steps → lower factorisation error → better generation quality.
+This motivates using large $T$ (e.g., T=1000 vs T=128). The MAUVE improvement from
+T=128 to T=1000 in our results is at least partially explained by $E_{\text{fact}}$ reduction.
+
+#### B.7.3 Remasking as Error Correction
+
+Remasking addresses $E_{\text{fact}}$ at inference time without retraining. If a token
+$x^i$ was committed (unmasked) based on insufficient context — because correlated tokens
+$x^j, x^k$ were still masked — remasking it to $\texttt{M}$ allows the model to reconsider
+it after those context tokens are revealed.
+
+**Formal effect:** Let $E_{\text{fact}}^{\text{base}}$ be the factorisation error without
+remasking. With remasking, committed tokens can be revised, reducing the effective
+$\Sigma^2$ at each step. The theoretical gain depends on whether the proxy confidence
+signal aligns with the information profile $I^i(\mathbf{x})$.
+
+---
+
+### B.8 Evaluation Metrics: Formal Definitions
+
+#### B.8.1 Perplexity and Bits-Per-Byte
+
+**Perplexity** of a language model $p_\theta$ on text data $\mathcal{D}$:
+
+$$\text{PPL}(p_\theta, \mathcal{D}) = \exp\!\left(\frac{1}{N}\sum_{n=1}^N -\log p_\theta(\mathbf{x}_n)\right) = \exp\big(H(p_{\text{data}}, p_\theta)\big)$$
+
+where $H(p_{\text{data}}, p_\theta)$ is the cross-entropy of the data distribution under the model.
+
+**Bits-per-byte (BPB):** $\text{BPB} = H(p_{\text{data}}, p_\theta) / \ln(2) / C$
+where $C$ is the average number of bytes per token (typically $\approx 4$ for GPT-2 tokenizer).
+
+**Gen-ppl** (used in this thesis): evaluates the *generated* distribution $p_\theta$ under
+an external evaluator $q_{\text{GPT-2}}$:
+
+$$\text{gen-ppl} = \exp H(p_\theta, q_{\text{GPT-2}}) = \exp\big[H(p_\theta) + D_\text{KL}(p_\theta \| q_{\text{GPT-2}})\big]$$
+
+This is estimated by: generate $N$ sequences from $p_\theta$, compute their average
+negative log-likelihood under GPT-2. Lower gen-ppl means generated text is more
+likely under GPT-2 (closer to fluent English), **but** it conflates fluency (low KL)
+with low diversity (low entropy). A model that generates one GPT-2-likely sentence
+repeatedly achieves gen-ppl $\approx 1$ while being degenerate.
+
+#### B.8.2 MAUVE
+
+**MAUVE** (Pillutla et al., 2021) measures the divergence between the model distribution
+$P$ (generated samples) and the reference distribution $Q$ (human text) via the
+**divergence frontier**.
+
+For $\lambda \in [0, 1]$, define the mixture:
+$$M_\lambda = (1 - \lambda)\, P + \lambda\, Q$$
+
+The **divergence frontier** is the curve:
+$$\mathcal{F}(P, Q) = \{(\text{KL}(M_\lambda \| P),\; \text{KL}(M_\lambda \| Q)) : \lambda \in [0,1]\}$$
+
+This traces a curve in $\mathbb{R}_{\geq 0}^2$. When $P = Q$, $M_\lambda = P = Q$ for all $\lambda$,
+and both KLs are zero — the curve collapses to the origin.
+
+**MAUVE score:**
+$$\text{MAUVE}(P, Q) = \exp(-c \cdot \text{Area}(\mathcal{F}(P, Q)))$$
+
+where $c > 0$ is a scaling constant. Lower area = higher MAUVE = distributions more similar.
+MAUVE $\in (0, 1]$, with MAUVE $= 1$ when $P = Q$.
+
+**Geometric interpretation of the frontier:**
+- The $x$-axis KL $= \text{KL}(M_\lambda \| P)$ measures how far the mixture deviates from $P$ (model). High $\lambda$ (mixture close to $Q$) → large $x$.
+- The $y$-axis KL $= \text{KL}(M_\lambda \| Q)$ measures how far the mixture deviates from $Q$ (reference). Low $\lambda$ (mixture close to $P$) → large $y$.
+- If $P$ has low recall (misses modes of $Q$): large $y$-axis values (high divergence from $Q$).
+- If $P$ has low precision (generates OOD text): large $x$-axis values (high divergence from $P$).
+
+**Practical computation:** $P$ and $Q$ are not available analytically; they are represented
+as sets of feature vectors (GPT-2 embeddings of generated / reference sentences).
+The frontier is approximated by a quantisation of the feature space. This introduces
+sampling variance — estimates are unreliable for $N < 500$ samples (Pillutla et al.).
+
+#### B.8.3 Entropy as a Diversity Proxy
+
+Token-level entropy of the generated distribution:
+
+$$H_{\text{gen}} = \frac{1}{L} \sum_{i=1}^{L} H(x^i) = -\frac{1}{L} \sum_{i=1}^L \sum_v p_\theta(x^i = v)\, \ln p_\theta(x^i = v)$$
+
+In practice, estimated by the empirical marginal over $N$ generated samples.
+
+**Interpretation:** High entropy = diverse vocabulary usage; low entropy = repetitive text.
+Entropy drop is a **signature of mode collapse**: the model is concentrating on a small
+subset of tokens. In our results, remdm-conf drops from $H = 5.499$ at T=128 to
+$H = 5.357$ at T=1000 — a decrease of 0.142 nats, corresponding to a character
+perplexity ratio of $e^{0.142} \approx 1.15$ (15% reduction in effective vocabulary).
+
+**Limitations:** Entropy is a marginal statistic — it misses higher-order structure.
+A model that generates each token independently at the correct marginal frequency would
+have the correct entropy but zero inter-token correlation (wrong text). Entropy is
+necessary but not sufficient for quality assessment.
+
+#### B.8.4 Bootstrap Confidence Intervals
+
+Given $N$ i.i.d. samples and a statistic $\hat{\theta}$ (e.g., MAUVE, gen-ppl), the
+**bootstrap** (Efron, 1979) estimates the sampling distribution of $\hat{\theta}$:
+
+1. Draw $B$ bootstrap samples: for each $b = 1, \ldots, B$, resample $N$ observations with replacement from the original $N$ samples.
+2. Compute $\hat{\theta}^{(b)}$ for each bootstrap sample.
+3. The bootstrap distribution $\{\hat{\theta}^{(b)}\}_{b=1}^B$ approximates the sampling distribution of $\hat{\theta}$.
+
+**Percentile CI:** $[\hat{\theta}^{(\alpha/2)},\, \hat{\theta}^{(1-\alpha/2)}]$ where the quantiles are from the bootstrap distribution. This is a 95% CI when $\alpha = 0.05$.
+
+**Why N=100 is marginal for MAUVE:** MAUVE estimates the area of a frontier in feature space — it requires enough samples to cover the manifold. With $N=100$, bootstrap CIs typically span $\pm 0.05$–$0.10$ MAUVE units. A difference of $\Delta\text{MAUVE} = 0.09$ (e.g., remdm-conf vs remdm-loop at T=128: $0.440$ vs $0.396$) may not be significant. Bootstrap CIs are needed to determine which differences in the step-sweep table are reliably non-zero.
+
+---
+
+### B.9 Softmax, Temperature Scaling, and Calibration
+
+#### B.9.1 Softmax
+
+The **softmax** function maps logits $\mathbf{z} \in \mathbb{R}^V$ to probabilities:
+
+$$\text{softmax}(\mathbf{z})_v = \frac{e^{z_v}}{\sum_{v'=1}^V e^{z_{v'}}}$$
+
+**Temperature softmax** with temperature $\tau > 0$:
+
+$$\text{softmax}_\tau(\mathbf{z})_v = \frac{e^{z_v/\tau}}{\sum_{v'} e^{z_{v'}/\tau}}$$
+
+- $\tau \to 0$: $\text{softmax}_\tau \to \arg\max$ (one-hot, deterministic greedy)
+- $\tau = 1$: standard softmax
+- $\tau \to \infty$: $\text{softmax}_\tau \to \text{Uniform}(V)$
+
+**Temperature annealing in remasking:** At high masking rates (early generation), the
+model is uncertain — high temperature encourages exploration. As fewer tokens are masked,
+the model is more confident — lower temperature enables exploitation. The schedule
+$\tau(t) = 1 + (\tau_0 - 1)(t/T)$ achieves $\tau = \tau_0 > 1$ at $t = T$ (fully masked)
+and $\tau = 1$ at $t = 0$ (fully revealed).
+
+#### B.9.2 Calibration
+
+A model is **calibrated** if its confidence equals its empirical accuracy:
+
+$$P(\hat{y} = y \mid p_\theta(\hat{y}) = p) = p \quad \forall p \in [0,1]$$
+
+**Overconfidence:** $p_\theta(\hat{y}) > P(\text{correct})$ — the model claims higher certainty than warranted. Common in large neural language models.
+
+**Temperature scaling** is the simplest post-hoc calibration method: find $\tau^*$ on a
+held-out validation set that minimises the expected calibration error (ECE):
+
+$$\tau^* = \arg\min_\tau \frac{1}{N}\sum_n \text{NLL}_\tau(y_n, p_\theta(\cdot \mid \mathbf{x}_n))$$
+
+**Connection to remdm-conf collapse:** If $p_\theta$ is overconfident (too-small $\tau$),
+the confidence signal is overconfident — it commits tokens prematurely. At T=1000 there
+are 1000 opportunities to make premature commitments that cannot be revisited, leading
+to diversity collapse. Entropy-based or temperature-calibrated confidence is a principled
+fix.
+
+---
+
+### B.10 Worked Examples: Applying the Formulas
+
+#### B.10.1 Computing KL Divergence for a Categorical
+
+Let $P = \text{Cat}(0.7, 0.2, 0.1)$ and $Q = \text{Cat}(0.5, 0.3, 0.2)$ over $V = 3$ tokens.
+
+$$D_\text{KL}(P \| Q) = 0.7 \ln\frac{0.7}{0.5} + 0.2 \ln\frac{0.2}{0.3} + 0.1 \ln\frac{0.1}{0.2}$$
+$$= 0.7 \times 0.336 + 0.2 \times (-0.405) + 0.1 \times (-0.693)$$
+$$= 0.235 - 0.081 - 0.069 = 0.085 \text{ nats}$$
+
+Note: the first term dominates because $P$ has high mass on $v=1$ but $Q$ assigns less.
+The mode-seeking asymmetry: $D_\text{KL}(Q \| P) = 0.5\ln(0.5/0.7) + \ldots \approx 0.076$ nats
+— different and slightly smaller (the reverse direction is less penalised for the mass shift).
+
+#### B.10.2 ELBO Bound Tightness
+
+Suppose $\log p_\theta(\mathbf{x}) = -3.2$ nats. A variational approximation achieves
+$\mathcal{L} = -4.1$ nats. Then:
+
+$$D_\text{KL}(q \| p_\theta(\cdot \mid \mathbf{x})) = \log p_\theta(\mathbf{x}) - \mathcal{L} = -3.2 - (-4.1) = 0.9 \text{ nats}$$
+
+The variational posterior is 0.9 nats from the true posterior — substantial room for improvement.
+In practice, a well-trained diffusion model drives this gap toward zero by the design of the
+forward process (the posterior is analytically tractable).
+
+#### B.10.3 Absorbing Posterior: Numerical Example
+
+Let $T = 4$, $\alpha_t = 1 - t/T$, so $\alpha_0 = 1$, $\alpha_1 = 0.75$, $\alpha_2 = 0.5$, $\alpha_3 = 0.25$, $\alpha_4 = 0$.
+
+Given $x^i_0 = \text{"cat"}$ and $x^i_3 = \texttt{M}$ (masked at step 3):
+
+$$q(x^i_2 \mid x^i_3 = \texttt{M},\, x^i_0 = \text{"cat"}) = \frac{\alpha_2 - \alpha_3}{1 - \alpha_3}\, \mathbf{e}_{\text{"cat"}} + \frac{1 - \alpha_2}{1 - \alpha_3}\, \mathbf{e}_\texttt{M}$$
+$$= \frac{0.5 - 0.25}{1 - 0.25}\, \mathbf{e}_{\text{"cat"}} + \frac{1 - 0.5}{1 - 0.25}\, \mathbf{e}_\texttt{M} = \frac{1}{3}\, \mathbf{e}_{\text{"cat"}} + \frac{2}{3}\, \mathbf{e}_\texttt{M}$$
+
+At step $t=3$, a masked token at step $t=2$: 1/3 chance it was unmasked (= "cat"), 2/3 chance it was still masked. The model must predict "cat" with confidence proportional to this posterior.
+
+#### B.10.4 Entropy of Generated Text
+
+Generated sequence entropy $H = 5.45$ nats per token (observed for remdm-loop at T=1000).
+Character perplexity: $e^{5.45} = 233$.
+
+If entropy drops to $H = 5.35$ nats (remdm-conf at T=1000, a drop of 0.10 nats):
+- Character perplexity ratio: $e^{0.10} = 1.105$
+- Interpretation: effective vocabulary 10.5% smaller — not catastrophic, but a consistent signal of mode-seeking behaviour.
+
+The corresponding gen-ppl change is **larger** than this entropy change alone would suggest,
+because mode-seeking also reduces $D_\text{KL}(p_\theta \| q_{\text{GPT-2}})$: a less diverse
+model is "closer" to GPT-2's distribution in the forward KL sense.
+
+---
+
+### B.11 Quick-Reference: Key Inequalities
+
+| Inequality | Statement | Used for |
+|---|---|---|
+| **Jensen** | $f(\mathbb{E}[X]) \leq \mathbb{E}[f(X)]$ for convex $f$ | ELBO derivation |
+| **Gibbs** | $D_\text{KL}(P \| Q) \geq 0$ | All KL-based bounds |
+| **Data processing** | $I(X;Z) \leq I(X;Y)$ if $X \to Y \to Z$ | Forward process information loss |
+| **Chain rule** | $H(X_1,\ldots,X_n) = \sum_i H(X_i \mid X_{1:i-1})$ | Autoregressive decomposition |
+| **Conditioning** | $H(X \mid Y) \leq H(X)$ | Information profile optimality |
+| **Log-sum** | $\sum_i a_i \ln(a_i/b_i) \geq (\sum_i a_i)\ln(\sum_i a_i / \sum_i b_i)$ | Rate-distortion bounds |
+
+---
+
+### B.12 Notation Conventions Used Throughout This Document
+
+| Symbol | Meaning |
+|---|---|
+| $\mathbf{x} = (x^1, \ldots, x^L)$ | Token sequence of length $L$ |
+| $\mathbf{x}^{\setminus i}$ | All tokens except position $i$ |
+| $\alpha_t \in [0,1]$ | Survival probability at step $t$ (prob. of being unmasked) |
+| $\texttt{M}$ or $\texttt{[MASK]}$ | Mask token |
+| $q(\cdot)$ | Forward process (fixed, data-independent) |
+| $p_\theta(\cdot)$ | Reverse (generative) model with parameters $\theta$ |
+| $D_\text{KL}(P \| Q)$ | KL divergence from $Q$ to $P$ |
+| $H(P, Q)$ | Cross-entropy of $P$ under $Q$ |
+| $H(X)$ | Entropy of $X$ |
+| $I(X;Y)$ | Mutual information |
+| $I^i(\mathbf{x})$ | Information profile at position $i$: $H(x^i \mid \mathbf{x}^{\setminus i})$ |
+| $E_{\text{fact}}$ | Total factorisation error $= \sum_t D_\text{KL}(\text{true} \| \text{factored})$ |
+| $\text{ELBO}$ | Evidence lower bound $= \log p(\mathbf{x}) - D_\text{KL}(q \| p_\theta(\cdot \mid \mathbf{x}))$ |
+| $\Delta_{V-1}$ | Probability simplex over $V$ tokens |
+| $\tau$ | Temperature parameter (softmax scaling) |
+| $\boldsymbol{\pi}$ | Probability vector in $\Delta_{V-1}$ |
+
+---
+
+## Appendix B: Repository Index
 
 | Repository | GitHub URL | Submodule path | Role in thesis |
 |---|---|---|---|

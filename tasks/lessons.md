@@ -110,3 +110,34 @@
 - MAUVE compares generated text to a reference distribution
 - Using wikitext103 (Wikipedia) as reference for a model trained on OpenWebText → near-zero MAUVE (~0.006-0.008) for all strategies, differences indistinguishable
 - **Rule:** For thesis eval, either use OpenWebText validation split as MAUVE reference or omit MAUVE and rely on gen_ppl. Document this limitation explicitly.
+
+---
+
+## Statistical Rigour
+
+### S1: gen_ppl is NOT KL divergence — it is cross-entropy
+- gen_ppl = exp(H(p_θ, q_GPT2)) = exp(H(p_θ) + KL(p_θ ‖ q_GPT2))
+- The entropy term H(p_θ) is substantial: if a model halves entropy (diversity collapse), gen_ppl drops ~35% even with zero KL improvement
+- This explains why remdm-conf gets low gen_ppl at T=1000 despite low MAUVE: mode-seeking suppresses H(p_θ)
+- **Rule:** When explaining gen_ppl changes, decompose into entropy change and KL change. Never say "lower gen_ppl = better fit to GPT-2" without checking entropy.
+
+### S2: MAUVE is a divergence frontier area, not a product of exponentials
+- Correct: MAUVE(P,Q) = exp(-c · Area(F)) where F = {(KL(M_λ ‖ Q), KL(M_λ ‖ P)) : λ ∈ [0,1]} and M_λ = (1-λ)P + λQ
+- The area over the frontier curve measures asymmetric divergences in both directions simultaneously
+- **Rule:** Never write MAUVE as exp(-KL₁) · exp(-KL₂). Use the frontier area definition.
+
+### S3: Entropy changes → character perplexity, not "effective alphabet size"
+- Entropy change ΔH → character perplexity changes by factor 2^ΔH
+- "Effective alphabet size" is not a standard term and is misleading
+- Example: entropy drop 5.507 → 5.357 = 0.150 nats → factor 2^0.150 = 1.11 (11% change in character perplexity)
+- **Rule:** Use "character perplexity 2^H" for interpretable entropy units. Compute percentage change as (2^ΔH - 1) × 100%.
+
+### S4: N=100 samples is insufficient for reliable MAUVE CIs
+- Pillutla et al. (2021) report MAUVE estimates stabilise around N≥500
+- At N=100, observed differences (e.g. 0.590 vs 0.684) are directionally informative but not statistically validated
+- **Rule:** Always attach bootstrap confidence intervals (B=10,000) before calling any MAUVE difference "significant". Use `scripts/bootstrap_ci.py`.
+
+### S5: Annealed temperature formula — high temp should apply at START (high masking rate)
+- Correct: τ(t) = 1 + (τ₀ - 1)·t/T gives τ=τ₀ at t=T (most masked, most uncertain) and τ=1 at t=0 (almost unmasked, greedy)
+- Intuition: when most tokens are masked, we want high temperature (diverse exploration); as we unmask, commit more greedily
+- **Rule:** When describing annealed temperature in discrete diffusion, verify: does τ → τ₀ when masking rate α_t → 0 (high masking)?

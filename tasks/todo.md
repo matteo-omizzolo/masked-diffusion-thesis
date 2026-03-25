@@ -1,7 +1,6 @@
 # Next Steps — Masked Diffusion Thesis
 
-**Status as of 2026-03-15:** T=128 and T=1000 evals complete for mdlm / remdm-conf / remdm-loop.
-Key finding: MAUVE ranking inverts between T=128 and T=1000.
+**Status as of 2026-03-16:** All empirical experiments complete. Thesis writing is the active priority.
 
 ---
 
@@ -14,147 +13,45 @@ Key finding: MAUVE ranking inverts between T=128 and T=1000.
 
 ---
 
-## Priority 1 (was 2) — RemeDi / LLaDa evaluation ← CURRENT (BLOCKED on RemeDi-RL)
+## ~~Priority 2 — RemeDi / LLaDa evaluation~~ ✗ PERMANENTLY SKIPPED
 
-**Goal:** Understand when and why remdm-conf MAUVE collapses as T increases.
-Produces a "steps vs metric" curve — strong thesis material.
-
-### Steps
-1. Create `hpc/remdm_sweep.sbatch` — parallel job running all 3 strategies at T=256, T=512
-   - Same pattern as `remdm_t1000_parallel.sbatch` (CUDA_VISIBLE_DEVICES=0/1/2)
-   - Output dirs: `results/sweep/T256/` and `results/sweep/T512/`
-   - Separate jobs for each T (or pack T=256 and T=512 into one job if 6 GPUs aren't available)
-2. Submit: `bash hpc/submit.sh sweep256` / `bash hpc/submit.sh sweep512`
-3. Pull results, aggregate into sweep table: steps × strategy → gen_ppl + MAUVE
-4. Plot (matplotlib): two panels — gen_ppl vs T and MAUVE vs T, one line per strategy
-5. Hypotheses to test from the data:
-   - Does remdm-conf MAUVE degrade monotonically or is there a cliff (e.g. T>512)?
-   - Does remdm-loop MAUVE improve monotonically?
-   - Does entropy decrease for remdm-conf (mode collapse signature)?
-
-### Files to create/modify
-- `hpc/remdm_sweep.sbatch` (new)
-- `hpc/submit.sh` — add `sweep256`, `sweep512` targets
-- `scripts/plot_sweep.py` (new) — generate the step-curve figure
-- `results/sweep/` — output dir (tracked via comparison.json pattern)
-
-### Expected outcome
-A 4-row × 3-col table (T=128/256/512/1000 × 3 metrics per strategy) and a 2-panel figure.
-The inversion point for remdm-conf will be visible. If entropy drops for remdm-conf at
-high T, that confirms diversity collapse; if entropy is flat, it's a distributional shift
-(mode-seeking without diversity loss).
+**Decision (2026-03-16):** RemeDi-RL evaluation blocked and out of scope.
+- `maple-research-lab/RemeDi-RL` references `FSDPLLaDAUPMModelLM` — class not in any public repo
+- 8B parameters vs 100M MDLM baseline — not comparable without scale normalisation
+- Thesis scope: remasking strategies on MDLM-scale models. External RL-finetuned models are out of scope.
+- Document this limitation in thesis Section 5 (Discussion).
 
 ---
 
-## ~~Priority 2 — RemeDi evaluation~~ (renumbered to Priority 1 above)
+## Priority 1 (current) — Thesis chapter draft
 
-**Goal:** Add the RL-finetuned RemeDi model to the comparison table.
-HF model: `maple-research-lab/RemeDi-RL`
+### 1a — Qualitative sample analysis
+Extract 5–10 generated samples per strategy from `results/t1000_eval/<strategy>/external_remdm/generated_sequences.json` (on HPC).
+- Use `ssh 3316152@slogin.hpc.unibocconi.it "python3 -c '...'"` to avoid rsync issues
+- Save locally in `results/samples/`
+- Compute type-token ratio (TTR) and repetition rate as diversity proxies
 
-### BLOCKER — RemeDi-RL HF model is broken + wrong scale
+### 1b — LaTeX table generation
+Auto-generate thesis comparison table from `results/combined_comparison.md`.
+Script: `scripts/generate_latex_table.py` (to create)
 
-Investigation (2026-03-15) revealed:
-- `maple-research-lab/RemeDi-RL` is **8B parameters** (d_model=4096, 32 layers, vocab=126464)
-  vs our MDLM baseline of ~100M. Not directly comparable.
-- HF model references `FSDPLLaDAUPMModelLM` in auto_map, but this class does NOT exist
-  in the public LLaDa codebase (`GSAI-ML/LLaDA-8B-Instruct/modeling_llada.py`).
-  The model is **unusable for public inference** without the authors' private code.
-
-**Options:**
-A) **LLaDa-8B-Instruct** (`GSAI-ML/LLaDA-8B-Instruct`): the base model before RemeDi RL
-   fine-tuning. Has complete public code, same 8B scale. Evaluates masked diffusion at
-   large scale. Note scale difference prominently in thesis.
-B) **Skip external model comparison** entirely. Thesis contribution = step-sweep findings.
-   Add a discussion section noting RemeDi-RL is blocked and the scale mismatch.
-
-Recommended: Option A (LLaDa-8B) for completeness, with clear scale caveat.
-See `hpc/llada_eval.sbatch` (to be created) using GSAI-ML's generate_block_diffusion.
-
-### Step 1 — Research RemeDi inference API (subagent task)
-RemeDi has a different interface from ReMDM (it's RL-finetuned, not remasking-based).
-Need to understand:
-- How to load and run inference: `model.generate()` or custom sampling loop?
-- What config/tokenizer it expects
-- Whether it produces token sequences or text directly
-- Checkpoint size (for HPC download planning)
-
-Action: Launch a subagent to read the RemeDi repo (`external/remedi/`) and HF model card,
-return the inference API signature and example usage.
-
-### Step 2 — Write RemeDi runner
-Options (after Step 1 research):
-a) **Wrapper in `src/mdm_playground/models/remedi.py`** — adapts RemeDi to the same
-   `generate(num_samples, steps) → List[str]` interface used by the ReMDM runner
-b) **Standalone script** — if RemeDi API is too different, a self-contained
-   `scripts/remedi_eval.py` that writes output in the same summary.json format
-
-Prefer (a) for clean integration. Use (b) if RemeDi requires conflicting deps.
-
-### Step 3 — HPC setup
-- Download `maple-research-lab/RemeDi-RL` to HPC: `huggingface-cli download` on login node
-  Estimated size: ~500MB–1.5GB (check HF model card)
-- Check if RemeDi needs additional packages not in `remdm311` env
-- Write `hpc/remedi_eval.sbatch` using the parallel pattern (1 GPU, T=128 and T=1000)
-
-### Step 4 — Run and integrate
-- Submit, pull results, add RemeDi row to `results/combined_comparison.md`
-- If RemeDi gen_ppl / MAUVE are competitive: noteworthy thesis comparison
-- Update `scripts/aggregate_results.py` if needed
-
-### Files to create/modify
-- `src/mdm_playground/models/remedi.py` (new) or `scripts/remedi_eval.py` (new)
-- `hpc/remedi_eval.sbatch` (new)
-- `hpc/submit.sh` — add `remedi` target
-- `external/remedi/` — already rsync'd; check what's in it
+### 1c — Figure updates
+Figures already in `figures/step_sweep.{pdf,png}`. Verify fonts/labels are thesis-quality.
 
 ---
 
-## Priority 3 — Thesis writing support
-
-**Goal:** The analysis chapter needs quantitative evidence and figures.
-
-### 3a — Generate sample text for qualitative analysis
-For each strategy at T=1000, extract 5–10 generated samples from
-`results/t1000_eval/<strategy>/external_remdm/generated_sequences.json` (on HPC).
-Save locally in `results/samples/`. Include in thesis appendix.
-
-### 3b — Step-curve figure (from Priority 1)
-Two-panel matplotlib figure:
-- Left: gen_ppl vs steps (128/256/512/1000), lines for mdlm/remdm-conf/remdm-loop
-- Right: MAUVE vs steps, same lines
-Save as `figures/step_sweep.pdf` (vector) and `.png`.
-
-### 3c — Summary comparison table
-Final thesis table: all methods × (gen_ppl T=128, gen_ppl T=1000, MAUVE T=128, MAUVE T=1000).
-Auto-generated from `results/combined_comparison.md` → LaTeX table via script.
-
----
-
-## Priority 4 — PRISM (low priority, optional)
+## Priority 2 — PRISM (low priority, optional)
 
 `external/PRISM/` exists as a submodule but hasn't been tested on HPC.
 PRISM uses a different architecture (score-based). Skip unless thesis scope requires it.
-If needed: follow same pattern as RemeDi — research API, write runner, write sbatch.
 
 ---
 
-## Execution order
+## Study materials (complete)
 
-```
-Week 1:
-  [ ] Priority 1: create sweep sbatch + submit T=256 and T=512
-  [ ] Priority 1: pull results, aggregate, plot step curve
-  [ ] Priority 2 Step 1: subagent research RemeDi API
-
-Week 2:
-  [ ] Priority 2 Steps 2–4: implement + run RemeDi eval
-  [ ] Priority 3a: extract sample texts for qualitative analysis
-
-Week 3:
-  [ ] Priority 3b: finalize figures
-  [ ] Priority 3c: generate LaTeX table
-  [ ] Thesis chapter draft using all collected results
-```
+- `docs/comparison.md` — 12-paper literature review + unified notation + 48 study questions + 8 research directions
+- `docs/empirical_analysis.md` — statistical analysis of step-sweep results + 6 research directions
+- PDF/HTML versions in `docs/output/`
 
 ---
 
@@ -165,15 +62,10 @@ Week 3:
    repetitive/mode-seeking output (low diversity → low MAUVE despite low gen_ppl).
    Hypothesis B: The confidence threshold was tuned for low-step regimes; at T=1000 the
    model greedily locks tokens too early, reducing exploration.
-   Test: compare entropy (already have it — drops slightly for remdm-conf at T=1000) +
-   qualitative text inspection + type-token ratio on generated sequences.
+   Test: compare entropy (already have — drops slightly) + TTR on generated sequences.
 
 2. **Is remdm-loop's improvement at T=1000 genuine or an artifact of the OWT reference?**
-   remdm-loop MAUVE 0.684 > mdlm MAUVE 0.590 at T=1000. Both use the same 1000-sample
-   OWT reference. The difference is real but could reflect vocabulary/style differences.
-   Test: compute type-token ratio and repetition rate on generated samples.
+   remdm-loop MAUVE 0.684 > mdlm MAUVE 0.590 at T=1000. Needs TTR + CI validation.
 
-3. **Does RemeDi (RL-finetuned) outperform all three on MAUVE?**
-   RemeDi is explicitly trained to maximise reward on text quality — expected to score
-   higher MAUVE. But may sacrifice diversity (lower entropy). Thesis can frame this as
-   supervised-fine-tuned vs RL-finetuned trade-off.
+3. **Is T=256 the diversity-optimal budget for MDLM?**
+   MDLM MAUVE peaks at T=256 then drops. Bootstrap CI will confirm if peak is real.

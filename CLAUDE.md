@@ -1,8 +1,8 @@
 # CLAUDE.md — Project Context for Claude Code
 
 ## Project
-MSc thesis on **masked diffusion models**. Unified inference playground comparing
-RemeDi, ReMDM, and PRISM on OpenWebText. Main metric: bits-per-byte (BPB) perplexity.
+MSc thesis on **masked diffusion models**. Empirical comparison of three remasking strategies
+(MDLM, ReMDM-conf, ReMDM-loop) on OpenWebText. Main metrics: gen_ppl, entropy, MAUVE.
 
 ## Repo layout
 - `src/mdm_playground/` — main package (`pip install -e .`)
@@ -10,6 +10,10 @@ RemeDi, ReMDM, and PRISM on OpenWebText. Main metric: bits-per-byte (BPB) perple
 - `hpc/` — Bocconi HPC workflow scripts
 - `configs/` — YAML experiment configs
 - `checkpoints/` — local checkpoint storage (gitignored)
+- `results/` — experiment outputs (gitignored)
+- `figures/` — generated plots
+- `docs/` — study documents and literature review
+- `scripts/` — analysis and plotting scripts
 
 ## HPC — Bocconi cluster
 - **Host:** `slogin.hpc.unibocconi.it` | **User:** `3316152`
@@ -27,14 +31,9 @@ RemeDi, ReMDM, and PRISM on OpenWebText. Main metric: bits-per-byte (BPB) perple
 ## HPC workflow
 ```bash
 bash hpc/push.sh       # rsync code (excludes checkpoints, .venv, results)
-bash hpc/submit.sh     # sbatch hpc/remdm_smoke.sbatch
-bash hpc/pull.sh       # fetch out/, err/, results/ — NOTE: uses GNU rsync flags, broken on macOS
-```
-
-**macOS pull workaround** (pull.sh uses `--ignore-missing-args` which macOS rsync doesn't support):
-```bash
-ssh 3316152@slogin.hpc.unibocconi.it "cat ~/mdm/masked-diffusion-thesis/out/<file>"
-# or rsync manually without --ignore-missing-args
+bash hpc/submit.sh t1000p  # all 3 strategies on 3 GPUs in 1 job (recommended)
+# NOTE: pull.sh uses GNU rsync flags, broken on macOS. Use SSH instead:
+ssh 3316152@slogin.hpc.unibocconi.it "python3 -c 'import json; print(...)'"
 ```
 
 ---
@@ -91,56 +90,68 @@ after `rearrange(qkv, 'b s ... -> (b s) ...')` gives shape `(b*s, 3, h, d)`.
 when a copy is needed.
 **Fix:** `pip install 'datasets>=2.21'` (datasets 4.x supports NumPy 2.x).
 
-### 11. OpenWebText download fails — disk quota on HPC home directory
+### 11. OpenWebText reference — use owt-reference streaming solution
 Downloading openwebtext (38GB) for MAUVE reference exceeds HPC user quota.
-**Fix:** Changed `external/remdm/configs/data/openwebtext-split.yaml` to use
-`valid: wikitext103` (tiny ~1MB dataset, already in HF cache) for MAUVE reference.
-For production eval: use a beegfs scratch partition or pre-download on login node.
+**Fix:** `scripts/stage_owt_reference.py` streams 1000 OWT samples to
+`/home/3316152/mdm/data/owt_reference_1000.json` on the login node.
+`external/remdm/configs/data/openwebtext-split.yaml` → `valid: owt-reference`.
+`external/remdm/dataloader.py` adds `owt-reference` branch.
 
 ---
 
-## Current status (2026-03-15) — T=1000 EVAL COMPLETE ✓
+## Current status (2026-03-16) — ALL EXPERIMENTS COMPLETE ✓
 
-All three strategies evaluated at both T=128 and T=1000 steps. Results in `results/`.
+All three strategies evaluated at T=128, T=256, T=512, T=1000 steps.
 
-### T=128 results (`results/full_eval/comparison.json`)
-| strategy   | gen_ppl | entropy | MAUVE |
-|------------|---------|---------|-------|
-| mdlm       |  60.914 |  5.507  | 0.170 |
-| remdm-conf |  57.579 |  5.499  | 0.440 |
-| remdm-loop |  59.632 |  5.538  | 0.396 |
-
-### T=1000 results (`results/t1000_eval/comparison.json`) — job 465445, 2h47m
-| strategy   | gen_ppl | entropy | MAUVE |
-|------------|---------|---------|-------|
-| mdlm       |  52.269 |  5.446  | 0.590 |
-| remdm-conf |  37.321 |  5.357  | 0.325 |
-| remdm-loop |  30.296 |  5.390  | 0.684 |
-
-### Key findings — step sweep (T=128/256/512/1000)
+### Full step sweep results
 | strategy   | T=128 MAUVE | T=256 MAUVE | T=512 MAUVE | T=1000 MAUVE |
 |------------|-------------|-------------|-------------|--------------|
 | mdlm       | 0.170       | **0.740**   | 0.592       | 0.590        |
 | remdm-conf | 0.440       | 0.475       | 0.470       | 0.325        |
 | remdm-loop | 0.396       | 0.614       | 0.532       | **0.684**    |
 
-- **mdlm MAUVE peaks sharply at T=256 (0.740)** then drops — optimal diversity window
-- remdm-conf diversity collapse: entropy drops 5.499→5.357 across T=128→1000
-- remdm-loop: only strategy with monotonically improving MAUVE; best gen_ppl at all T≥256
-- mdlm gen_ppl anomaly: slightly worsens T=512→T=1000 (49.0→52.3)
+### T=1000 gen_ppl / entropy
+| strategy   | gen_ppl | entropy |
+|------------|---------|---------|
+| mdlm       |  52.269 |  5.446  |
+| remdm-conf |  37.321 |  5.357  |
+| remdm-loop |  30.296 |  5.390  |
+
+### Key findings
+- **mdlm MAUVE peaks at T=256 (0.740)** — "diversity window" thesis finding
+- remdm-conf: diversity collapse confirmed; entropy drops 5.499→5.357 at high T
+- remdm-loop: only strategy with monotonically improving MAUVE; best gen_ppl at T≥256
 - Figure: `figures/step_sweep.{pdf,png}` | Full analysis: `results/combined_comparison.md`
 
-## Submit targets
-```bash
-bash hpc/submit.sh t1000p   # all 3 strategies on 3 GPUs in 1 job (recommended)
-bash hpc/submit.sh smoke    # 2-batch smoke test
-bash hpc/submit.sh eval     # 128-step array (tasks 0-1)
-bash hpc/submit.sh eval-loop  # 128-step task 2
-```
+### Scope decisions (final)
+- **RemeDi-RL**: PERMANENTLY SKIPPED. `maple-research-lab/RemeDi-RL` missing `FSDPLLaDAUPMModelLM`
+  class (not in any public repo) + 8B vs 100M scale mismatch. Out of thesis scope.
+- **PRISM**: Low priority, not yet populated. Skip unless required.
+- **Thesis scope**: Remasking strategies on MDLM-scale models only.
 
-## Next experiments
-1. ~~Full eval (T=128)~~ ✓ `results/full_eval/`
-2. ~~T=1000 eval~~ ✓ `results/t1000_eval/`
-3. ~~Step-sweep T=256/512~~ ✓ `results/sweep/` — MAUVE inversion fully characterised
-4. RemeDi evaluation: HF model `maple-research-lab/RemeDi-RL` ← **IN PROGRESS**
-5. PRISM: `external/PRISM/` not yet populated — low priority
+## Claude Code tools & plugins
+
+### Active skills (no installation needed)
+- **`firecrawl`** — fetch arXiv papers, read documentation; primary tool for literature search
+- **`simplify`** — review analysis scripts for quality/efficiency after writing them
+
+### Installed plugins
+- **`code-review`** — structured review of scripts before HPC submission (`/code-review`)
+- **`playground`** — interactive HTML explorers; useful for corrector strategy space visualisation
+- **`claude-md-management`** — improve/revise this CLAUDE.md (`/revise-claude-md`)
+- **`feature-dev`** — structured 7-phase workflow for implementing new corrector strategies (`/feature-dev`)
+- **`learning-output-style`** — interactive learning mode when reading complex corrector papers
+- **`math-olympiad`** — adversarial proof verification for corrector convergence proofs (preview; auto-triggers on "prove", "verify proof", "detailed balance")
+
+### Math context
+Corrector math in this project = Markov chain theory (spectral gaps, mixing times, Gibbs sampling, Metropolis-Hastings) applied to discrete/masked token spaces. See `docs/correctors_deep_dive.md` and `notebooks/01_spectral_gap_and_mixing.ipynb`.
+
+### Not relevant
+- **`ui-ux-pro-max`** — already installed, not relevant to this project
+
+---
+
+## Next steps
+1. Qualitative sample analysis: extract 5-10 samples per strategy from HPC results
+2. LaTeX table generation: `scripts/generate_latex_table.py`
+3. Thesis chapter draft using `docs/empirical_analysis.md` as structure

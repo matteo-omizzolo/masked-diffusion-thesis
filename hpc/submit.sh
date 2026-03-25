@@ -1,13 +1,15 @@
 #!/bin/bash
 # Submit job to Bocconi HPC cluster
-# Usage: bash hpc/submit.sh [smoke|eval|eval-loop|t1000|t1000-loop]   (default: smoke)
+# Usage: bash hpc/submit.sh [smoke|eval|eval-loop|t1000|t1000-loop|t1000p|sweep]   (default: smoke)
 #
 # Targets:
 #   smoke      — 2-batch smoke test (remdm-conf, no MAUVE)
 #   eval       — full eval array: tasks 0-1 (mdlm + remdm-conf, 100 batches, 128 steps, MAUVE)
 #   eval-loop  — single task 2 (remdm-loop); submit after eval jobs complete
-#   t1000      — T=1000 eval array: tasks 0-1 (mdlm + remdm-conf, paper-comparable gen_ppl)
+#   t1000      — T=1000 eval array: tasks 0-1 (mdlm + remdm-conf)
 #   t1000-loop — single task 2 (remdm-loop) at T=1000; submit after t1000 completes
+#   t1000p     — all 3 strategies in parallel on 3 GPUs (recommended, 1 job slot)
+#   sweep      — T=256 + T=512 step sweep (all 3 strategies)
 
 set -euo pipefail
 
@@ -26,9 +28,8 @@ case "$TARGET" in
               EXTRA_SBATCH_OPTS="--array=2-2" ;;
   t1000p)     SBATCH_FILE="hpc/remdm_t1000_parallel.sbatch" ;;  # all 3 strategies on 3 GPUs, 1 job
   sweep)      SBATCH_FILE="hpc/remdm_sweep.sbatch" ;;          # T=256 + T=512 step sweep
-  remedi)     SBATCH_FILE="hpc/remedi_eval.sbatch" ;;         # RemeDi-RL: T=32/128/1000
   *)
-    echo "ERROR: unknown target '$TARGET'. Use 'smoke', 'eval', 'eval-loop', 't1000', 't1000-loop', 't1000p', 'sweep', or 'remedi'."
+    echo "ERROR: unknown target '$TARGET'. Use 'smoke', 'eval', 'eval-loop', 't1000', 't1000-loop', 't1000p', or 'sweep'."
     exit 1
     ;;
 esac
