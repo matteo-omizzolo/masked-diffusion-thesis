@@ -39,3 +39,7 @@ wandb/
 
 # Claude Code
 .claude/
+
+# External repositories (too large to commit; clone locally)
+# ProSeCo: git clone https://github.com/kuleshov-group/proseco external/proseco
+external/proseco/
