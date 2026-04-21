@@ -88,7 +88,7 @@ outcomes machine-readable rather than buried in a narrative.
 
 ## 2. Stage 2a outputs
 
-Four JSON files under `results/phase2a/`, all conforming to §1.1.
+Four JSON files under `archive/legacy_framework/results/phase2a/`, all conforming to §1.1.
 
 ### 2a.1 `rank_A_vs_G.json`
 
@@ -484,8 +484,8 @@ exists to prevent.
 
 ## 10. Implementation checklist
 
-- [ ] `scripts/analyze_phase2a.py` — new; consumes
-  `results/phase1_proseco_owt_full/*` and emits all files in §2.
+- [ ] `archive/legacy_framework/scripts/analyze_phase2a.py` — archived analysis
+  helper; consumes `results/phase1_proseco_owt_full/*` and emits all files in §2.
 - [ ] `scripts/analyze_phase2b.py` — new; consumes
   `results/phase2b_proseco_owt/*` and emits all files in §3.
 - [ ] `scripts/analyze_phase2c.py` — new; emits §4 (only if 2c fires).

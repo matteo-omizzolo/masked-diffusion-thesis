@@ -1,6 +1,6 @@
-"""mdm_playground: unified inference playground for masked diffusion models.
+"""Thesis package for signal-adaptive corrector scheduling.
 
-Supports RemeDi (direct HF), ReMDM (subprocess), and PRISM (subprocess) via a
-common ModelAdapter interface, pluggable strategies, shared sampler, and a
-single CLI entrypoint.
+The public mainline is the ``mdm_playground.scheduling`` and
+``mdm_playground.analysis`` packages used by the Phase 2b / Phase 3a thesis
+workflow.
 """

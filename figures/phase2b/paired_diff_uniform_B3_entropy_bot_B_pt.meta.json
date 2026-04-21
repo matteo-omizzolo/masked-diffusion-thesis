@@ -1,0 +1,6 @@
+{
+  "source": "results/phase2b/policy_comparison_paired.json",
+  "fields": [
+    "data.per_policy_per_B.entropy_bot_B_pt.3.paired_vs_uniform"
+  ]
+}

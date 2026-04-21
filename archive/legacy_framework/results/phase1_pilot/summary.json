@@ -1,0 +1,87 @@
+{
+  "T": 32,
+  "N_trajectories": 5,
+  "calibration": {
+    "entropy": {
+      "eps_rms": 0.01705082763215136,
+      "eps_max": 0.03456488562789235,
+      "spearman_mean": -0.19244868035190615,
+      "spearman_std": 0.04722910090441761,
+      "calib_a": -0.00619089851230357,
+      "calib_b": 0.03275399391227388
+    },
+    "inverse_margin": {
+      "eps_rms": 0.01754495346330244,
+      "eps_max": 0.036568899331663025,
+      "spearman_mean": 0.19193548387096776,
+      "spearman_std": 0.04300501772393867,
+      "calib_a": 0.01261387665267293,
+      "calib_b": 0.018174296509881418
+    },
+    "quality_mass_proxy": {
+      "eps_rms": 0.017564353811815935,
+      "eps_max": 0.03577634657275928,
+      "spearman_mean": -0.18966275659824045,
+      "spearman_std": 0.046771435581823936,
+      "calib_a": -0.011672531892031417,
+      "calib_b": 0.030872677425625203
+    }
+  },
+  "eta_by_B": {
+    "4": {
+      "eta_95": 0.029568046116681485,
+      "eta_mean": 0.016325944206984598,
+      "n_schedules": 5
+    },
+    "8": {
+      "eta_95": 0.04979072440656313,
+      "eta_mean": 0.037278887559506604,
+      "n_schedules": 5
+    }
+  },
+  "gamma": {
+    "gamma_95": 0.015516684605898279,
+    "gamma_mean": 0.00711052595767585,
+    "gamma_max": 0.01577399317999717,
+    "n_pairs": 20
+  },
+  "T_low": {
+    "threshold_50pct_peak": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "threshold_30pct_peak": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      27,
+      28,
+      29
+    ],
+    "peak_delta_mean": 0.05128737947376498
+  },
+  "theorem_A_bound_check": {
+    "4": {
+      "bound_2Be_2eta": 0.19554,
+      "G_top_B_estimate": 0.01247,
+      "bound_useful": false
+    },
+    "8": {
+      "bound_2Be_2eta": 0.37239,
+      "G_top_B_estimate": 0.05078,
+      "bound_useful": false
+    }
+  }
+}

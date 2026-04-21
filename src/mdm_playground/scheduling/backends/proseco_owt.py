@@ -1,56 +1,25 @@
-"""ProSeCo-OWT backend: annealed-refinement corrector on co-trained backbone.
+"""ProSeCo-OWT backend for the thesis mainline.
 
-Loads kuleshov-group/proseco-owt (co-trained with the corrector loss) and
-runs Protocol A + B with our standard scheduling infrastructure.
-
-Key distinction from backends/proseco.py (structural no-op):
-  The mdlm.ckpt backbone was NOT co-trained with ProSeCo's corrector.
-  Argmax re-decoding at committed positions reproduced the same tokens,
-  so Δ_t ≡ 0 at every step.  With proseco-owt, the backbone learned (at
-  training time) to respond to the corrector's perturbation structure.
-  Corrector application at committed tokens should therefore change tokens
-  and Δ_t should be non-trivial at mid-to-late trajectory steps.
+This backend expects a locally staged HuggingFace snapshot of
+``kuleshov-group/proseco-owt`` and runs the thesis Protocol A/B workflow on
+that snapshot. The checkpoint directory is the only external dependency for
+the active Phase 2b / Phase 3a path.
 
 Corrector action set: UNMASKED (committed) positions.
-  - At step t, the predictor has committed ~(1-mask_prob_t) * L tokens.
-  - The corrector runs corrector_steps annealed forward passes starting from
-    argmax(p_θ(x_0 | x_t)), then applies the refined tokens back to
-    committed positions only.
-  - Masked positions are left unchanged (MDLM predictor owns them).
-
 Signal extraction: entropy / inverse_margin / quality_mass_proxy over the
-  committed positions — the corrector's action set.
+committed positions — the corrector's action set.
 
-Checkpoint loading:
-  Uses kuleshov-group/proseco-owt (HuggingFace, ~500 MB).
-  On HPC: download via stage_proseco_owt.py (once), then point --checkpoint to
-  the local snapshot directory.
-  The modeling_proseco.py in the snapshot must have flash_attn patched out
-  (the patch_snapshot() call in stage_proseco_owt.py handles this).
-
-Usage:
-    gen = ProSeCoOWTGenerator(
-        checkpoint='/home/3316152/mdm/checkpoints/proseco_owt',
-        T=64,
-        corrector_steps=1,
-    )
-    y_base   = gen.run_base(seed=0)
-    y_branch = gen.run_branch(t_corrected=30, seed=0)
+Use ``scripts/stage_proseco_owt.py`` to download and patch the snapshot before
+running the thesis scripts.
 """
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
-
-_REPO_ROOT = Path(__file__).resolve().parents[4]
-_PROSECO_DIR = _REPO_ROOT / "external" / "proseco"
-if str(_PROSECO_DIR) not in sys.path:
-    sys.path.insert(0, str(_PROSECO_DIR))
 
 # PyTorch >= 2.6: force weights_only=False for trusted local checkpoints
 _orig_torch_load = torch.load
@@ -58,6 +27,21 @@ def _patched_torch_load(*args, **kwargs):
     kwargs.setdefault("weights_only", False)
     return _orig_torch_load(*args, **kwargs)
 torch.load = _patched_torch_load
+
+
+def _validate_snapshot_dir(snapshot_path: Path) -> Path:
+    """Ensure the staged ProSeCo-OWT snapshot is present and complete."""
+    required = ("config.json", "configuration_proseco.py", "modeling_proseco.py")
+    missing = [name for name in required if not (snapshot_path / name).exists()]
+    if missing:
+        raise FileNotFoundError(
+            "Missing ProSeCo-OWT snapshot files in "
+            f"{snapshot_path}: {', '.join(missing)}. "
+            "Stage the snapshot with "
+            "`python scripts/stage_proseco_owt.py --dest <proseco_owt_snapshot_dir>` "
+            "or point --checkpoint to an existing staged directory."
+        )
+    return snapshot_path
 
 
 def _load_proseco_owt(snapshot_path: str, device: str = "cuda"):
@@ -72,7 +56,7 @@ def _load_proseco_owt(snapshot_path: str, device: str = "cuda"):
     import importlib.util
     import json
 
-    snap = Path(snapshot_path)
+    snap = _validate_snapshot_dir(Path(snapshot_path))
     print(f"  [_load_proseco_owt] Loading from: {snap}")
 
     # Load config

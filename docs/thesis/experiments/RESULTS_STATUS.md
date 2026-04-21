@@ -1,7 +1,8 @@
-# Phase 1 Experimental Status — Canonical Record
+# Historical Experimental Status — Phase 1 through Phase 2b
 
-> **⚠ [UNDER AUDIT — 2026-04-19]** The headline below was written before the
-> ANALYSIS_SPEC-compliant reanalysis. Two findings now demote the headline:
+> **⚠ [HISTORICAL / UNDER AUDIT — 2026-04-19]** The headline below was written
+> before the ANALYSIS_SPEC-compliant reanalysis and before the Phase 2b / Phase
+> 3a mainline. Two findings now demote the headline:
 > (a) "entropy_bot_B +29% over uniform at B=8" mixes the proxy A(S) (additive
 > surrogate over per-step Δ_t) with the true pipeline-evaluated G(S). On the same
 > N=50 run, G(S) at B=8 has uniform ≈ 0.76, entropy_bot_B ≈ 0.08 — a 10× loss.
@@ -11,8 +12,8 @@
 >
 > See `docs/thesis/experiments/EXPERIMENT_CRITICAL_AUDIT.md` and
 > `docs/thesis/theory/THEORY_STRESS_TEST.md`. Authoritative rankings resume with
-> Phase 2b (paired K-seed sweep). Do not cite Phase 1 policy comparisons in the
-> thesis until the audit resolves.
+> Phase 2b paired evaluation and Phase 3a combinatorial scheduling. Do not
+> cite Phase 1 policy comparisons in the thesis until the audit resolves.
 
 *Last updated: 2026-04-19 (ProSeCo-OWT FULL RUN complete — job 479537; canonical rankings now under audit).*
 *Scope: corrector scheduling for MDLM / ProSeCo on the Bocconi HPC.*
@@ -56,7 +57,7 @@ for Theorem A's ε is therefore not yet possible.
 
 - **Role:** first real-checkpoint Phase 1 pilot (T=64, N=20, M=15, P=120,
   B ∈ {4, 8, 16}). Completed in 4249.5 s on `gnode02` (A100 80GB PCIe).
-- **Data:** `results/phase1_pilot/`. Full logs in `out/phase1_pilot_478600.out`.
+- **Data:** `archive/legacy_framework/results/phase1_pilot/`. Full logs in `archive/legacy_framework/out/phase1_pilot_478600.out`.
 - **What was measured:** per-step one-loop gain Δ_t, TCR_t, base/branch neg-NLL,
   entropy / inverse-margin / quality-mass signals, η_B over 45 schedules and γ
   over 120 pairs.
@@ -110,7 +111,7 @@ validated, but numeric values must not be cited as calibration of the theory.
   invalidated by a token change (which happens on every predictor step in
   practice). Previously `p_x0_cache = None` caused `TypeError: 'NoneType'
   object is not subscriptable` in signal extraction.
-- **Preflight:** `scripts/debug_proseco_load.py` runs five checks on CPU with
+- **Preflight:** `archive/legacy_framework/scripts/debug_proseco_load.py` runs five checks on CPU with
   T=2 (config readable, generator instantiates, base loop, branch loop, neg_nll
   finite). All five passed on 2026-04-17 — see
   `docs/experiments/results/proseco_load_validation.md`.
@@ -136,7 +137,7 @@ The minimal config was missing `eval.gen_ppl_eval_model_name_or_path`,
   seed=42, `mdlm.ckpt`.
 - **Node:** gnode04 (A100 80GB). Elapsed 3544.6 s (≈ 59 min).
 
-### KEY RESULTS (from `results/phase1_proseco/summary.json`)
+### KEY RESULTS (from `archive/legacy_framework/results/phase1_proseco/summary.json`)
 
 | Metric | Value |
 |--------|-------|
@@ -196,7 +197,7 @@ steps. If still degenerate at pilot scale, fall back to Option 1.
 - **Fix applied (M2 patch):** `_extract_signals` now computes entropy/margin/quality_mass over
   the top_k=20 lowest-confidence masked positions — exactly the action set `_apply_corrector`
   resamples. `n_action` field added to per-step records for provenance.
-- **Node:** gnode02 (A100 80GB). Elapsed ≈ 68 min. Results: `results/phase1_mdlm_conf_signal_aligned/`.
+- **Node:** gnode02 (A100 80GB). Elapsed ≈ 68 min. Results: `archive/legacy_framework/results/phase1_mdlm_conf_signal_aligned/`.
 
 ### §7.1 Success criteria — PASS/FAIL
 
@@ -252,19 +253,19 @@ is structurally better-calibrated.
 
 | Subdirectory | Content | Status |
 |--------------|---------|--------|
-| `results/phase1_pilot/` | MDLM heuristic corrector pilot, job 478600 (T=64, N=20) | Diagnostic / negative result — do not cite values |
-| `results/phase1_smoke/` | Smoke test from pipeline bring-up | Archive |
-| `results/phase1_proseco/` | ProSeCo pilot, job 478929 (T=64, N=20) — all zeros | Diagnostic — structural no-op on MDLM backbone |
-| `results/phase1_proseco_surrogate_sanity/` | ProSeCo pipeline surrogate (T=16, N=5) — passed | Valid (surrogate sanity) |
-| `results/phase1_mdlm_conf/` | MDLM-conf pilot data (T=64, N=20, top_k=20, 2026-04-17 14:16) | Pilot data present; re-validate against preflight before citing |
-| `results/phase1_mdlm_conf_surrogate_sanity/` | MDLM-conf pipeline surrogate | Valid (surrogate sanity) |
-| `results/sweep/T256/`, `results/sweep/T512/` | Earlier MDLM/ReMDM-conf/ReMDM-loop step sweeps | Archive (pre-pivot, earlier phase) |
-| `results/t1000_eval/` | T=1000 step-sweep (MDLM / ReMDM-conf / ReMDM-loop + comparison.json) | Archive (pre-pivot) |
-| `results/full_eval/` | MDLM / ReMDM-conf / ReMDM-loop full eval | Archive (pre-pivot) |
-| `results/remdm_smoke/` | ReMDM environment smoke test | Archive |
-| `results/phase1_mdlm_conf_signal_aligned/` | MDLM-conf M2-fixed pilot (job 479257, T=64, N=20) | **COMPLETE — §7.1 verdict: 4/6 pass; Spearman noise-level; switch to proseco-owt** |
-| `results/phase1_proseco_owt/` | ProSeCo-OWT pilot (job 479382, T=64, N=20) | **COMPLETE — 5–6/6 §7.2 pass; entropy_bot_B beats uniform at all B; C6 passes (inverted direction); full analysis in PROSECO_ANALYSIS.md** |
-| `results/phase1_proseco_owt_full/` | ProSeCo-OWT FULL RUN (job 479537, T=64, N=50, M=30, P=300) | **COMPLETE — all §7.2 pass; entropy_bot_B +29% over uniform at B=8; thesis-grade evidence. Full analysis: PROSECO_ANALYSIS.md** |
+| `archive/legacy_framework/results/phase1_pilot/` | MDLM heuristic corrector pilot, job 478600 (T=64, N=20) | Diagnostic / negative result — do not cite values |
+| `archive/legacy_framework/results/phase1_smoke/` | Smoke test from pipeline bring-up | Archive |
+| `archive/legacy_framework/results/phase1_proseco/` | ProSeCo pilot, job 478929 (T=64, N=20) — all zeros | Diagnostic — structural no-op on MDLM backbone |
+| `archive/legacy_framework/results/phase1_proseco_surrogate_sanity/` | ProSeCo pipeline surrogate (T=16, N=5) — passed | Valid (surrogate sanity) |
+| `archive/legacy_framework/results/phase1_mdlm_conf/` | MDLM-conf pilot data (T=64, N=20, top_k=20, 2026-04-17 14:16) | Pilot data present; re-validate against preflight before citing |
+| `archive/legacy_framework/results/phase1_mdlm_conf_surrogate_sanity/` | MDLM-conf pipeline surrogate | Valid (surrogate sanity) |
+| `archive/legacy_framework/results/phase2a/T256/`, `archive/legacy_framework/results/phase2a/T512/` | Earlier MDLM/ReMDM-conf/ReMDM-loop step sweeps | Archive (pre-pivot, earlier phase) |
+| `archive/legacy_framework/results/t1000_eval/` | T=1000 step-sweep (MDLM / ReMDM-conf / ReMDM-loop + comparison.json) | Archive (pre-pivot) |
+| `archive/legacy_framework/results/full_eval/` | MDLM / ReMDM-conf / ReMDM-loop full eval | Archive (pre-pivot) |
+| `archive/legacy_framework/results/remdm_smoke/` | ReMDM environment smoke test | Archive |
+| `archive/legacy_framework/results/phase1_mdlm_conf_signal_aligned/` | MDLM-conf M2-fixed pilot (job 479257, T=64, N=20) | **COMPLETE — §7.1 verdict: 4/6 pass; Spearman noise-level; switch to proseco-owt** |
+| `archive/legacy_framework/results/phase1_proseco_owt/` | ProSeCo-OWT pilot (job 479382, T=64, N=20) | **COMPLETE — 5–6/6 §7.2 pass; entropy_bot_B beats uniform at all B; C6 passes (inverted direction); full analysis in archive/legacy_framework/docs/thesis/experiments/PROSECO_ANALYSIS.md** |
+| `results/phase1_proseco_owt_full/` | ProSeCo-OWT FULL RUN (job 479537, T=64, N=50, M=30, P=300) | **COMPLETE — all §7.2 pass; entropy_bot_B +29% over uniform at B=8; thesis-grade evidence. Full analysis: archive/legacy_framework/docs/thesis/experiments/PROSECO_ANALYSIS.md** |
 
 ---
 

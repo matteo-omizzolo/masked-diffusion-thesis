@@ -4,6 +4,11 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+.coverage.*
 
 # Environments
 .venv/
@@ -13,8 +18,18 @@ venv/
 # Jupyter
 .ipynb_checkpoints/
 
+# Local editor / OS junk
+.DS_Store
+.idea/
+.vscode/
+
 # Output artifacts (do not commit)
 logs/
+out/
+err/
+tmp/
+temp/
+
 # In results/, ignore large raw outputs but track summaries
 results/**/generated_sequences.json
 results/**/samples_*.json
@@ -25,21 +40,42 @@ results/**/*.ckpt
 data/
 checkpoints/*
 !checkpoints/.gitkeep
+external/proseco/
 
-# Smoke / run outputs
-runs/
-smoke_*/
-wandb/
-
-# Pytest cache
-.pytest_cache/
-
-# OS
-.DS_Store
+# TeX / LaTeX build artifacts
+*.aux
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+*.run.xml
+*.synctex.gz
+thesis/*.aux
+thesis/*.bcf
+thesis/*.blg
+thesis/*.bbl
+thesis/*.fdb_latexmk
+thesis/*.fls
+thesis/*.log
+thesis/*.out
+thesis/*.pdf
+thesis/*.toc
+thesis/*.run.xml
+thesis/*.synctex.gz
 
 # Claude Code
 .claude/
 
-# External repositories (too large to commit; clone locally)
-# ProSeCo: git clone https://github.com/kuleshov-group/proseco external/proseco
-external/proseco/
+# Experiment scratch / ad hoc runs
+runs/
+smoke_*/
+wandb/
+
+# Generated PDF outputs under docs/
+docs/pdf/**/*.pdf
+
+# Reference paper PDFs and notes under study/
+study/**/*.pdf

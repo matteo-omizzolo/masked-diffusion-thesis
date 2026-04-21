@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "phase": "2a",
+    "stage_name": "mc_oracle_lowerbound",
+    "generated_at_utc": "2026-04-19T06:41:57.347015Z",
+    "generated_by": "scripts/analyze_phase2a.py@f86458403d82",
+    "source_results_paths": [
+      "results/phase1_proseco_owt_full"
+    ],
+    "config": {
+      "F": "neg_nll"
+    }
+  },
+  "data": {
+    "max_over_30_minus_uniform": {
+      "4": {
+        "max_G": 0.7648196220397949,
+        "argmax_schedule_A": 0.40143339157104496,
+        "argmax_schedule_idx": 15,
+        "uniform_G_single_seed": 0.5436334609985352,
+        "headroom_lower_bound": 0.22118616104125977,
+        "n_schedules": 30,
+        "note": "uniform_G is single-seed (Tier T4). Headroom is a lower bound on the true MC-oracle-minus-uniform gap; not paired across trajectories.",
+        "tier": "T4"
+      },
+      "8": {
+        "max_G": 0.7177333831787109,
+        "argmax_schedule_A": 0.531578950881958,
+        "argmax_schedule_idx": 3,
+        "uniform_G_single_seed": 0.7584733963012695,
+        "headroom_lower_bound": -0.040740013122558594,
+        "n_schedules": 30,
+        "note": "uniform_G is single-seed (Tier T4). Headroom is a lower bound on the true MC-oracle-minus-uniform gap; not paired across trajectories.",
+        "tier": "T4"
+      },
+      "16": {
+        "max_G": 1.1613216400146484,
+        "argmax_schedule_A": 1.3546616744995117,
+        "argmax_schedule_idx": 13,
+        "uniform_G_single_seed": 0.9359755516052246,
+        "headroom_lower_bound": 0.22534608840942383,
+        "n_schedules": 30,
+        "note": "uniform_G is single-seed (Tier T4). Headroom is a lower bound on the true MC-oracle-minus-uniform gap; not paired across trajectories.",
+        "tier": "T4"
+      }
+    },
+    "fraction_beating_uniform": {
+      "4": 0.13333333333333333,
+      "8": 0.0,
+      "16": 0.13333333333333333
+    },
+    "limitation": "Phase 1 protocol_b schedules are drawn i.i.d. without pairing to individual trajectories; uniform_G is a single-seed row from policy_comparison.json. Results here are preliminary (Tier T4). A proper paired per-trajectory MC-oracle analysis is a Phase 2b deliverable \u2014 see mc_oracle.json schema in ANALYSIS_SPEC \u00a73b.2."
+  },
+  "decisions": [
+    {
+      "gate_id": "headroom_exists_B8",
+      "result": "fail",
+      "evidence": "max_over_30_minus_uniform.8.headroom_lower_bound=-0.040740013122558594; threshold 0.05"
+    }
+  ]
+}

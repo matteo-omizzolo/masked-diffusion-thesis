@@ -10,8 +10,8 @@ The corrector at step t is defined as:
   and re-draws each masked position independently from the model's x0 posterior
   at that noise level.
 
-Usage (from run_phase1_pilot.py, no --surrogate):
-  gen = MDLMGenerator(checkpoint='/home/3316152/mdm/checkpoints/mdlm.ckpt', T=64)
+Usage (from the legacy Phase 1 runner, no --surrogate):
+  gen = MDLMGenerator(checkpoint='path/to/mdlm.ckpt', T=64)
   y_base   = gen.run_base(seed=0)
   y_branch = gen.run_branch(t_corrected=30, seed=0)
 """

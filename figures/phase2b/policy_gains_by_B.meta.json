@@ -1,0 +1,13 @@
+{
+  "source": "results/phase2b/policy_comparison_paired.json",
+  "fields": [
+    "data.per_policy_per_B.*.*.G_per_seed"
+  ],
+  "B_values": [
+    2,
+    3,
+    4,
+    8,
+    16
+  ]
+}

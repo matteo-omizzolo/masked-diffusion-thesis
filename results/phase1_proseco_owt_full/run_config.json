@@ -1,0 +1,17 @@
+{
+  "backend": "proseco_owt",
+  "T": 64,
+  "N": 50,
+  "M": 30,
+  "P": 300,
+  "B_values": [
+    4,
+    8,
+    16
+  ],
+  "seed": 42,
+  "checkpoint": "/home/3316152/mdm/checkpoints/proseco_owt",
+  "corrector_steps": 1,
+  "out_dir": "results/phase1_proseco_owt_full",
+  "timestamp": "2026-04-19T00:25:57"
+}

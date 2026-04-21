@@ -1,4 +1,4 @@
-"""ProSeCo-style corrector backend for Protocol A + B experiments.
+"""Legacy ProSeCo-style corrector backend for Protocol A + B experiments.
 
 Implements ProSeCo's annealed iterative-refinement corrector on top of the
 existing MDLM checkpoint, which is already validated on the HPC cluster.
@@ -40,16 +40,16 @@ existing MDLM checkpoint, which is already validated on the HPC cluster.
   - n_masked: |masked| positions remaining
 
 **Note on checkpoint:**
-  Uses the MDLM checkpoint (/home/3316152/mdm/checkpoints/mdlm.ckpt) loaded
-  via the remdm Diffusion class.  This is the same model as the MDLM backend.
-  The key difference is the corrector strategy, not the backbone weights.
+  Uses the MDLM checkpoint loaded via the remdm Diffusion class. This is the
+  same model as the MDLM backend. The key difference is the corrector strategy,
+  not the backbone weights.
 
-  The proseco-owt checkpoint (kuleshov-group/proseco-owt), trained with
-  corrector co-training loss, would give stronger correction quality.  Loading
-  it requires internet access and HuggingFace download (~500MB).  A separate
-  hf_dit loading path is provided at the bottom of this file.
+  The active thesis path now uses the staged ProSeCo-OWT HuggingFace snapshot
+  (`kuleshov-group/proseco-owt`) in `backends/proseco_owt.py`. Loading that
+  snapshot requires internet access once, then local reuse from the staged
+  snapshot directory described in `REPRODUCIBILITY.md`.
 
-Usage (from run_phase1_proseco.py):
+Usage (from archive/legacy_framework/scripts/run_phase1_proseco.py):
   gen = ProSeCoGenerator(checkpoint='...', T=64, corrector_steps=2)
   y_base   = gen.run_base(seed=0)
   y_branch = gen.run_branch(t_corrected=30, seed=0)

@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spectral Gap &amp; Poincaré Inequality — Interactive Explorer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0d0d1a;
+  color: #dde1f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  padding: 14px 28px 10px;
+  border-bottom: 1px solid #1e2035;
+  flex-shrink: 0;
+}
+
+header h1 { font-size: 17px; font-weight: 500; color: #e8ecff; letter-spacing: 0.01em; }
+header p  { color: #667799; font-size: 12px; margin-top: 2px; }
+
+.tabs {
+  display: flex;
+  padding: 0 28px;
+  border-bottom: 1px solid #1e2035;
+  background: #0d0d1a;
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  padding: 9px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #55607a;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+.tab-btn:hover { color: #99aacc; }
+.tab-btn.active { color: #9eb4ff; border-bottom-color: #9eb4ff; }
+
+.main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.panel-left {
+  flex: 1;
+  padding: 18px 24px;
+  overflow-y: auto;
+  border-right: 1px solid #1e2035;
+}
+
+.panel-right {
+  width: 280px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.explain {
+  background: #0f1025;
+  border-left: 3px solid #3344aa;
+  padding: 11px 14px;
+  margin-bottom: 16px;
+  border-radius: 0 4px 4px 0;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: #b8c0dc;
+}
+.explain .mh { color: #9eb4ff; font-style: italic; }
+
+canvas {
+  width: 100%;
+  background: #070710;
+  border-radius: 6px;
+  border: 1px solid #181830;
+  display: block;
+}
+
+.legend {
+  display: flex;
+  gap: 18px;
+  font-size: 11.5px;
+  color: #667799;
+  margin-top: 7px;
+  flex-wrap: wrap;
+}
+.dot {
+  width: 9px; height: 9px;
+  border-radius: 2px;
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.ctrl-group { display: flex; flex-direction: column; gap: 5px; }
+
+.ctrl-label {
+  font-size: 11.5px;
+  color: #8890b0;
+  display: flex;
+  justify-content: space-between;
+}
+.ctrl-label span { color: #9eb4ff; font-family: 'SF Mono','Fira Code',monospace; font-size: 11px; }
+
+input[type=range] { width: 100%; accent-color: #5566cc; cursor: pointer; }
+
+.btn {
+  padding: 7px 13px;
+  background: #151a33;
+  border: 1px solid #252b50;
+  border-radius: 5px;
+  color: #8eaaff;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.btn:hover { background: #1e2545; }
+.btn.primary { background: #1e2fa0; border-color: #2d42cc; color: #d8e4ff; }
+.btn.primary:hover { background: #2538c0; }
+.btn-row { display: flex; gap: 7px; }
+
+.stat-box {
+  background: #0f1025;
+  border: 1px solid #1a1f3a;
+  border-radius: 5px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2.5px 0;
+  border-bottom: 1px solid #151528;
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-label { color: #667799; }
+.stat-val { color: #9eb4ff; font-family: 'SF Mono','Fira Code',monospace; }
+.stat-val.good { color: #55cc88; }
+.stat-val.warn { color: #cc8844; }
+
+.section-title {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #445599;
+  margin-bottom: 6px;
+}
+
+.ineq-box {
+  background: #090f28;
+  border: 1px solid #223388;
+  border-radius: 5px;
+  padding: 12px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 2;
+  color: #b0c4ff;
+}
+
+.select-ctrl {
+  background: #0f1025;
+  border: 1px solid #252b50;
+  border-radius: 4px;
+  color: #dde1f0;
+  padding: 5px 8px;
+  font-size: 12.5px;
+  font-family: inherit;
+  cursor: pointer;
+  width: 100%;
+}
+
+.prompt-area {
+  padding: 10px 24px;
+  border-top: 1px solid #1e2035;
+  background: #09091a;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.prompt-text {
+  flex: 1;
+  font-size: 12px;
+  color: #667799;
+  font-style: italic;
+  line-height: 1.4;
+}
+.copy-btn {
+  padding: 5px 12px;
+  background: #151a33;
+  border: 1px solid #252b50;
+  border-radius: 4px;
+  color: #8eaaff;
+  cursor: pointer;
+  font-size: 11.5px;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.copy-btn:hover { background: #1e2545; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Spectral Gap &amp; Poincaré Inequality — Interactive Explorer</h1>
+  <p>Visual intuition for Markov chain mixing, correctors in masked diffusion, and the Poincaré inequality</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab(0)">① Chain Mixing</button>
+  <button class="tab-btn" onclick="switchTab(1)">② Poincaré Inequality</button>
+  <button class="tab-btn" onclick="switchTab(2)">③ Two-Valley Landscape</button>
+  <button class="tab-btn" onclick="switchTab(3)">④ Informed vs Uniform</button>
+</div>
+
+<div class="main">
+
+  <!-- ===== LEFT PANEL ===== -->
+  <div class="panel-left">
+
+    <!-- TAB 0 -->
+    <div class="tab-content active" id="tab0">
+      <div class="explain">
+        A Markov chain on 8 states. Mass starts at state 1 and converges to π (uniform).
+        States 1–4 are <b>Valley A</b>, states 5–8 are <b>Valley B</b> — separated by a barrier.
+        The spectral gap <span class="mh">γ = 1 − λ₂</span> controls convergence:
+        <span class="mh">KL(pₖ ‖ π) ≤ (1−γ)ᵏ · KL(p₀ ‖ π)</span>.
+        Raise the barrier → lower p_cross → smaller γ → exponentially slower mixing.
+      </div>
+      <canvas id="chainCanvas" height="210"></canvas>
+      <div class="legend">
+        <div><span class="dot" style="background:#4466ee"></span>Current pₖ</div>
+        <div><span class="dot" style="background:transparent;border:1px solid #334488"></span>Stationary π</div>
+        <div><span class="dot" style="background:#cc4433;border-radius:0"></span>Barrier</div>
+      </div>
+      <canvas id="klCanvas" height="120" style="margin-top:10px"></canvas>
+    </div>
+
+    <!-- TAB 1 -->
+    <div class="tab-content" id="tab1">
+      <div class="explain">
+        The <b>Poincaré inequality</b>: for any test function <span class="mh">f</span> on the state space,
+        <span class="mh">Var_π(f) ≤ (1/γ) · ε(f, f)</span>.
+        <br>• <span class="mh">Var_π(f)</span> = how spread out f is at equilibrium (global variance)<br>
+        • <span class="mh">ε(f, f)</span> = Dirichlet form = average squared change in f per step (local movement)<br>
+        • If ε is small but Var is large, the chain makes tiny progress per step → γ must be small.
+        The second eigenvector is the worst-case f — it maximises the ratio Var/ε = 1/γ.
+      </div>
+      <canvas id="poinCanvas" height="220"></canvas>
+      <canvas id="dirichletCanvas" height="120" style="margin-top:10px"></canvas>
+    </div>
+
+    <!-- TAB 2 -->
+    <div class="tab-content" id="tab2">
+      <div class="explain">
+        A particle doing <b>Metropolis–Hastings</b> random walk on a double-well potential <span class="mh">V(x)</span>.
+        Barrier height controls how hard it is to cross. By the Arrhenius formula:
+        <span class="mh">γ ≈ exp(−2ΔV / T)</span>.
+        High barrier + low temperature → exponentially rare crossings → γ ≈ 0.
+        This is exactly the situation for Gibbs correctors on multimodal text distributions.
+      </div>
+      <canvas id="landscapeCanvas" height="200"></canvas>
+      <canvas id="histCanvas" height="110" style="margin-top:10px"></canvas>
+    </div>
+
+    <!-- TAB 3 -->
+    <div class="tab-content" id="tab3">
+      <div class="explain">
+        A Gibbs corrector picks a position d and resamples it.
+        <b>Uniform:</b> all positions equally likely.
+        <b>Informed (β &gt; 0):</b> weight ∝ <span class="mh">exp(β · surpriseᵈ)</span>.
+        By the <b>rearrangement inequality</b>: putting more weight on high-surprise positions
+        (which also have large local Dirichlet contributions) increases <span class="mh">ε_informed ≥ ε_uniform</span>,
+        and therefore <span class="mh">γ_informed ≥ γ_uniform</span>.
+        The gain grows with <span class="mh">Var[surprise]</span>.
+      </div>
+      <canvas id="correctorCanvas" height="260"></canvas>
+    </div>
+
+  </div>
+
+  <!-- ===== RIGHT PANEL ===== -->
+  <div class="panel-right">
+
+    <!-- CTRL 0 -->
+    <div class="tab-content active" id="ctrl0">
+      <div class="section-title">Chain Controls</div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label">Barrier −log(p_cross) <span id="barrierVal1">3.0</span></div>
+        <input type="range" id="barrier1" min="0" max="5" step="0.1" value="3.0"
+               oninput="onBarrier1()">
+      </div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label">Within-cluster mixing <span id="withinVal">0.40</span></div>
+        <input type="range" id="within1" min="0.05" max="0.48" step="0.01" value="0.40"
+               oninput="onWithin1()">
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-row"><span class="stat-label">Step k</span><span class="stat-val" id="stepVal">0</span></div>
+        <div class="stat-row"><span class="stat-label">KL(pₖ ‖ π)</span><span class="stat-val" id="klVal">—</span></div>
+        <div class="stat-row"><span class="stat-label">Spectral gap γ</span><span class="stat-val" id="gammaVal">—</span></div>
+        <div class="stat-row"><span class="stat-label">t_mix ≈ 1/γ</span><span class="stat-val" id="tmixVal">—</span></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="doChainStep()">+1 Step</button>
+        <button class="btn primary" id="runBtn" onclick="toggleChainRun()">▶ Run</button>
+      </div>
+      <button class="btn" style="width:100%;margin-top:2px" onclick="resetChain()">↺ Reset</button>
+    </div>
+
+    <!-- CTRL 1 -->
+    <div class="tab-content" id="ctrl1">
+      <div class="section-title">Poincaré Controls</div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label">Test function f</div>
+        <select class="select-ctrl" id="fPreset" onchange="updatePoincare()">
+          <option value="step">Step (left vs right)</option>
+          <option value="linear">Linear gradient</option>
+          <option value="eigen">2nd eigenvector (worst case)</option>
+          <option value="random">Random</option>
+        </select>
+      </div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label">Barrier (controls γ) <span id="barrierVal2">3.0</span></div>
+        <input type="range" id="barrier2" min="0.1" max="5" step="0.1" value="3.0"
+               oninput="updatePoincare()">
+      </div>
+
+      <div class="ineq-box" id="ineqDisplay">Var_π(f) ≤ (1/γ)·ε(f,f)</div>
+
+      <div class="stat-box">
+        <div class="stat-row"><span class="stat-label">Var_π(f)</span><span class="stat-val" id="varVal">—</span></div>
+        <div class="stat-row"><span class="stat-label">ε(f, f)</span><span class="stat-val" id="dirichVal">—</span></div>
+        <div class="stat-row"><span class="stat-label">Var / ε  (ratio)</span><span class="stat-val" id="ratioVal">—</span></div>
+        <div class="stat-row"><span class="stat-label">1 / γ  (bound)</span><span class="stat-val" id="invGammaVal">—</span></div>
+        <div class="stat-row"><span class="stat-label">Inequality holds?</span><span class="stat-val good" id="holdsVal">—</span></div>
+      </div>
+    </div>
+
+    <!-- CTRL 2 -->
+    <div class="tab-content" id="ctrl2">
+      <div class="section-title">Landscape Controls</div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label">Barrier height ΔV <span id="barrierVal3">2.0</span></div>
+        <input type="range" id="barrier3" min="0" max="5" step="0.1" value="2.0"
+               oninput="updateLandscape()">
+      </div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label">Temperature T <span id="tempVal">1.0</span></div>
+        <input type="range" id="temp3" min="0.2" max="3" step="0.1" value="1.0"
+               oninput="updateLandscape()">
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-row"><span class="stat-label">γ (Arrhenius)</span><span class="stat-val" id="gammaLand">—</span></div>
+        <div class="stat-row"><span class="stat-label">t_mix ≈ 1/γ</span><span class="stat-val" id="tmixLand">—</span></div>
+        <div class="stat-row"><span class="stat-label">Sim steps</span><span class="stat-val" id="simSteps">0</span></div>
+        <div class="stat-row"><span class="stat-label">Valley crossings</span><span class="stat-val warn" id="crossings">0</span></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn primary" id="landRunBtn" onclick="toggleLandRun()">▶ Run</button>
+        <button class="btn" onclick="resetLandscape()">↺ Reset</button>
+      </div>
+    </div>
+
+    <!-- CTRL 3 -->
+    <div class="tab-content" id="ctrl3">
+      <div class="section-title">Corrector Controls</div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label">Informed temperature β <span id="betaVal">1.0</span></div>
+        <input type="range" id="beta" min="0" max="5" step="0.1" value="1.0"
+               oninput="updateCorrector()">
+      </div>
+
+      <button class="btn" style="width:100%" onclick="randomiseSurprises()">↺ New random surprises</button>
+
+      <div class="stat-box">
+        <div class="stat-row"><span class="stat-label">ε_uniform</span><span class="stat-val" id="epsUniform">—</span></div>
+        <div class="stat-row"><span class="stat-label">ε_informed</span><span class="stat-val" id="epsInformed">—</span></div>
+        <div class="stat-row"><span class="stat-label">γ gain ratio</span><span class="stat-val good" id="gammaGain">—</span></div>
+        <div class="stat-row"><span class="stat-label">Var[surprise]</span><span class="stat-val" id="varSurprise">—</span></div>
+      </div>
+
+      <div class="explain" style="margin-top:0;font-size:12px">
+        At <span class="mh">β = 0</span>: informed = uniform, gain = 1×.<br>
+        As <span class="mh">β → ∞</span>: all weight on max-surprise position.<br>
+        Gain grows with <span class="mh">Var[surprise]</span> — heterogeneous positions benefit most.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="prompt-area">
+  <div class="prompt-text" id="promptText">Explore any tab to generate a study prompt.</div>
+  <button class="copy-btn" onclick="copyPrompt()">Copy prompt</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONSTANTS & STATE
+// ═══════════════════════════════════════════════════════
+const N = 8;
+const WITHIN_DEFAULT = 0.40;
+
+const S = {
+  tab: 0,
+  // tab 0
+  barrier1: 3.0, within1: WITHIN_DEFAULT,
+  step: 0, dist: null, klHist: [], running: false,
+  gamma1: 0,
+  // tab 1
+  barrier2: 3.0, fPreset: 'step', pF: null,
+  // tab 2
+  barrier3: 2.0, temp3: 1.0,
+  px: 0.2,
+  hist: new Array(60).fill(0),
+  simN: 0, crossings: 0, prevLeft: true,
+  landRunning: false,
+  // tab 3
+  beta: 1.0,
+  surprises: [0.4, 1.9, 0.6, 2.3, 0.8, 1.4, 0.3, 1.7]
+};
+
+// ═══════════════════════════════════════════════════════
+// MARKOV CHAIN MATH
+// ═══════════════════════════════════════════════════════
+function buildT(barrier, within) {
+  const pc = Math.exp(-barrier);
+  const T = Array.from({length:N}, () => new Array(N).fill(0));
+  const half = N/2;
+  for (let i=0;i<N;i++) {
+    if (i>0   && i<half)   T[i][i-1] = within;
+    if (i<half-1)          T[i][i+1] = within;
+    if (i===0)             T[i][i+1] = within;
+    if (i===half-1)        T[i][i+1] = pc;
+    if (i===half)          T[i][i-1] = pc;
+    if (i>half  && i<N-1)  T[i][i-1] = within;
+    if (i>=half && i<N-1)  T[i][i+1] = within;
+    if (i===N-1)           T[i][i-1] = within;
+    let s = T[i].reduce((a,x)=>a+x,0);
+    T[i][i] = Math.max(0, 1-s);
+  }
+  return T;
+}
+
+function applyT(T, dist) {
+  const next = new Array(N).fill(0);
+  for (let j=0;j<N;j++) for (let i=0;i<N;i++) next[j] += dist[i]*T[i][j];
+  return next;
+}
+
+function stationary(T) {
+  let pi = new Array(N).fill(1/N);
+  for (let k=0;k<1000;k++) pi = applyT(T, pi);
+  return pi;
+}
+
+function klDiv(p, q) {
+  let kl = 0;
+  for (let i=0;i<N;i++) if (p[i]>1e-15 && q[i]>1e-15) kl += p[i]*Math.log(p[i]/q[i]);
+  return Math.max(0, kl);
+}
+
+function spectralGap(T, pi) {
+  // Power iteration for λ₂
+  let v = pi.map((_, i) => i < N/2 ? 1.0 : -1.0);
+  function projectOut(u) {
+    const d = u.reduce((s,x,i)=>s+x*pi[i], 0);
+    return u.map((x,i)=>x-d);
+  }
+  v = projectOut(v);
+  let nm = Math.sqrt(v.reduce((s,x)=>s+x*x, 0));
+  v = v.map(x=>x/nm);
+  for (let k=0;k<300;k++) {
+    let Tv = new Array(N).fill(0);
+    for (let j=0;j<N;j++) for (let i=0;i<N;i++) Tv[j]+=v[i]*T[i][j];
+    Tv = projectOut(Tv);
+    nm = Math.sqrt(Tv.reduce((s,x)=>s+x*x, 0));
+    if (nm<1e-12) break;
+    v = Tv.map(x=>x/nm);
+  }
+  let Tv = new Array(N).fill(0);
+  for (let j=0;j<N;j++) for (let i=0;i<N;i++) Tv[j]+=v[i]*T[i][j];
+  const l2 = v.reduce((s,x,i)=>s+x*Tv[i], 0);
+  return Math.max(1e-6, 1 - Math.abs(l2));
+}
+
+function varPi(f, pi) {
+  const mean = f.reduce((s,x,i)=>s+x*pi[i], 0);
+  return f.reduce((s,x,i)=>s+pi[i]*(x-mean)**2, 0);
+}
+
+function dirichletForm(f, T, pi) {
+  let E = 0;
+  for (let i=0;i<N;i++) for (let j=0;j<N;j++) E += 0.5*pi[i]*T[i][j]*(f[i]-f[j])**2;
+  return E;
+}
+
+function getF(preset, T, pi) {
+  switch(preset) {
+    case 'step':   return Array.from({length:N},(_,i)=>i<N/2?1:0);
+    case 'linear': return Array.from({length:N},(_,i)=>i/(N-1));
+    case 'eigen': {
+      let v = pi.map((_,i)=>i<N/2?1:-1);
+      function po(u) { const d=u.reduce((s,x,i)=>s+x*pi[i],0); return u.map((x,i)=>x-d); }
+      v=po(v); let nm=Math.sqrt(v.reduce((s,x)=>s+x*x,0)); v=v.map(x=>x/nm);
+      for(let k=0;k<400;k++){
+        let Tv=new Array(N).fill(0);
+        for(let j=0;j<N;j++) for(let i=0;i<N;i++) Tv[j]+=v[i]*T[i][j];
+        Tv=po(Tv); nm=Math.sqrt(Tv.reduce((s,x)=>s+x*x,0)); if(nm<1e-12)break; v=Tv.map(x=>x/nm);
+      }
+      return v;
+    }
+    case 'random': return Array.from({length:N},()=>Math.random()*2-1);
+    default: return Array.from({length:N},(_,i)=>i<N/2?1:0);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB 0 — CHAIN MIXING
+// ═══════════════════════════════════════════════════════
+function resetChain() {
+  S.step=0; S.klHist=[];
+  S.dist = new Array(N).fill(0); S.dist[0]=1;
+  const T=buildT(S.barrier1,S.within1), pi=stationary(T);
+  S.gamma1 = spectralGap(T, pi);
+  updateStats0(T,pi,klDiv(S.dist,pi));
+  renderChain(); renderKL();
+  updatePrompt();
+}
+
+function doChainStep() {
+  const T=buildT(S.barrier1,S.within1), pi=stationary(T);
+  S.dist=applyT(T,S.dist); S.step++;
+  const kl=klDiv(S.dist,pi);
+  S.klHist.push(kl); if(S.klHist.length>250) S.klHist.shift();
+  S.gamma1=spectralGap(T,pi);
+  updateStats0(T,pi,kl);
+  renderChain(); renderKL(); updatePrompt();
+}
+
+function updateStats0(T,pi,kl) {
+  const g=S.gamma1;
+  document.getElementById('stepVal').textContent=S.step;
+  document.getElementById('klVal').textContent=kl.toFixed(5);
+  document.getElementById('gammaVal').textContent=g.toFixed(5);
+  document.getElementById('tmixVal').textContent=g>0.001?Math.round(1/g).toLocaleString():'>10 000';
+}
+
+let chainTimer=null;
+function toggleChainRun() {
+  S.running=!S.running;
+  document.getElementById('runBtn').textContent=S.running?'⏸ Pause':'▶ Run';
+  if(S.running) chainLoop();
+}
+function chainLoop() {
+  if(!S.running||S.tab!==0) return;
+  doChainStep();
+  chainTimer=setTimeout(chainLoop,60);
+}
+
+function onBarrier1() {
+  S.barrier1=parseFloat(document.getElementById('barrier1').value);
+  document.getElementById('barrierVal1').textContent=S.barrier1.toFixed(1);
+  resetChain();
+}
+function onWithin1() {
+  S.within1=parseFloat(document.getElementById('within1').value);
+  document.getElementById('withinVal').textContent=S.within1.toFixed(2);
+  resetChain();
+}
+
+function dpr() { return window.devicePixelRatio||1; }
+
+function setupCanvas(id, displayH) {
+  const c=document.getElementById(id);
+  const d=dpr(), w=c.offsetWidth||580;
+  c.width=w*d; c.height=displayH*d;
+  const ctx=c.getContext('2d'); ctx.scale(d,d);
+  return {ctx, W:w, H:displayH};
+}
+
+function renderChain() {
+  const {ctx,W,H}=setupCanvas('chainCanvas',210);
+  ctx.clearRect(0,0,W,H);
+  const T=buildT(S.barrier1,S.within1), pi=stationary(T);
+  const bw=Math.max(6,Math.floor(W/N)-10);
+  const maxH=H-52;
+
+  for(let i=0;i<N;i++){
+    const x=(i/N)*W+(W/N-bw)/2;
+    // π background
+    const ph=pi[i]*maxH*N;
+    ctx.fillStyle='#141a40'; ctx.strokeStyle='#223377'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.rect(x,H-38-ph,bw,ph); ctx.fill(); ctx.stroke();
+    // current dist
+    const dh=S.dist[i]*maxH*N;
+    ctx.fillStyle=i<N/2?'rgba(68,110,238,0.85)':'rgba(80,180,120,0.85)';
+    ctx.beginPath(); ctx.rect(x,H-38-dh,bw,dh); ctx.fill();
+    // labels
+    ctx.fillStyle='#8890b0'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(i+1, x+bw/2, H-22);
+    ctx.fillStyle='#9eb4ff'; ctx.font='9px monospace';
+    if(S.dist[i]>0.005) ctx.fillText(S.dist[i].toFixed(2), x+bw/2, H-40-dh);
+  }
+
+  // Barrier line
+  const mx=(N/2/N)*W;
+  ctx.strokeStyle='rgba(200,60,50,0.7)'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(mx,8); ctx.lineTo(mx,H-30); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(200,60,50,0.7)'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('barrier', mx, H-8);
+
+  // Valley labels
+  ctx.fillStyle='rgba(68,110,238,0.6)'; ctx.font='11px sans-serif';
+  ctx.fillText('Valley A', W*0.22, 16);
+  ctx.fillStyle='rgba(80,180,120,0.6)';
+  ctx.fillText('Valley B', W*0.78, 16);
+
+  ctx.fillStyle='#55607a'; ctx.textAlign='left'; ctx.font='11px sans-serif';
+  ctx.fillText(`k = ${S.step}   γ = ${S.gamma1.toFixed(4)}`, 8, 16);
+}
+
+function renderKL() {
+  const {ctx,W,H}=setupCanvas('klCanvas',120);
+  ctx.clearRect(0,0,W,H);
+  if(S.klHist.length<2) {
+    ctx.fillStyle='#33406a'; ctx.font='12px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Run the chain to see KL convergence', W/2, H/2); return;
+  }
+  const pad={l:44,r:14,t:12,b:26};
+  const pw=W-pad.l-pad.r, ph2=H-pad.t-pad.b;
+  const maxKL=Math.max(...S.klHist,0.001);
+  const logScale = v => Math.log(v+1e-6);
+  const logMax=logScale(maxKL), logMin=logScale(1e-6);
+
+  // Axes
+  ctx.strokeStyle='#222840'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,pad.t+ph2); ctx.lineTo(pad.l+pw,pad.t+ph2); ctx.stroke();
+
+  // Actual KL
+  ctx.strokeStyle='#4466ee'; ctx.lineWidth=2;
+  ctx.beginPath();
+  S.klHist.forEach((kl,i)=>{
+    const x=pad.l+(i/(S.klHist.length-1))*pw;
+    const y=pad.t+ph2-(logScale(kl)-logMin)/(logMax-logMin)*ph2;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // Theoretical (1-γ)^k
+  if(S.gamma1>0.001&&S.klHist[0]>0){
+    const kl0=S.klHist[0];
+    ctx.strokeStyle='#cc8844'; ctx.lineWidth=1.2; ctx.setLineDash([3,3]);
+    ctx.beginPath();
+    S.klHist.forEach((_,i)=>{
+      const theorKL=kl0*Math.pow(1-S.gamma1,i);
+      const x=pad.l+(i/(S.klHist.length-1))*pw;
+      const y=pad.t+ph2-(logScale(theorKL)-logMin)/(logMax-logMin)*ph2;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  ctx.fillStyle='#55607a'; ctx.font='10px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('log KL(pₖ ‖ π)', pad.l+4, pad.t+11);
+  ctx.fillStyle='#4466ee'; ctx.fillText('actual', pad.l+4, pad.t+23);
+  ctx.fillStyle='#cc8844'; ctx.fillText('theory (1−γ)ᵏ', pad.l+44, pad.t+23);
+  ctx.fillStyle='#33406a'; ctx.textAlign='center';
+  ctx.fillText('step k', pad.l+pw/2, H-4);
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB 1 — POINCARÉ
+// ═══════════════════════════════════════════════════════
+function updatePoincare() {
+  S.fPreset=document.getElementById('fPreset').value;
+  S.barrier2=parseFloat(document.getElementById('barrier2').value);
+  document.getElementById('barrierVal2').textContent=S.barrier2.toFixed(1);
+
+  const T=buildT(S.barrier2, WITHIN_DEFAULT), pi=stationary(T);
+  const g=spectralGap(T,pi);
+  const f=getF(S.fPreset,T,pi);
+  S.pF=f;
+
+  const vf=varPi(f,pi), ef=dirichletForm(f,T,pi);
+  const ratio=ef>1e-10?vf/ef:Infinity;
+  const invg=g>1e-6?1/g:Infinity;
+  const holds=ratio<=invg+0.05;
+
+  document.getElementById('varVal').textContent=vf.toFixed(5);
+  document.getElementById('dirichVal').textContent=ef.toFixed(5);
+  document.getElementById('ratioVal').textContent=isFinite(ratio)?ratio.toFixed(3):'∞';
+  document.getElementById('invGammaVal').textContent=invg<1e5?invg.toFixed(3):'>10⁵';
+  document.getElementById('holdsVal').textContent=holds?'✓ yes':'✗ no';
+  document.getElementById('holdsVal').className='stat-val '+(holds?'good':'');
+
+  document.getElementById('ineqDisplay').innerHTML=
+    `Var_π(f) ≤ (1/γ) · ε(f,f)<br>
+     <span style="color:#9eb4ff">${vf.toFixed(4)}</span> ≤
+     <span style="color:#cc8844">${invg<1e5?invg.toFixed(2):'∞'}</span> ×
+     <span style="color:#55cc88">${ef.toFixed(4)}</span>
+     = <span style="color:${holds?'#55cc88':'#cc4433'}">${(invg*ef).toFixed(4)} ${holds?'✓':'✗'}</span>`;
+
+  renderPoincare(f,pi,T); renderDirichlet(f,T,pi);
+  updatePrompt();
+}
+
+function renderPoincare(f,pi,T) {
+  const {ctx,W,H}=setupCanvas('poinCanvas',220);
+  ctx.clearRect(0,0,W,H);
+  const bw=Math.max(6,Math.floor(W/N)-10);
+  const fMin=Math.min(...f), fMax=Math.max(...f), fRange=(fMax-fMin)||1;
+  const maxH2=H/2-30;
+
+  ctx.fillStyle='#33406a'; ctx.font='11px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('f(state)  —  height = value, colour = magnitude', 8, 14);
+  ctx.strokeStyle='#334466'; ctx.lineWidth=1;
+  ctx.fillText('π(state)  —  outline width', 8, H-10);
+
+  for(let i=0;i<N;i++){
+    const x=(i/N)*W+(W/N-bw)/2;
+    const fn=(f[i]-fMin)/fRange;
+    const bh=fn*maxH2;
+    const r=Math.round(60+fn*150), b=Math.round(255-fn*130);
+    ctx.fillStyle=`rgba(${r},90,${b},0.85)`;
+    ctx.beginPath(); ctx.rect(x, H/2-bh, bw, bh); ctx.fill();
+
+    // π outline below
+    const pw2=pi[i]*maxH2*N;
+    ctx.strokeStyle='rgba(200,140,60,0.7)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.rect(x, H/2, bw, pw2); ctx.stroke();
+
+    ctx.fillStyle='#9eb4ff'; ctx.font='9px monospace'; ctx.textAlign='center';
+    ctx.fillText(f[i].toFixed(2), x+bw/2, H/2-bh-4);
+    ctx.fillStyle='#55607a'; ctx.font='10px sans-serif';
+    ctx.fillText(i+1, x+bw/2, H/2+pw2+14);
+  }
+}
+
+function renderDirichlet(f,T,pi) {
+  const {ctx,W,H}=setupCanvas('dirichletCanvas',120);
+  ctx.clearRect(0,0,W,H);
+  const contribs=[];
+  for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){
+    const c=pi[i]*T[i][j]*(f[i]-f[j])**2 + pi[j]*T[j][i]*(f[j]-f[i])**2;
+    if(c>1e-8) contribs.push({i,j,c});
+  }
+  if(!contribs.length) return;
+  const maxC=Math.max(...contribs.map(x=>x.c));
+  const bw2=Math.max(8,Math.floor((W-50)/contribs.length)-4);
+
+  ctx.fillStyle='#33406a'; ctx.font='11px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('ε(f,f) contributions per edge (i↔j)', 8, 15);
+
+  contribs.forEach((c,idx)=>{
+    const x=25+idx*(bw2+4);
+    const bh=(c.c/maxC)*(H-38);
+    const isBarrier=(c.i===N/2-1&&c.j===N/2);
+    ctx.fillStyle=isBarrier?'rgba(200,70,55,0.8)':'rgba(55,90,200,0.7)';
+    ctx.beginPath(); ctx.rect(x,H-26-bh,bw2,bh); ctx.fill();
+    ctx.fillStyle='#55607a'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(`${c.i+1}↔${c.j+1}`, x+bw2/2, H-10);
+  });
+
+  ctx.fillStyle='rgba(200,70,55,0.8)'; ctx.font='10px sans-serif'; ctx.textAlign='right';
+  ctx.fillText('barrier edge', W-6, 30);
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB 2 — LANDSCAPE
+// ═══════════════════════════════════════════════════════
+function dwV(x, dv) {
+  const u=4*x-2;
+  return dv*0.1*(u*u-1)*(u*u-1);
+}
+
+function updateLandscape() {
+  S.barrier3=parseFloat(document.getElementById('barrier3').value);
+  S.temp3=parseFloat(document.getElementById('temp3').value);
+  document.getElementById('barrierVal3').textContent=S.barrier3.toFixed(1);
+  document.getElementById('tempVal').textContent=S.temp3.toFixed(1);
+  const g=Math.exp(-2*S.barrier3/S.temp3);
+  document.getElementById('gammaLand').textContent=g<0.0001?'< 0.0001':g.toFixed(5);
+  document.getElementById('tmixLand').textContent=g>0.0001?Math.round(1/g).toLocaleString():'>100 000';
+  renderLandscape(); renderHist();
+  updatePrompt();
+}
+
+function renderLandscape() {
+  const {ctx,W,H}=setupCanvas('landscapeCanvas',200);
+  ctx.clearRect(0,0,W,H);
+  const pad={l:36,r:16,t:16,b:32};
+  const pw=W-pad.l-pad.r, ph=H-pad.t-pad.b;
+  const NP=300;
+  const vs=Array.from({length:NP},(_,i)=>dwV(i/(NP-1),S.barrier3));
+  const vmax=Math.max(...vs), vmin=Math.min(...vs), vr=vmax-vmin||1;
+  const toY=v=>pad.t+(1-(v-vmin)/vr)*ph;
+
+  // Shaded area under curve
+  ctx.fillStyle='#0a0f2a';
+  ctx.beginPath();
+  vs.forEach((v,i)=>{
+    const x=pad.l+(i/(NP-1))*pw;
+    i===0?ctx.moveTo(x,pad.t+ph):ctx.lineTo(x,toY(v));
+  });
+  ctx.lineTo(pad.l+pw,pad.t+ph); ctx.closePath(); ctx.fill();
+
+  // Curve
+  ctx.strokeStyle='#3355bb'; ctx.lineWidth=2.5;
+  ctx.beginPath();
+  vs.forEach((v,i)=>{
+    const x=pad.l+(i/(NP-1))*pw; const y=toY(v);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }); ctx.stroke();
+
+  // Valley shading
+  ctx.fillStyle='rgba(60,100,220,0.09)';
+  ctx.beginPath();
+  for(let i=0;i<NP/2;i++){
+    const x=pad.l+(i/(NP-1))*pw;
+    i===0?ctx.moveTo(x,pad.t+ph):ctx.lineTo(x,toY(vs[i]));
+  }
+  ctx.lineTo(pad.l+pw/2,pad.t+ph); ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle='rgba(180,80,60,0.09)';
+  ctx.beginPath();
+  for(let i=Math.floor(NP/2);i<NP;i++){
+    const x=pad.l+(i/(NP-1))*pw;
+    i===Math.floor(NP/2)?ctx.moveTo(x,pad.t+ph):ctx.lineTo(x,toY(vs[i]));
+  }
+  ctx.lineTo(pad.l+pw,pad.t+ph); ctx.closePath(); ctx.fill();
+
+  // ΔV annotation
+  const bx=pad.l+pw/2;
+  const topV=dwV(0.5,S.barrier3), botV=dwV(0.25,S.barrier3);
+  ctx.strokeStyle='rgba(200,180,60,0.45)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(bx,toY(topV)); ctx.lineTo(bx,toY(botV)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#cc8844'; ctx.font='11px sans-serif'; ctx.textAlign='left';
+  ctx.fillText(`ΔV=${S.barrier3.toFixed(1)}`, bx+6, (toY(topV)+toY(botV))/2+4);
+
+  // Particle
+  const px3=pad.l+S.px*pw;
+  const py3=toY(dwV(S.px,S.barrier3))-8;
+  ctx.fillStyle='#ffdd33'; ctx.strokeStyle='#ff9900'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(px3,py3,7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+
+  // Labels
+  ctx.fillStyle='rgba(60,100,220,0.65)'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Valley A', pad.l+pw*0.22, H-8);
+  ctx.fillStyle='rgba(180,80,60,0.65)';
+  ctx.fillText('Valley B', pad.l+pw*0.78, H-8);
+  ctx.fillStyle='#33406a'; ctx.textAlign='left'; ctx.font='11px sans-serif';
+  ctx.fillText('V(x)', 4, pad.t+12);
+}
+
+function renderHist() {
+  const {ctx,W,H}=setupCanvas('histCanvas',110);
+  ctx.clearRect(0,0,W,H);
+  const nb=S.hist.length;
+  const mx=Math.max(...S.hist,1);
+  const bw2=Math.max(2,Math.floor(W/nb)-1);
+
+  ctx.fillStyle='#33406a'; ctx.font='11px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('Time spent at each position', 8, 14);
+
+  for(let i=0;i<nb;i++){
+    const x=(i/nb)*W+1;
+    const bh=(S.hist[i]/mx)*(H-30);
+    ctx.fillStyle=i<nb/2?'rgba(60,100,220,0.65)':'rgba(180,80,60,0.65)';
+    ctx.beginPath(); ctx.rect(x,H-22-bh,bw2,bh); ctx.fill();
+  }
+
+  // Stationary overlay
+  const potVals=Array.from({length:nb},(_,i)=>dwV(i/(nb-1),S.barrier3));
+  const logW=potVals.map(v=>-v/S.temp3);
+  const maxLW=Math.max(...logW);
+  const wts=logW.map(lw=>Math.exp(lw-maxLW));
+  const tot=wts.reduce((a,b)=>a+b,0);
+  const piLand=wts.map(w=>w/tot);
+  const piMax=Math.max(...piLand);
+
+  ctx.strokeStyle='#cc8844'; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  piLand.forEach((p,i)=>{
+    const x=(i/nb)*W+bw2/2;
+    const y=H-22-p/piMax*(H-30);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }); ctx.stroke();
+  ctx.fillStyle='#cc8844'; ctx.font='10px sans-serif'; ctx.textAlign='right';
+  ctx.fillText('π stationary', W-4, 26);
+}
+
+function resetLandscape() {
+  S.px=0.15; S.hist=new Array(60).fill(0); S.simN=0; S.crossings=0;
+  S.prevLeft=true;
+  document.getElementById('simSteps').textContent='0';
+  document.getElementById('crossings').textContent='0';
+  renderLandscape(); renderHist();
+}
+
+let landRafId=null;
+function toggleLandRun() {
+  S.landRunning=!S.landRunning;
+  document.getElementById('landRunBtn').textContent=S.landRunning?'⏸ Pause':'▶ Run';
+  if(S.landRunning) landLoop();
+}
+function landLoop() {
+  if(!S.landRunning||S.tab!==2) return;
+  for(let k=0;k<8;k++) {
+    const prop=S.px+(Math.random()-0.5)*0.09;
+    if(prop>=0&&prop<=1){
+      const dE=dwV(prop,S.barrier3)-dwV(S.px,S.barrier3);
+      if(Math.random()<Math.min(1,Math.exp(-dE/S.temp3))){
+        S.px=prop;
+        const nowLeft=S.px<0.5;
+        if(nowLeft!==S.prevLeft){S.crossings++; S.prevLeft=nowLeft;}
+      }
+    }
+    const bin=Math.min(S.hist.length-1,Math.floor(S.px*S.hist.length));
+    S.hist[bin]++; S.simN++;
+  }
+  if(S.simN%40===0){
+    document.getElementById('simSteps').textContent=S.simN.toLocaleString();
+    document.getElementById('crossings').textContent=S.crossings;
+    renderLandscape(); renderHist();
+  }
+  landRafId=requestAnimationFrame(landLoop);
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB 3 — INFORMED vs UNIFORM
+// ═══════════════════════════════════════════════════════
+function randomiseSurprises() {
+  S.surprises=Array.from({length:N},()=>+(Math.random()*2.4+0.1).toFixed(2));
+  updateCorrector();
+}
+
+function updateCorrector() {
+  S.beta=parseFloat(document.getElementById('beta').value);
+  document.getElementById('betaVal').textContent=S.beta.toFixed(1);
+  const sr=S.surprises, L=sr.length;
+
+  // Uniform
+  const wU=new Array(L).fill(1/L);
+  // Informed
+  const logW=sr.map(s=>S.beta*s), mx=Math.max(...logW);
+  const raw=logW.map(lw=>Math.exp(lw-mx));
+  const tot=raw.reduce((a,b)=>a+b,0);
+  const wI=raw.map(w=>w/tot);
+
+  // ε proxy: Σ_d w_d * (s_d - s̄)^2
+  const sbar=sr.reduce((a,b)=>a+b,0)/L;
+  const local=sr.map(s=>(s-sbar)**2);
+  const eU=wU.reduce((a,w,i)=>a+w*local[i],0);
+  const eI=wI.reduce((a,w,i)=>a+w*local[i],0);
+  const gain=eU>1e-10?eI/eU:1;
+
+  const vs=sr.reduce((a,b)=>a+(b-sbar)**2,0)/L;
+
+  document.getElementById('epsUniform').textContent=eU.toFixed(5);
+  document.getElementById('epsInformed').textContent=eI.toFixed(5);
+  document.getElementById('gammaGain').textContent=gain.toFixed(3)+'×';
+  document.getElementById('varSurprise').textContent=vs.toFixed(5);
+
+  renderCorrector(sr,wU,wI,local);
+  updatePrompt();
+}
+
+function renderCorrector(sr,wU,wI,local) {
+  const {ctx,W,H}=setupCanvas('correctorCanvas',260);
+  ctx.clearRect(0,0,W,H);
+  const L=sr.length;
+  const bw3=Math.max(6,Math.floor(W/L)-10);
+  const maxS=Math.max(...sr), maxW=Math.max(...wI);
+  const rowH=72, pad3=8;
+
+  // Row 1: surprises
+  ctx.fillStyle='#33406a'; ctx.font='11px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('surprise^d  (model entropy at each position)', 8, 14);
+  for(let i=0;i<L;i++){
+    const x=(i/L)*W+(W/L-bw3)/2;
+    const bh=(sr[i]/maxS)*(rowH-22);
+    ctx.fillStyle=`rgba(160,100,240,0.8)`;
+    ctx.beginPath(); ctx.rect(x,rowH-bh,bw3,bh); ctx.fill();
+    ctx.fillStyle='#9980cc'; ctx.font='9px monospace'; ctx.textAlign='center';
+    ctx.fillText(sr[i].toFixed(1), x+bw3/2, rowH-bh-3);
+    ctx.fillStyle='#44506a'; ctx.font='10px sans-serif';
+    ctx.fillText('p'+(i+1), x+bw3/2, rowH+10);
+  }
+
+  // Row 2: weights
+  const r2y=rowH+pad3+14;
+  ctx.fillStyle='#33406a'; ctx.font='11px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('selection weight w_d   (blue=uniform  orange=informed)', 8, r2y+14);
+  for(let i=0;i<L;i++){
+    const x=(i/L)*W+(W/L-bw3)/2;
+    const uh=(wU[i]/maxW)*(rowH-20);
+    const ih=(wI[i]/maxW)*(rowH-20);
+    ctx.fillStyle='rgba(80,100,200,0.55)';
+    ctx.beginPath(); ctx.rect(x, r2y+rowH-uh, bw3/2-1, uh); ctx.fill();
+    ctx.fillStyle='rgba(210,120,60,0.8)';
+    ctx.beginPath(); ctx.rect(x+bw3/2+1, r2y+rowH-ih, bw3/2-1, ih); ctx.fill();
+  }
+
+  // Row 3: ε contributions
+  const r3y=r2y+rowH+pad3+14;
+  const localMax=Math.max(...local.map((l,i)=>Math.max(wU[i]*l,wI[i]*l)),1e-10);
+  ctx.fillStyle='#33406a'; ctx.font='11px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('ε contribution per position  w_d × (s_d − s̄)²', 8, r3y+14);
+  for(let i=0;i<L;i++){
+    const x=(i/L)*W+(W/L-bw3)/2;
+    const uh=(wU[i]*local[i]/localMax)*(rowH-20);
+    const ih=(wI[i]*local[i]/localMax)*(rowH-20);
+    ctx.fillStyle='rgba(80,100,200,0.55)';
+    ctx.beginPath(); ctx.rect(x, r3y+rowH-uh, bw3/2-1, uh); ctx.fill();
+    ctx.fillStyle='rgba(210,120,60,0.8)';
+    ctx.beginPath(); ctx.rect(x+bw3/2+1, r3y+rowH-ih, bw3/2-1, ih); ctx.fill();
+  }
+  // Total bar indicator
+  const totalUx=W-110, totalIx=W-60;
+  const barScale=(rowH-20);
+  ctx.fillStyle='rgba(80,100,200,0.55)'; ctx.fillRect(totalUx, r3y+rowH-barScale*0.3, 20, barScale*0.3);
+  ctx.fillStyle='rgba(210,120,60,0.8)';
+  const normI=Math.min(1,wI.reduce((a,w,i)=>a+w*local[i],0)/Math.max(1e-10,wU.reduce((a,w,i)=>a+w*local[i],0)));
+  ctx.fillRect(totalIx, r3y+rowH-barScale*normI, 20, barScale*normI);
+  ctx.fillStyle='#55607a'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('ε_U', totalUx+10, r3y+rowH+12);
+  ctx.fillText('ε_I', totalIx+10, r3y+rowH+12);
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════
+function switchTab(idx) {
+  S.tab=idx;
+  S.running=false; document.getElementById('runBtn').textContent='▶ Run';
+  S.landRunning=false; document.getElementById('landRunBtn').textContent='▶ Run';
+  if(chainTimer){clearTimeout(chainTimer);chainTimer=null;}
+  if(landRafId){cancelAnimationFrame(landRafId);landRafId=null;}
+
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  // Left panels: tab0..tab3; right panels: ctrl0..ctrl3
+  ['tab','ctrl'].forEach(prefix=>{
+    for(let i=0;i<4;i++){
+      const el=document.getElementById(prefix+i);
+      if(el) el.classList.toggle('active',i===idx);
+    }
+  });
+
+  setTimeout(()=>{
+    if(idx===0){renderChain();renderKL();}
+    if(idx===1) updatePoincare();
+    if(idx===2){renderLandscape();renderHist();}
+    if(idx===3) updateCorrector();
+    updatePrompt();
+  },50);
+}
+
+// ═══════════════════════════════════════════════════════
+// PROMPT
+// ═══════════════════════════════════════════════════════
+function updatePrompt() {
+  let txt='';
+  if(S.tab===0){
+    const kl=S.klHist.length?S.klHist[S.klHist.length-1]:null;
+    txt=`Exploring chain mixing: barrier=${S.barrier1.toFixed(1)} → p_cross≈${Math.exp(-S.barrier1).toFixed(4)}, γ≈${S.gamma1.toFixed(5)}, t_mix≈${S.gamma1>0.001?Math.round(1/S.gamma1).toLocaleString():'very large'}. After ${S.step} steps, KL(pₖ‖π)=${kl!==null?kl.toFixed(5):'not started'}. Why does doubling the barrier roughly square the mixing time?`;
+  } else if(S.tab===1){
+    const T=buildT(S.barrier2,WITHIN_DEFAULT),pi=stationary(T);
+    const g=spectralGap(T,pi);
+    const f=S.pF||getF(S.fPreset,T,pi);
+    const vf=varPi(f,pi),ef=dirichletForm(f,T,pi);
+    txt=`Poincaré inequality with f="${S.fPreset}", barrier=${S.barrier2.toFixed(1)}, γ≈${g.toFixed(5)}: Var_π(f)=${vf.toFixed(4)}, ε(f,f)=${ef.toFixed(4)}, ratio=${ef>1e-10?(vf/ef).toFixed(3):'∞'} ≤ 1/γ=${(1/g).toFixed(3)}. Why does the second eigenvector achieve equality?`;
+  } else if(S.tab===2){
+    const g=Math.exp(-2*S.barrier3/S.temp3);
+    txt=`Double-well landscape: ΔV=${S.barrier3.toFixed(1)}, T=${S.temp3.toFixed(1)}, γ≈${g.toFixed(5)}, t_mix≈${g>1e-5?Math.round(1/g).toLocaleString():'very large'}. After ${S.simN.toLocaleString()} steps: ${S.crossings} valley crossings. How does this map to slow mixing in masked diffusion over multimodal text?`;
+  } else {
+    txt=`Informed vs uniform corrector: β=${S.beta.toFixed(1)}, Var[surprise]=${document.getElementById('varSurprise').textContent}, γ gain=${document.getElementById('gammaGain').textContent}. How does the rearrangement inequality guarantee ε_informed ≥ ε_uniform, and why does the gain vanish when β=0 or all surprises are equal?`;
+  }
+  document.getElementById('promptText').textContent=txt;
+}
+
+function copyPrompt() {
+  navigator.clipboard.writeText(document.getElementById('promptText').textContent).then(()=>{
+    const b=document.querySelector('.copy-btn'); b.textContent='Copied!';
+    setTimeout(()=>b.textContent='Copy prompt',1600);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  resetChain();
+  setTimeout(()=>{
+    renderChain(); renderKL();
+    updatePoincare();
+    renderLandscape(); renderHist();
+    updateCorrector();
+    updatePrompt();
+  },120);
+});
+
+window.addEventListener('resize',()=>{
+  if(S.tab===0){renderChain();renderKL();}
+  if(S.tab===1) updatePoincare();
+  if(S.tab===2){renderLandscape();renderHist();}
+  if(S.tab===3) updateCorrector();
+});
+</script>
+</body>
+</html>

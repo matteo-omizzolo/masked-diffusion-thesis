@@ -1,0 +1,10 @@
+{
+  "source_json": "results/phase2a/eps_R.json",
+  "fields": [
+    "data.per_trajectory_spearman.entropy",
+    "data.per_trajectory_spearman.inverse_margin",
+    "data.per_trajectory_spearman.quality_mass_proxy",
+    "data.per_trajectory_spearman.unmasked_fraction"
+  ],
+  "n_trajectories": 50
+}

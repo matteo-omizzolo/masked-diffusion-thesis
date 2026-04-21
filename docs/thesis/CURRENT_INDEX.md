@@ -45,12 +45,12 @@ See `docs/thesis/CANONICAL_RESEARCH_DIRECTION.md` for the full framing.
 | 1 | `docs/thesis/CURRENT_INDEX.md` | This file |
 | 2 | `docs/thesis/CANONICAL_RESEARCH_DIRECTION.md` | Authoritative research direction, scope, theorem targets (rewritten 2026-04-19 post-audit) |
 | 3 | `docs/thesis/CANONICAL_EXPERIMENT_OVERVIEW.md` | End-to-end explanation of the experiment (Protocol A/B) |
-| 4 | `docs/thesis/experiments/EXPERIMENT_CRITICAL_AUDIT.md` | **Audit** of Phase 1 policy claims — A(S) vs G(S), single-seed inadmissibility, mean-field vs trajectory-aware policies |
+| 4 | `docs/thesis/experiments/EXPERIMENT_CRITICAL_AUDIT.md` | **Historical audit** of the Phase 1 policy claims — retained for provenance; superseded by the Phase 2b / Phase 3a mainline |
 | 5 | `docs/thesis/theory/THEORY_STRESS_TEST.md` | **Theory stress test** — vacuity verdict, ε-conflation diagnosis, Refinement A′/A″ candidates |
 | 6 | `docs/thesis/experiments/ANALYSIS_SPEC.md` | Tier T1–T4 evidence rules, paired estimator definition, BCa CI |
-| 7 | `docs/thesis/experiments/NEXT_PHASE_EXPERIMENT_PLAN.md` | Phase 2 stage spec (2a offline / 2b HPC / 2c MAUVE-swap) |
-| 8 | `docs/thesis/experiments/RESULTS_STATUS.md` | Summary of all runs + Phase 2 in-flight status |
-| 9 | `docs/thesis/experiments/PROSECO_ANALYSIS.md` | Phase 1 trajectory-level analysis (numerical inputs to the stress test) |
+| 7 | `docs/thesis/experiments/NEXT_PHASE_EXPERIMENT_PLAN.md` | Historical Phase 2 stage spec (2a offline / 2b HPC / 2c MAUVE-swap) |
+| 8 | `docs/thesis/experiments/RESULTS_STATUS.md` | Summary of Phase 1–3 results and evidence ledger |
+| 9 | `docs/thesis/experiments/PROSECO_ANALYSIS.md` | Phase 1 trajectory-level analysis (historical numerical inputs to the stress test) |
 | 10 | `docs/thesis/theory/THEORY_STATUS.md` | Theorem A, Propositions B/C, Refinements A′/A″, honesty ledger |
 | 11 | `docs/thesis/theory/NEXT_THEORY_STEPS.md` | Next 3 theory tasks |
 | 12 | `docs/thesis/experiments/PHASE3_DIRECTION_AUDIT.md` | Audit that rejected the PRISM pivot (with post-Phase-3a addendum) |
@@ -91,13 +91,14 @@ See `docs/thesis/CANONICAL_RESEARCH_DIRECTION.md` for the full framing.
 
 | Script | Purpose |
 |---|---|
-| `scripts/run_phase1_mdlm_conf.py` | **PRIMARY** — MDLM-conf corrector Phase 1 runner |
-| `scripts/run_phase1_proseco.py` | Alternate — ProSeCo runner (currently no-op on mdlm.ckpt) |
-| `scripts/run_phase1_pilot.py` | MDLM heuristic runner (diagnostic baseline only) |
-| `scripts/analyze_phase1.py` | Figure generation |
-| `scripts/debug_mdlm_conf_load.py` | CPU preflight for MDLM-conf backend |
-| `scripts/debug_proseco_load.py` | CPU preflight for ProSeCo backend |
-| `scripts/stage_owt_reference.py` | Stream OWT samples to HPC for MAUVE reference |
+| `scripts/run_phase2b_proseco_owt.py` | **PRIMARY** — Phase 2b paired K-seed evaluation and MC oracle |
+| `scripts/analyze_phase2b.py` | Phase 2b aggregation and ranking analysis |
+| `scripts/run_phase3a_combinatorial.py` | **PRIMARY** — Phase 3a combinatorial scheduling baselines |
+| `scripts/analyze_phase3a.py` | Phase 3a paired comparison and oracle-gap closure analysis |
+| `scripts/stage_proseco_owt.py` | Reproducibility helper: stage the ProSeCo-OWT snapshot |
+| `scripts/debug_proseco_owt_load.py` | CPU preflight for the staged ProSeCo-OWT backend |
+
+Legacy Phase 1 scripts live in `archive/legacy_scripts/`.
 
 ---
 
@@ -105,16 +106,14 @@ See `docs/thesis/CANONICAL_RESEARCH_DIRECTION.md` for the full framing.
 
 | File | Purpose |
 |---|---|
-| `hpc/phase3a_combinatorial.sbatch` | **MOST RECENT** — Phase 3a CD-G + BS-AG combinatorial baselines (job 479941, complete 2026-04-20) |
-| `hpc/phase2b_proseco_owt.sbatch` | Phase 2b paired K=30 sweep (job 479581, complete 2026-04-19/20) |
-| `hpc/phase1_proseco_owt_full.sbatch` | Phase 1 ProSeCo-OWT FULL RUN (job 479537, complete 2026-04-19) |
-| `hpc/phase1_proseco_owt.sbatch` | Phase 1 ProSeCo-OWT pilot (job 479382, complete) |
-| `hpc/phase1_mdlm_conf.sbatch` | Phase 1 MDLM-conf signal-aligned (job 479257, complete) |
-| `hpc/phase1_pilot.sbatch` | DEPRECATED — MDLM heuristic (Δ_t ≤ 0 everywhere) |
+| `hpc/phase2b_proseco_owt.sbatch` | Phase 2b paired K=30 sweep |
+| `hpc/phase3a_combinatorial.sbatch` | Phase 3a CD-G + BS-AG combinatorial baselines |
 | `hpc/push.sh` | rsync repo to HPC |
 | `hpc/pull.sh` | rsync results back (broken on macOS; use ssh instead) |
 | `hpc/setup_env.sh` | One-time conda env bootstrap |
-| `hpc/submit.sh` | Legacy multi-strategy submitter (pre-Phase-1) |
+
+Legacy Phase 1 sbatch files and the old `submit.sh` wrapper live in
+`archive/legacy_scripts/` and are not the thesis mainline.
 
 HPC details:
 - Host: `slogin.hpc.unibocconi.it`, user `3316152`
@@ -129,10 +128,10 @@ HPC details:
 
 | File | Purpose |
 |---|---|
-| `src/mdm_playground/scheduling/backends/proseco_owt.py` | **PRIMARY** — ProSeCo-OWT co-trained backbone, importlib loader |
-| `src/mdm_playground/scheduling/backends/mdlm_conf.py` | MDLM-conf top-K resample (Spearman noise-level, do not rerun) |
-| `src/mdm_playground/scheduling/backends/proseco.py` | ProSeCo on mdlm.ckpt (structural no-op, deprecated) |
-| `src/mdm_playground/scheduling/backends/mdlm.py` | MDLM heuristic (all-masked resample; diagnostic only) |
+| `src/mdm_playground/scheduling/backends/proseco_owt.py` | **PRIMARY** — ProSeCo-OWT staged snapshot loader |
+| `src/mdm_playground/scheduling/backends/mdlm_conf.py` | Supporting backend for Phase 1 chronology and regression checks |
+| `src/mdm_playground/scheduling/backends/proseco.py` | **LEGACY** — ProSeCo on `mdlm.ckpt` structural no-op |
+| `src/mdm_playground/scheduling/backends/mdlm.py` | **LEGACY** — MDLM heuristic baseline |
 | `src/mdm_playground/scheduling/signals.py` | Signal extraction (entropy, margin, quality mass) |
 | `src/mdm_playground/scheduling/allocation.py` | Policies: uniform, top_B, burn_in_gated, front/back/middle |
 | `src/mdm_playground/scheduling/gain.py` | `estimate_single_step_gain` |
@@ -145,25 +144,14 @@ HPC details:
 
 | Path | Interpretation |
 |---|---|
-| `results/phase3a_proseco_owt/{cd,bs}_paired.json` | **Phase 3a — combinatorial baselines** (K=30 paired, T=64, job 479941, COMPLETE 2026-04-20). CD-G PASS at all B with Δ ∈ [+0.32, +0.38]; BS-AG PASS at all B with Δ ∈ [+0.15, +0.29]. Full report: `PHASE3A_COMBINATORIAL_RESULTS.md`. |
-| `results/phase3a_proseco_owt/oracle_gap_closure.json` | **Phase 3a oracle-gap closure** — CD-G 78.9 / 74.1 / 84.3 % at B ∈ {2,3,4}; BS-AG 64.1 / 57.1 / 48.8 %. |
-| `results/phase2b_proseco_owt/{policy_raw,mc_raw}.json` | **Phase 2b — paired K=30 sweep** (T=64, job 479581, COMPLETE 2026-04-19/20). 5 PASS / 30 FAIL / 9 BORDERLINE; MC oracle +0.45 vs uniform at B ∈ {2,3,4}; pooled ρ(A,G) decays 0.66 → 0.39. Aggregator: `scripts/analyze_phase2b.py`. |
-| `results/phase2b/policy_comparison_paired.json` | **Phase 2b paired CIs** (BCa per policy/B). |
-| `results/phase2b/mc_oracle.json` | **Phase 2b MC-oracle bound** (best-of-100 random schedules per seed). |
-| `results/phase1_proseco_owt_full/summary.json` | **Phase 1 — ProSeCo-OWT FULL RUN** (N=50, T=64, job 479537, COMPLETE 2026-04-19 07:04). Trajectory-level (Tier T1) results valid: 61/64 positive Δ_t, peak=0.157, Spearman=−0.191. Policy-ranking rows (Tier T4) are inadmissible per audit; superseded by Phase 2b. Full analysis: `PROSECO_ANALYSIS.md`. |
-| `results/phase1_proseco_owt/summary.json` | **Phase 1 — ProSeCo-OWT pilot** (N=20, T=64, job 479382, COMPLETE). 59/64 positive Δ_t, peak=0.178. |
-| `results/phase1_mdlm_conf_signal_aligned/summary.json` | **MDLM-conf signal-aligned pilot** (N=20, T=64, job 479257). M2 fix applied. Verdict: signal noise-level; switched to proseco-owt. |
-| `results/phase1_mdlm_conf/summary.json` | **MDLM-conf unaligned pilot** (N=20, T=64, job 478962). Superseded — do not cite. |
-| `results/phase1_proseco/summary.json` | **ProSeCo pilot on mdlm.ckpt** (N=20, T=64, job 478929). All Δ_t = 0 — structural no-op. |
-| `results/phase1_pilot/summary.json` | **MDLM heuristic pilot** (N=20, T=64, job 478600). All Δ_t ≤ 0 — diagnostic negative. |
-| `results/phase1_{*}_surrogate_sanity/summary.json` | Surrogate sanity for the corresponding backend. |
-| `results/phase1_smoke/` | Smoke-test logs (pre-Phase-1). |
-| `results/full_eval/` / `results/sweep/` / `results/t1000_eval/` / `results/remdm_smoke/` | Pre-Phase-1 step-sweep results (archive candidate). |
+| `results/phase3a_proseco_owt/{cd,bs}_paired.json` | **Phase 3a** paired outputs (K=30, T=64). CD-G and BS-AG both PASS at every budget tested. |
+| `results/phase3a_proseco_owt/oracle_gap_closure.json` | **Phase 3a** oracle-gap closure ratios and verdicts. |
+| `results/phase2b_proseco_owt/{policy_raw,mc_raw}.json` | **Phase 2b** raw paired policy rows and MC oracle samples. |
+| `results/phase2b/policy_comparison_paired.json` | **Phase 2b** paired BCa confidence intervals. |
+| `results/phase2b/mc_oracle.json` | **Phase 2b** MC-oracle headroom summary. |
+| `results/phase1_proseco_owt_full/summary.json` | **Prerequisite chronology artifact** for Phase 2b; keep as a read-only supporting result. |
 
-HPC stdout/stderr for each job live at `out/{phase}_{*}_{jobid}.out` /
-`err/{phase}_{*}_{jobid}.err`. Reference jobs: `479941` (Phase 3a),
-`479581` (Phase 2b), `479537` (Phase 1 ProSeCo-OWT full),
-`479257` (MDLM-conf), `478600` (MDLM heuristic), `478929` (ProSeCo no-op).
+Legacy Phase 1, Phase 2a, and old smoke/eval outputs are archived outside the main path.
 
 ---
 
@@ -186,15 +174,10 @@ HPC stdout/stderr for each job live at `out/{phase}_{*}_{jobid}.out` /
 
 ## 10. Archived material
 
-Everything legacy is under `archive/`. See `archive/ARCHIVE_MANIFEST.md`
-for a complete move-log. At a glance:
-
-- `archive/legacy/` — pre-April 2026 study docs and PDFs
-- `archive/legacy_docs/` — April 2026 cleanup: old CURRENT_INDEX, docs/md, docs/pdf
-- `archive/legacy_prompts/` — GPT Pro v1/v2 prompts and responses
-- `archive/legacy_results_notes/` — ProSeCo chronicle, phase2 change report, LaTeX stray
-- `archive/legacy_results_notes/proseco_chronicle/` — chronological audit fragments (superseded by RESULTS_STATUS.md)
-- `archive/old_directions/` / `archive/old_notes/` — March 2026 direction / notes
+Everything legacy is under `archive/`. See `archive/ARCHIVE_MANIFEST.md` for
+the move-log. The main legacy buckets are `archive/legacy_docs/`,
+`archive/legacy_prompts/`, `archive/legacy_results_notes/`, `archive/old_*`,
+and `archive/legacy_scripts/`.
 
 ---
 
@@ -214,10 +197,9 @@ for a complete move-log. At a glance:
 ## 12. What to run next
 
 **Phase 3a complete (2026-04-20, job 479941).** No HPC runs are in flight or
-queued. The empirical contract for Chapter 7 is closed: Phase 1 (trajectory
-diagnostics) + Phase 2b (paired ranker sweep + MC oracle) + Phase 3a
-(combinatorial search-class positive). See `RESULTS_STATUS.md` §§11–14 and
-`PHASE3A_COMBINATORIAL_RESULTS.md`.
+queued. The empirical contract for the thesis is now: Phase 2b paired
+evaluation + Phase 3a combinatorial search-class positive. See
+`RESULTS_STATUS.md` §§11–14 and `PHASE3A_COMBINATORIAL_RESULTS.md`.
 
 **Active work — Phase 3b theory finalisation (notebook, no HPC):**
 

@@ -1,0 +1,88 @@
+# External Repos Manifest — Signal-Adaptive Corrector Scheduling Thesis
+# Machine-readable manifest for reproducibility.
+# Updated: April 2026
+
+tier_a:
+  mdlm:
+    repo: https://github.com/kuleshov-group/mdlm
+    status: cloned
+    location: external/mdlm/
+    checkpoint: kuleshov-group/mdlm-owt
+    checkpoint_status: on_hpc
+    params: ~130M
+    license: Apache-2.0
+    notes: Base masked diffusion LM; experimental backbone
+
+  remdm:
+    repo: https://github.com/kuleshov-group/remdm
+    status: cloned_and_patched
+    location: external/remdm/
+    checkpoint: kuleshov-group/mdlm-owt  # shares MDLM checkpoint
+    checkpoint_status: on_hpc
+    notes: >
+      Remasking framework; patched for flash_attn SDPA fallback.
+      Primary platform for trajectory diagnostics and corrector scheduling.
+
+  proseco_owt:
+    source: huggingface
+    repo: kuleshov-group/proseco-owt
+    status: staged_via_script
+    location: ~/mdm/checkpoints/proseco_owt/
+    checkpoint_status: local_snapshot_required
+    params: ~130M
+    notes: >
+      Co-trained ProSeCo checkpoint used by the thesis mainline. Stage it with
+      scripts/stage_proseco_owt.py; the active backend loads the local snapshot,
+      not a hidden repo checkout.
+    action_required: stage snapshot, verify config.json/modeling_proseco.py/model.safetensors
+
+tier_b:
+  prism:
+    repo: https://github.com/SeunggeunKimkr/PRISM
+    status: submodule_not_tested
+    location: external/PRISM/
+    notes: Quality-signal platform; Phase 3 experiments
+
+  dllm:
+    repo: https://github.com/ZHZisZZ/dllm
+    status: not_cloned
+    notes: Broader diffusion LM framework; optional
+
+tier_c:
+  llada:
+    repo: https://github.com/ML-GSAI/LLaDA
+    status: not_cloned
+    params: ~8B
+    notes: Larger-scale validation; inference-only; Phase 4 only
+
+  dream:
+    repo: https://github.com/DreamLM/Dream
+    status: not_cloned
+    params: ~7B
+    notes: Optional late-stage validation
+
+analysis_codebases:
+  denoising_entropy:
+    repo: https://github.com/LINs-lab/DenoisingEntropy
+    status: confirmed_public
+    notes: Per-step entropy H_DE computation; Dec 2025
+
+  klass:
+    repo: https://github.com/shkim0116/KLASS
+    status: confirmed_public
+    notes: KL-based selection; NeurIPS 2025 Spotlight
+
+  psi_samplers:
+    repo: https://github.com/s-sahoo/duo
+    status: confirmed_public
+    notes: General PC framework; ICLR 2026
+
+  mdpo:
+    repo: https://github.com/autonomousvision/mdpo
+    status: confirmed_public
+    notes: Running Confidence Remasking; Aug 2025
+
+  discrete_fkc:
+    repo: https://github.com/hasanmohsin/discrete_fkc
+    status: confirmed_public
+    notes: SMC-based correctors; Jan 2026

@@ -1,0 +1,248 @@
+{
+  "T": 64,
+  "N_trajectories": 20,
+  "backend": "ProSeCo-style corrector (MDLM backbone)",
+  "n_positive_delta_steps": 59,
+  "t_first_positive_delta": 2,
+  "peak_mean_delta": 0.17782704830169677,
+  "calibration": {
+    "entropy": {
+      "label": "entropy",
+      "eps_rms": 0.1475237510607427,
+      "eps_max": 1.2396344352920075,
+      "spearman_mean": -0.2341475475277214,
+      "spearman_std": 0.21111006293290993,
+      "calib_a": -0.02120125748852078,
+      "calib_b": 0.11123360849615668
+    },
+    "inverse_margin": {
+      "label": "inverse_margin",
+      "eps_rms": 0.14746635241972655,
+      "eps_max": 1.2397961499296637,
+      "spearman_mean": -0.23188301473212053,
+      "spearman_std": 0.18958150843635563,
+      "calib_a": -0.16483722257483902,
+      "calib_b": 0.11394795017997666
+    },
+    "quality_mass_proxy": {
+      "label": "quality_mass_proxy",
+      "eps_rms": 0.1474485469337525,
+      "eps_max": 1.2402272755102122,
+      "spearman_mean": -0.2200316317917786,
+      "spearman_std": 0.20589006631240986,
+      "calib_a": -0.16979927901623118,
+      "calib_b": 0.11255607561375301
+    },
+    "unmasked_fraction": {
+      "label": "unmasked_fraction",
+      "eps_rms": 0.14905239448107013,
+      "eps_max": 1.2071515431032345,
+      "spearman_mean": 0.05259905860605929,
+      "spearman_std": 0.28422617702356723,
+      "calib_a": 0.02202256576536411,
+      "calib_b": 0.08695702804095973
+    }
+  },
+  "eta_by_B": {
+    "4": {
+      "eta_95": 0.342237923145294,
+      "eta_mean": 0.1592788076400757,
+      "n_schedules": 15
+    },
+    "8": {
+      "eta_95": 0.9872720670700071,
+      "eta_mean": 0.3954605118433634,
+      "n_schedules": 15
+    },
+    "16": {
+      "eta_95": 1.3125887012481687,
+      "eta_mean": 0.9030959844589233,
+      "n_schedules": 15
+    }
+  },
+  "gamma": {
+    "gamma_95": 0.3507115125656126,
+    "gamma_mean": 0.10488816499710082,
+    "gamma_max": 0.5867214202880859,
+    "n_pairs": 120
+  },
+  "T_low": {
+    "threshold_50pct_peak": [
+      0,
+      1,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "threshold_30pct_peak": [
+      0,
+      1,
+      4,
+      5,
+      6,
+      7,
+      8,
+      56,
+      57,
+      58
+    ],
+    "n_positive_delta": 59,
+    "t_first_positive": 2
+  },
+  "theorem_A_bound_check": {
+    "4": {
+      "bound_2Be_2eta": 1.86467,
+      "G_oracle_estimate": 0.69456,
+      "bound_useful": false,
+      "eps_entropy_rms": 0.14752,
+      "eta_95": 0.34224
+    },
+    "8": {
+      "bound_2Be_2eta": 4.33492,
+      "G_oracle_estimate": 1.34604,
+      "bound_useful": false,
+      "eps_entropy_rms": 0.14752,
+      "eta_95": 0.98727
+    },
+    "16": {
+      "bound_2Be_2eta": 7.34594,
+      "G_oracle_estimate": 2.54922,
+      "bound_useful": false,
+      "eps_entropy_rms": 0.14752,
+      "eta_95": 1.31259
+    }
+  },
+  "policy_comparison": {
+    "B4": {
+      "uniform": {
+        "G": 0.42572,
+        "beats_uniform": false
+      },
+      "front": {
+        "G": 0.0,
+        "beats_uniform": false
+      },
+      "back": {
+        "G": 0.03746,
+        "beats_uniform": false
+      },
+      "middle": {
+        "G": 0.48286,
+        "beats_uniform": true
+      },
+      "entropy_top_B": {
+        "G": 0.0,
+        "beats_uniform": false
+      },
+      "margin_top_B": {
+        "G": 0.0,
+        "beats_uniform": false
+      },
+      "quality_top_B": {
+        "G": 0.0,
+        "beats_uniform": false
+      },
+      "entropy_burn_in_gated": {
+        "G": 0.0,
+        "beats_uniform": false
+      },
+      "oracle": {
+        "G": 0.39815,
+        "beats_uniform": false
+      },
+      "bottom_B": {
+        "G": 0.28259,
+        "beats_uniform": false
+      }
+    },
+    "B8": {
+      "uniform": {
+        "G": 0.40319,
+        "beats_uniform": false
+      },
+      "front": {
+        "G": -0.07573,
+        "beats_uniform": false
+      },
+      "back": {
+        "G": 0.04268,
+        "beats_uniform": false
+      },
+      "middle": {
+        "G": 0.41494,
+        "beats_uniform": true
+      },
+      "entropy_top_B": {
+        "G": -0.07573,
+        "beats_uniform": false
+      },
+      "margin_top_B": {
+        "G": -0.07573,
+        "beats_uniform": false
+      },
+      "quality_top_B": {
+        "G": -0.07573,
+        "beats_uniform": false
+      },
+      "entropy_burn_in_gated": {
+        "G": -0.07573,
+        "beats_uniform": false
+      },
+      "oracle": {
+        "G": 0.84028,
+        "beats_uniform": true
+      },
+      "bottom_B": {
+        "G": 0.43582,
+        "beats_uniform": true
+      }
+    },
+    "B16": {
+      "uniform": {
+        "G": 0.6679,
+        "beats_uniform": false
+      },
+      "front": {
+        "G": 0.0894,
+        "beats_uniform": false
+      },
+      "back": {
+        "G": 0.1934,
+        "beats_uniform": false
+      },
+      "middle": {
+        "G": 0.61284,
+        "beats_uniform": false
+      },
+      "entropy_top_B": {
+        "G": 0.34495,
+        "beats_uniform": false
+      },
+      "margin_top_B": {
+        "G": 0.33411,
+        "beats_uniform": false
+      },
+      "quality_top_B": {
+        "G": 0.34495,
+        "beats_uniform": false
+      },
+      "entropy_burn_in_gated": {
+        "G": 0.34495,
+        "beats_uniform": false
+      },
+      "oracle": {
+        "G": 0.74455,
+        "beats_uniform": true
+      },
+      "bottom_B": {
+        "G": 0.63526,
+        "beats_uniform": false
+      }
+    }
+  }
+}

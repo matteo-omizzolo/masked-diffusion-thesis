@@ -26,7 +26,7 @@ Signal interpretation:
 
 Usage:
   gen = MDLMConfGenerator(
-      checkpoint='/home/3316152/mdm/checkpoints/mdlm.ckpt',
+      checkpoint='path/to/mdlm.ckpt',
       T=64,
       top_k=20,
   )

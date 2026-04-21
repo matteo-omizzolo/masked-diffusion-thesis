@@ -1,0 +1,17 @@
+{
+  "backend": "proseco",
+  "T": 64,
+  "N": 20,
+  "M": 15,
+  "P": 120,
+  "B_values": [
+    4,
+    8,
+    16
+  ],
+  "seed": 42,
+  "checkpoint": "/home/3316152/mdm/checkpoints/mdlm.ckpt",
+  "corrector_steps": 2,
+  "out_dir": "results/phase1_proseco",
+  "timestamp": "2026-04-17T12:55:07"
+}

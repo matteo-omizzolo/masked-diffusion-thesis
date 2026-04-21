@@ -1,0 +1,16 @@
+{
+  "backend": "surrogate",
+  "T": 16,
+  "N": 5,
+  "M": 3,
+  "P": 10,
+  "B_values": [
+    2,
+    4
+  ],
+  "seed": 42,
+  "checkpoint": null,
+  "corrector_steps": 2,
+  "out_dir": "results/phase1_proseco_surrogate_sanity",
+  "timestamp": "2026-04-17T07:38:05"
+}

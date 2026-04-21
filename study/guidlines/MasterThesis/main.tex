@@ -1,0 +1,62 @@
+\documentclass[12pt]{article}
+
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[english]{babel}
+\usepackage[outercaption]{sidecap}
+% Set page size and margins
+% Replace `letterpaper' with `a4paper' for UK/EU standard size
+\usepackage[a4paper,top=2cm,bottom=2cm,left=2.5cm,right=2.5cm,marginparwidth=1.75cm]{geometry}
+
+
+
+% Change font to the one required
+\usepackage[T1]{fontenc}
+\usepackage[scaled]{helvet}
+\renewcommand*{\familydefault}{\sfdefault}
+
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{soul} %used for highlighting in text
+\usepackage{xcolor}  %used for highlighting in text
+% mathematical package from Prof. Iozzi's problem sets
+\input{inc_ps.tex}
+
+% All extra packages
+\input{preamble.tex}
+
+\usepackage{array}
+\newcolumntype{L}{>{\centering\arraybackslash}m{2.7cm}}
+
+
+\begin{document}
+
+\newpage
+\thispagestyle{empty}
+\mbox{}
+\newpage
+\thispagestyle{empty}
+\mbox{}
+\newpage
+\thispagestyle{empty}
+\mbox{}
+\newpage
+\thispagestyle{empty}
+\mbox{}
+\pagenumbering{arabic}
+%\maketitle
+
+%\begin{abstract}
+%Your abstract.
+%\end{abstract}
+\tableofcontents
+\newpage
+\section{Introduction}
+
+\input{1_Literature_Review}
+
+
+\printbibliography[title = Bibliography]
+\end{document}

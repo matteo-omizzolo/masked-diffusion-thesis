@@ -2,9 +2,9 @@
 
 **Author:** Claude Code (rigorous co-advisor review)
 **Date:** 2026-04-19
-**Status:** Audit of `results/phase1_proseco_owt_full/` (N=50, T=64) and predecessor pilot
-`results/phase1_proseco_owt/` (N=20, T=64) against the canonical claims made in
-`docs/thesis/CURRENT_INDEX.md` and `docs/thesis/experiments/RESULTS_STATUS.md`.
+**Status:** Historical audit of `results/phase1_proseco_owt_full/` (N=50, T=64) and
+predecessor pilot `results/phase1_proseco_owt/` (N=20, T=64). Kept for provenance;
+the current thesis mainline is Phase 2b / Phase 3a.
 
 **Headline verdict:** The canonical claim *"entropy_bot_B beats uniform by +29% at B=8
 (thesis-grade evidence)"* **is not supported** by the data. It confuses the **additive
@@ -42,11 +42,12 @@ From `docs/thesis/experiments/RESULTS_STATUS.md` (full-run policy table, B=8):
 ### 1.2 Where these numbers actually come from
 
 These numbers are read from `results/phase1_proseco_owt_full/inverted_policy_analysis.json`
-(keyed under `policy_G`). They are written by `scripts/analyze_inverted_policies.py`.
+(keyed under `policy_G`). They are written by
+`archive/legacy_framework/scripts/analyze_inverted_policies.py`.
 The relevant line is:
 
 ```python
-# scripts/analyze_inverted_policies.py:112
+# archive/legacy_framework/scripts/analyze_inverted_policies.py:112
 G_list.append(sum(pt[t]["delta"] for t in steps))
 ```
 
@@ -104,7 +105,7 @@ Three independent reasons the A(S) column in the canonical table is misleading:
 
 3. **Sign-flipping empirical check.** The pipeline-evaluated `bottom_B` is exactly
    the entropy_bot_B policy (the signal used is `signal_traces["bottom_B"] =
-   mean_entropy` at `scripts/run_phase1_proseco_owt.py:285`, and `allocation.py::bottom_B`
+   mean_entropy` at `archive/legacy_framework/scripts/run_phase1_proseco_owt.py:285`, and `allocation.py::bottom_B`
    returns the B indices of smallest signal). Its true G at B=8 is 0.077.
    The additive surrogate says +0.199 above uniform; the pipeline says −0.682
    below uniform. Sign flipped, magnitude bigger, same policy.
@@ -141,19 +142,20 @@ corrector schedule beats uniform on the true joint gain G(S). It has evidence th
 B=8 — but the measured additivity slack at B=8 is larger than the claimed surplus,
 and the one end-to-end pipeline evaluation we did shows entropy_bot_B losing by 10×.
 
-This must be retracted from `CURRENT_INDEX.md` and `RESULTS_STATUS.md` before any
-further HPC work, and the next experimental phase must make A(S) vs G(S) the
-primary object of study.
+This audit was the reason `CURRENT_INDEX.md` and `RESULTS_STATUS.md` were
+reframed around the Phase 2b paired-evaluation / Phase 3a scheduling mainline.
+The underlying warning remains: A(S) vs G(S) must not be conflated, and any
+future comparison must be paired and seed-aligned.
 
 ---
 
 ## 2. Secondary finding — single-seed policy comparison, no confidence intervals
 
-`scripts/run_phase1_proseco_owt.py::run_policy_comparison` evaluates every (policy, B)
+`archive/legacy_framework/scripts/run_phase1_proseco_owt.py::run_policy_comparison` evaluates every (policy, B)
 combination against a **single** sample pair:
 
 ```python
-# run_phase1_proseco_owt.py:289
+# archive/legacy_framework/scripts/run_phase1_proseco_owt.py:289
 seed = seed_base + 88888
 ```
 
@@ -430,8 +432,9 @@ All four are worth investigating; §10 describes how.
 - `results/phase1_proseco_owt_full/summary.json` (N=50, T=64)
 - `results/phase1_proseco_owt_full/inverted_policy_analysis.json` (post-hoc A(S))
 - `results/phase1_proseco_owt/summary.json` (pilot N=20)
-- `scripts/analyze_inverted_policies.py` (line 112 — additive surrogate definition)
-- `scripts/run_phase1_proseco_owt.py` (lines 285, 289 — signal traces + single seed)
+- `archive/legacy_framework/scripts/analyze_inverted_policies.py` (line 112 —
+  additive surrogate definition)
+- `archive/legacy_framework/scripts/run_phase1_proseco_owt.py` (lines 285, 289 — signal traces + single seed)
 - `src/mdm_playground/scheduling/evaluate.py` (`evaluate_schedule` — true G(S))
 - `src/mdm_playground/scheduling/allocation.py` (`bottom_B` — signal-minimum selection)
 

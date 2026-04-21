@@ -2,10 +2,11 @@
 
 **Last updated:** 2026-04-18
 
-This file is the single authoritative description of the Phase 1 ProSeCo
-experiment — its backbone, predictor, corrector, protocols, signals, quality
-functional, and the precise meaning of every calibration quantity. Sibling
-canonical file: `CANONICAL_RESEARCH_DIRECTION.md`.
+This file is the canonical specification of the ProSeCo measurement pipeline
+that underpins the thesis mainline. It documents the original Phase 1
+Protocol A/B setup, which now serves as historical context and a prerequisite
+for the Phase 2b / Phase 3a scheduling experiments. Sibling canonical file:
+`CANONICAL_RESEARCH_DIRECTION.md`.
 
 Source specs this synthesizes:
 `docs/experiments/proseco_experiment_definition.md` (math),
@@ -119,7 +120,7 @@ Computed separately for each signal candidate.
 
 Implementation: `gen.run_base(seed=...)` plus a loop of
 `gen.run_branch(t_corrected=t, seed=...)` in
-`scripts/run_phase1_proseco.py`.
+`archive/legacy_framework/scripts/run_phase1_proseco.py`.
 
 ## 4. Protocol B — schedule-level additivity and interaction
 
@@ -224,7 +225,7 @@ the backend was fixed to hydrate its config from the checkpoint's
 `hyper_parameters["config"]` and to recompute `p_x0` for signals when the
 cache is None. The pilot then ran cleanly to completion.
 
-KEY RESULTS (from `results/phase1_proseco/summary.json`):
+KEY RESULTS (from `archive/legacy_framework/results/phase1_proseco/summary.json`):
 
 | Metric | Value |
 |---|---|
@@ -252,8 +253,8 @@ backbone/corrector pairs:
 
 1. **`kuleshov-group/proseco-owt` checkpoint** (HuggingFace,
    ~500 MB). Co-trained with a corrector loss → annealed refinement should
-   produce Δ_t > 0 somewhere. Existing `backends/proseco.py` code applies
-   with only a checkpoint-loading change.
+   produce Δ_t > 0 somewhere. Existing `backends/proseco_owt.py` code loads
+   the staged snapshot directly.
 2. **MDLM-conf partial resample** on `mdlm.ckpt`: corrector resamples only
    K lowest-confidence masked positions (not all masked positions).
    Expected to give non-zero Δ_t, likely mixed sign. An initial

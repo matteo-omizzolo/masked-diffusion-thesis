@@ -1,0 +1,189 @@
+{
+  "T": 16,
+  "N_trajectories": 5,
+  "backend": "ProSeCo-style corrector (MDLM backbone)",
+  "n_positive_delta_steps": 16,
+  "t_first_positive_delta": 0,
+  "peak_mean_delta": 0.05133784123837417,
+  "calibration": {
+    "entropy": {
+      "label": "entropy",
+      "eps_rms": 0.017043033772951598,
+      "eps_max": 0.03704564597125025,
+      "spearman_mean": -0.23176470588235296,
+      "spearman_std": 0.0990857864659951,
+      "calib_a": -0.006389315565454036,
+      "calib_b": 0.03282527781800917
+    },
+    "inverse_margin": {
+      "label": "inverse_margin",
+      "eps_rms": 0.01758554836678235,
+      "eps_max": 0.03839511592572063,
+      "spearman_mean": 0.23411764705882354,
+      "spearman_std": 0.09339057397809737,
+      "calib_a": 0.013691871036234902,
+      "calib_b": 0.017403373119997605
+    },
+    "quality_mass_proxy": {
+      "label": "quality_mass_proxy",
+      "eps_rms": 0.017554678143573272,
+      "eps_max": 0.03827957054867104,
+      "spearman_mean": -0.2335294117647059,
+      "spearman_std": 0.0998892119864817,
+      "calib_a": -0.015020627285593047,
+      "calib_b": 0.032575693467994785
+    },
+    "unmasked_fraction": {
+      "label": "unmasked_fraction",
+      "eps_rms": 0.01740272950995306,
+      "eps_max": 0.03781952521678984,
+      "spearman_mean": 0.23176470588235296,
+      "spearman_std": 0.0990857864659951,
+      "calib_a": 0.012562101874905751,
+      "calib_b": 0.017246241677845015
+    }
+  },
+  "eta_by_B": {
+    "2": {
+      "eta_95": 0.011471761924037052,
+      "eta_mean": 0.005835578047689912,
+      "n_schedules": 3
+    },
+    "4": {
+      "eta_95": 0.022486609595960553,
+      "eta_mean": 0.015997727261713172,
+      "n_schedules": 3
+    }
+  },
+  "gamma": {
+    "gamma_95": 0.008822560920543452,
+    "gamma_mean": 0.005091807852213614,
+    "gamma_max": 0.009290927375045666,
+    "n_pairs": 10
+  },
+  "T_low": {
+    "threshold_50pct_peak": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      12,
+      13,
+      14,
+      15
+    ],
+    "threshold_30pct_peak": [
+      0,
+      1,
+      2,
+      3,
+      14,
+      15
+    ],
+    "n_positive_delta": 16,
+    "t_first_positive": 0
+  },
+  "theorem_A_bound_check": {
+    "2": {
+      "bound_2Be_2eta": 0.09112,
+      "G_oracle_estimate": 0.1015,
+      "bound_useful": true,
+      "eps_entropy_rms": 0.01704,
+      "eta_95": 0.01147
+    },
+    "4": {
+      "bound_2Be_2eta": 0.18132,
+      "G_oracle_estimate": 0.19031,
+      "bound_useful": true,
+      "eps_entropy_rms": 0.01704,
+      "eta_95": 0.02249
+    }
+  },
+  "policy_comparison": {
+    "B2": {
+      "uniform": {
+        "G": 0.04669,
+        "beats_uniform": false
+      },
+      "front": {
+        "G": 0.00313,
+        "beats_uniform": false
+      },
+      "back": {
+        "G": 0.0083,
+        "beats_uniform": false
+      },
+      "middle": {
+        "G": 0.10222,
+        "beats_uniform": true
+      },
+      "entropy_top_B": {
+        "G": 0.00313,
+        "beats_uniform": false
+      },
+      "margin_top_B": {
+        "G": 0.0083,
+        "beats_uniform": false
+      },
+      "quality_top_B": {
+        "G": 0.00313,
+        "beats_uniform": false
+      },
+      "entropy_burn_in_gated": {
+        "G": 0.00313,
+        "beats_uniform": false
+      },
+      "oracle": {
+        "G": 0.08881,
+        "beats_uniform": true
+      },
+      "bottom_B": {
+        "G": 0.0083,
+        "beats_uniform": false
+      }
+    },
+    "B4": {
+      "uniform": {
+        "G": 0.0908,
+        "beats_uniform": false
+      },
+      "front": {
+        "G": 0.02614,
+        "beats_uniform": false
+      },
+      "back": {
+        "G": 0.03801,
+        "beats_uniform": false
+      },
+      "middle": {
+        "G": 0.21295,
+        "beats_uniform": true
+      },
+      "entropy_top_B": {
+        "G": 0.02614,
+        "beats_uniform": false
+      },
+      "margin_top_B": {
+        "G": 0.03801,
+        "beats_uniform": false
+      },
+      "quality_top_B": {
+        "G": 0.02614,
+        "beats_uniform": false
+      },
+      "entropy_burn_in_gated": {
+        "G": 0.02614,
+        "beats_uniform": false
+      },
+      "oracle": {
+        "G": 0.19037,
+        "beats_uniform": true
+      },
+      "bottom_B": {
+        "G": 0.03801,
+        "beats_uniform": false
+      }
+    }
+  }
+}
