@@ -1,0 +1,39 @@
+{
+  "backend": "proseco_owt",
+  "T": 64,
+  "K_total": 30,
+  "K_shard": 8,
+  "shard_idx": 1,
+  "shard_count": 4,
+  "B_values": [
+    2,
+    3,
+    4,
+    8,
+    16
+  ],
+  "mc_B_values": [
+    2,
+    3,
+    4
+  ],
+  "mc_P": 100,
+  "seed_start": 42,
+  "policies": [
+    "uniform",
+    "front",
+    "back",
+    "middle",
+    "entropy_top_B_pt",
+    "entropy_bot_B_pt",
+    "margin_top_B_pt",
+    "quality_top_B_pt",
+    "entropy_top_B_mp",
+    "mean_delta_oracle"
+  ],
+  "checkpoint": "/home/3316152/mdm/checkpoints/proseco_owt",
+  "corrector_steps": 1,
+  "protocol_a_dir": "/home/3316152/mdm/masked-diffusion-thesis/results/phase1_proseco_owt_full/protocol_a",
+  "timestamp": "2026-04-19T08:51:47",
+  "shard_out_suffix": "shard1-of-4"
+}

@@ -1,0 +1,35 @@
+\chapter{Experiments}
+\label{ch:experiments}
+
+%% Status: PLACEHOLDER — fill after gap decision.
+%%
+%% Setup (already in place):
+%%   - Model: MDLM-OWT checkpoint (130M parameters), OpenWebText
+%%   - Code: kuleshov-group/remdm (patched, in external/remdm/)
+%%   - Infrastructure: HPC Bocconi cluster, up to 4x A100 80GB
+%%   - No new training; inference-only
+%%
+%% Candidate experiments (one set per gap):
+%%
+%% --- Gap D ---
+%% \section{Selection Criterion Comparison}
+%%   - Fix T=256, vary selection criterion: confidence, entropy, random-k
+%%   - Metrics: MAUVE, gen_ppl
+%%   - Validates: which criterion is empirically best?
+%%
+%% \section{Budget Sweep}
+%%   - Fix best criterion, vary k \in {5%, 10%, 20%, 40%}
+%%   - Validates: advantage as function of budget
+%%
+%% --- Gap B/C ---
+%% \section{Entropy-Adaptive Scheduling}
+%%   - Entropy-triggered corrector vs. fixed allocation
+%%   - Validates: adaptive > uniform under fixed NFE budget
+%%
+%% Note: do NOT reference or re-use archived step-sweep results
+%% (T=256, T=512 runs) as evidence for thesis claims.
+%% Those runs are infrastructure only.
+%%
+%% \section{Experimental Setup}
+%% \section{Results}
+%% \section{Discussion}

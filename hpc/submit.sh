@@ -3,13 +3,14 @@
 # Usage: bash hpc/submit.sh [smoke|eval|eval-loop|t1000|t1000-loop|t1000p|sweep]   (default: smoke)
 #
 # Targets:
-#   smoke      — 2-batch smoke test (remdm-conf, no MAUVE)
-#   eval       — full eval array: tasks 0-1 (mdlm + remdm-conf, 100 batches, 128 steps, MAUVE)
-#   eval-loop  — single task 2 (remdm-loop); submit after eval jobs complete
-#   t1000      — T=1000 eval array: tasks 0-1 (mdlm + remdm-conf)
-#   t1000-loop — single task 2 (remdm-loop) at T=1000; submit after t1000 completes
-#   t1000p     — all 3 strategies in parallel on 3 GPUs (recommended, 1 job slot)
-#   sweep      — T=256 + T=512 step sweep (all 3 strategies)
+#   smoke         — 2-batch smoke test (remdm-conf, no MAUVE)
+#   phase1-pilot  — Phase 1 entropy-proxy pilot (Protocol A + B, N=20, T=64)
+#   eval          — full eval array: tasks 0-1 (mdlm + remdm-conf, 100 batches, 128 steps, MAUVE)
+#   eval-loop     — single task 2 (remdm-loop); submit after eval jobs complete
+#   t1000         — T=1000 eval array: tasks 0-1 (mdlm + remdm-conf)
+#   t1000-loop    — single task 2 (remdm-loop) at T=1000; submit after t1000 completes
+#   t1000p        — all 3 strategies in parallel on 3 GPUs (recommended, 1 job slot)
+#   sweep         — T=256 + T=512 step sweep (all 3 strategies)
 
 set -euo pipefail
 
@@ -19,8 +20,9 @@ REMOTE_HOST="slogin.hpc.unibocconi.it"
 
 EXTRA_SBATCH_OPTS=""
 case "$TARGET" in
-  smoke)     SBATCH_FILE="hpc/remdm_smoke.sbatch" ;;
-  eval)       SBATCH_FILE="hpc/remdm_full_eval.sbatch" ;;
+  smoke)          SBATCH_FILE="hpc/remdm_smoke.sbatch" ;;
+  phase1-pilot)   SBATCH_FILE="hpc/phase1_pilot.sbatch" ;;
+  eval)           SBATCH_FILE="hpc/remdm_full_eval.sbatch" ;;
   eval-loop)  SBATCH_FILE="hpc/remdm_full_eval.sbatch"
               EXTRA_SBATCH_OPTS="--array=2-2" ;;  # NOTE: sbatch opts must come before script
   t1000)      SBATCH_FILE="hpc/remdm_t1000_eval.sbatch" ;;

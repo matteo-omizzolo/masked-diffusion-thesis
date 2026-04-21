@@ -1,19 +1,34 @@
 # CLAUDE.md — Project Context for Claude Code
 
 ## Project
-MSc thesis on **masked diffusion models**. Empirical comparison of three remasking strategies
-(MDLM, ReMDM-conf, ReMDM-loop) on OpenWebText. Main metrics: gen_ppl, entropy, MAUVE.
+MSc thesis on **signal-adaptive corrector scheduling for masked diffusion language models**,
+supervised by Prof. Giacomo Zanella (Bocconi University).
+
+**Core research question:** For a fixed predictor schedule and fixed corrector NFE budget
+in masked diffusion language models, can aggregate trajectory signals — entropy, confidence
+margin, or quality mass — predict the marginal value of a corrective refinement loop well
+enough to outperform uniform corrector placement?
+
+**Key distinction:** This thesis targets corrector *scheduling* (when to spend corrective
+effort across the trajectory), not token-selection policies (which tokens to correct),
+predictor schedules (when to unmask), or corrector kernel design (how to correct).
+
+See `docs/thesis_direction.md` for the full research direction, scope, and non-goals.
 
 ## Repo layout
+- `thesis/` — LaTeX thesis chapters (ch2 first draft done)
+- `research/` — mathematical worklog, candidate theorems, proof ledger
+- `docs/` — core documentation (thesis_direction, literature_map, reading_plan, etc.)
+- `docs/md/` — older study documents (some deprecated; see deprecation banners)
+- `docs/instructions/` — Claude Code prompts and thesis brief
 - `src/mdm_playground/` — main package (`pip install -e .`)
-- `external/` — rsync'd copies of upstream repos (remdm, remedi, PRISM, sedd, mdlm)
-- `hpc/` — Bocconi HPC workflow scripts
-- `configs/` — YAML experiment configs
-- `checkpoints/` — local checkpoint storage (gitignored)
-- `results/` — experiment outputs (gitignored)
-- `figures/` — generated plots
-- `docs/` — study documents and literature review
+- `external/` — rsync'd copies of upstream repos (remdm, mdlm, PRISM, sedd, remedi)
+- `study/` — papers organized by topic, notes, thesis guidelines
 - `scripts/` — analysis and plotting scripts
+- `configs/` — YAML experiment configs
+- `hpc/` — Bocconi HPC workflow scripts
+- `archive/` — deprecated material (old directions, notes)
+- `figures/` — generated plots
 
 ## HPC — Bocconi cluster
 - **Host:** `slogin.hpc.unibocconi.it` | **User:** `3316152`
@@ -99,35 +114,38 @@ Downloading openwebtext (38GB) for MAUVE reference exceeds HPC user quota.
 
 ---
 
-## Current status (2026-03-16) — ALL EXPERIMENTS COMPLETE ✓
+## Current status (April 2026)
 
-All three strategies evaluated at T=128, T=256, T=512, T=1000 steps.
+Research direction refocused to **signal-adaptive corrector scheduling** after literature
+scan and brief preparation (April 2026). The thesis targets trajectory-level fixed-budget
+corrector allocation — a gap that remains open despite strong adjacent work on corrector
+design, token-selection, predictor scheduling, and remasking.
 
-### Full step sweep results
-| strategy   | T=128 MAUVE | T=256 MAUVE | T=512 MAUVE | T=1000 MAUVE |
-|------------|-------------|-------------|-------------|--------------|
-| mdlm       | 0.170       | **0.740**   | 0.592       | 0.590        |
-| remdm-conf | 0.440       | 0.475       | 0.470       | 0.325        |
-| remdm-loop | 0.396       | 0.614       | 0.532       | **0.684**    |
+Previous step-sweep experiments (MDLM/ReMDM-conf/ReMDM-loop at T∈{128,256,512,1000})
+are archived from the earlier phase.
 
-### T=1000 gen_ppl / entropy
-| strategy   | gen_ppl | entropy |
-|------------|---------|---------|
-| mdlm       |  52.269 |  5.446  |
-| remdm-conf |  37.321 |  5.357  |
-| remdm-loop |  30.296 |  5.390  |
+### Scope decisions
+- **RemeDi-RL**: PERMANENTLY SKIPPED — missing `FSDPLLaDAUPMModelLM` + 8B vs 100M mismatch.
+- **PRISM** (arXiv:2510.01384): **READ** — Zanella-recommended; quality signal for experiments.
+- **ProSeCo** (arXiv:2602.11590): **TO READ** — closest existing corrector-scheduling paper;
+  primary Tier A experimental platform.
+- **Gap D** (token selection): DEPRIORITIZED — empirically crowded (KLASS, UPO, DEMASK, ProSeCo).
+- **Primary direction**: Gap B/C (signal-adaptive corrector scheduling) + Gap E (E_fact
+  extension to corrector steps).
 
-### Key findings
-- **mdlm MAUVE peaks at T=256 (0.740)** — "diversity window" thesis finding
-- remdm-conf: diversity collapse confirmed; entropy drops 5.499→5.357 at high T
-- remdm-loop: only strategy with monotonically improving MAUVE; best gen_ppl at T≥256
-- Figure: `figures/step_sweep.{pdf,png}` | Full analysis: `results/combined_comparison.md`
+### Reading status
+- **Read:** MDLM, ReMDM, Zhao et al., PRISM, L&Z Error Bounds
+- **To read next:** ProSeCo, EAGS, Ascolani et al. 2024, Denoising Entropy
+- Full plan: `docs/reading_plan.md`
 
-### Scope decisions (final)
-- **RemeDi-RL**: PERMANENTLY SKIPPED. `maple-research-lab/RemeDi-RL` missing `FSDPLLaDAUPMModelLM`
-  class (not in any public repo) + 8B vs 100M scale mismatch. Out of thesis scope.
-- **PRISM**: Low priority, not yet populated. Skip unless required.
-- **Thesis scope**: Remasking strategies on MDLM-scale models only.
+### Writing status
+- ch2 (Background: Continuous Diffusion): **FIRST DRAFT DONE**
+- ch3–ch8: TODO. See `docs/md/research_plan.md` for chapter dependencies.
+
+### Experimental infrastructure
+- **Tier A:** MDLM (ready), ReMDM (ready, patched), ProSeCo (to clone)
+- **Tier B:** PRISM (submodule, not tested), dLLM (not cloned)
+- Full details: `docs/experimental_infrastructure.md`
 
 ## Claude Code tools & plugins
 
@@ -144,14 +162,24 @@ All three strategies evaluated at T=128, T=256, T=512, T=1000 steps.
 - **`math-olympiad`** — adversarial proof verification for corrector convergence proofs (preview; auto-triggers on "prove", "verify proof", "detailed balance")
 
 ### Math context
-Corrector math in this project = Markov chain theory (spectral gaps, mixing times, Gibbs sampling, Metropolis-Hastings) applied to discrete/masked token spaces. See `docs/correctors_deep_dive.md` and `notebooks/01_spectral_gap_and_mixing.ipynb`.
+Corrector math in this project = Markov chain theory (spectral gaps, mixing times, Gibbs
+sampling, Metropolis-Hastings) applied to discrete/masked token spaces. Key framework: L&Z
+E_fact/E_learn decomposition. See `research/proof_worklog.md` for active derivations and
+`docs/md/correctors_deep_dive.md` (deprecated but historically useful) for background.
 
 ### Not relevant
 - **`ui-ux-pro-max`** — already installed, not relevant to this project
 
 ---
 
-## Next steps
-1. Qualitative sample analysis: extract 5-10 samples per strategy from HPC results
-2. LaTeX table generation: `scripts/generate_latex_table.py`
-3. Thesis chapter draft using `docs/empirical_analysis.md` as structure
+## Next steps (current — April 2026)
+
+1. **Now:** Read ProSeCo — understand correction schedule knobs and baselines
+2. **Now:** Read EAGS — assess overlap with Gap B/C
+3. **Next:** Read Ascolani et al. 2024 (entropy contraction) for Gap E proof template
+4. **Next:** Clone ProSeCo repo and download `proseco-owt` checkpoint
+5. **Then:** Zanella meeting — present Gap B/C + E with preliminary theorem statement
+6. **Writing:** Start ch3 (Discrete Diffusion)
+
+Full plan: `docs/implementation_plan.md`
+Thesis LaTeX: `thesis/main.tex`

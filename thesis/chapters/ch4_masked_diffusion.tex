@@ -1,0 +1,52 @@
+\chapter{Masked Diffusion Language Models}
+\label{ch:masked-diffusion}
+
+%% Status: WRITE NOW — L&Z reading complete (2026-04-11).
+%% Depends on: ch3; L&Z decomposition is the core of sec:lz-decomposition
+%%
+%% Format: ~1200--1500 words + equations.
+
+%% ---------------------------------------------------------------
+\section{MDLM: The SUBS Parameterization}
+\label{sec:mdlm-subs}
+
+%% Cover (based on MDLM reading):
+%%   - The SUBS (Substitution) parameterization: p_theta(x | z_t) directly
+%%   - Training objective: masked language modelling loss
+%%   - Sampling algorithm: sequential unmasking from z_T to z_0
+%%   - Easy-first unmasking: why high-confidence positions are unmasked first
+%%   - When the factorisation approximation hurts most
+
+%% ---------------------------------------------------------------
+\section{Remasking Strategies: ReMDM}
+\label{sec:remdm}
+
+%% Cover (based on ReMDM reading):
+%%   - The remasking backward process: why remasking improves quality
+%%   - Four schedule variants: conf, loop, cap, rescale
+%%   - Why confidence-based remasking creates OOD states at high T
+%%   - Connection between remasking budget and number of NFEs
+%%   - Key distinction: remasking defers tokens (predictor modification)
+%%                      correctors add extra MCMC steps (our focus)
+
+%% ---------------------------------------------------------------
+\section{The L\&Z Error Decomposition}
+\label{sec:lz-decomposition}
+
+%% Cover (based on L&Z reading — complete this after finishing L&Z):
+%%   - The KL decomposition: \KL{\ptrue}{\palg} \leq \Elearn + \Efact
+%%   - \Elearn: controlled by training (neural denoiser quality)
+%%   - \Efact: controlled at inference time by the choice of schedule and correctors
+%%   - The EB-Sampler: minimises \Efact among unmasking-only strategies
+%%   - Section 6 of L&Z: "extending to corrector steps" as future work
+%%   - This thesis aims to answer that open question
+
+%% ---------------------------------------------------------------
+\section{The Corrector Problem}
+\label{sec:corrector-problem}
+
+%% Position the thesis within this framework:
+%%   - What a corrector is: extra Markov step after token commitment
+%%   - How a corrector appears in the total error bound
+%%   - The open question: can an informed corrector reduce \Efact below the EB-Sampler bound?
+%%   - Preview of the candidate directions (Gap D, B/C, E)

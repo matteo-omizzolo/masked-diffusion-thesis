@@ -1,0 +1,56 @@
+\chapter{Informed Correctors for Masked Diffusion}
+\label{ch:informed-correctors}
+
+%% Status: WRITE AFTER reading queue (DFM, EB-Sampler, Ascolani et al.) is done.
+%% Depends on: ch4, Zhao et al., PRISM (both read), DFM + Ascolani et al. (queued)
+%%
+%% This chapter reviews the informed corrector literature and positions the thesis
+%% contribution relative to it.
+
+%% ---------------------------------------------------------------
+\section{The Predictor-Corrector Framework for Discrete Diffusion}
+\label{sec:pc-discrete}
+
+%% Cover:
+%%   - How the continuous PC framework (Song et al. 2021) maps to discrete MDMs
+%%   - DFM (Gat et al. 2024): corrector as Gibbs sampler; mixing rate = spectral gap
+%%   - What "informed" means: using a signal (confidence, entropy, quality score)
+%%     to select which positions to update
+
+%% ---------------------------------------------------------------
+\section{Locally-Balanced Correctors: Zhao et al. 2024}
+\label{sec:zhao-correctors}
+
+%% Cover (based on Zhao et al. reading):
+%%   - The corrector as adaptive random-scan Gibbs with state-dependent selection
+%%   - Barker proposal (from Zanella 2020 locally-balanced theory): g(t) = t/(1+t)
+%%   - MPF corrector and its connection to Stein operators
+%%   - Hollow transformer architecture and why it is needed
+%%   - Confidence selection: q(d) \propto \exp(-c_d / \tau), k positions
+%%   - Key finding: Barker performed worse than confidence-guided in experiments
+%%   - Formal gap: no optimality result for confidence selection under budget k
+
+%% ---------------------------------------------------------------
+\section{Provably Learnable Quality Scores: PRISM}
+\label{sec:prism}
+
+%% Cover (based on PRISM reading):
+%%   - Setting: quality score q_phi(x, z_t) learned to assess correction targets
+%%   - Key result: quality scores are provably learnable under [conditions from paper]
+%%   - Connection to Gap D: if quality scores can be learned, can optimal selection
+%%     be characterised in terms of them?
+%%   - How PRISM's proof technique relates to the factorisation gap structure
+%%
+%% Note: fill this section with actual content from PRISM reading.
+%% [PLACEHOLDER — complete after user confirms PRISM takeaways]
+
+%% ---------------------------------------------------------------
+\section{The Open Gaps}
+\label{sec:open-gaps}
+
+%% Formally state the three candidate open gaps:
+%%   - Gap D: token selection optimality
+%%   - Gap B/C: corrector scheduling
+%%   - Gap E: E_fact extension to corrector steps
+%% Reference the L&Z Section 6 future work statement for Gap E.
+%% Reference the absence of any optimality proof in Zhao et al. for Gap D.

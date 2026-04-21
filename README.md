@@ -1,79 +1,82 @@
-# Masked Diffusion Thesis
+# Signal-Adaptive Corrector Scheduling for Masked Diffusion Language Models
 
-MSc thesis: empirical comparison of remasking strategies for masked diffusion language models
-(MDLM, ReMDM-conf, ReMDM-loop) on OpenWebText across T=128/256/512/1000 diffusion steps.
-
----
-
-## Key results
-
-| strategy   | T=128 MAUVE | T=256 MAUVE | T=512 MAUVE | T=1000 MAUVE | T=1000 gen_ppl |
-|------------|-------------|-------------|-------------|--------------|----------------|
-| mdlm       | 0.170       | **0.740**   | 0.592       | 0.590        | 52.3           |
-| remdm-conf | 0.440       | 0.475       | 0.470       | 0.325        | 37.3           |
-| remdm-loop | 0.396       | 0.614       | 0.532       | **0.684**    | 30.3           |
-
-See `results/combined_comparison.md` and `figures/step_sweep.{pdf,png}` for full analysis.
+MSc thesis by Matteo Omizzolo, supervised by Prof. Giacomo Zanella (Bocconi University).
 
 ---
 
-## Repo structure
+## Research Question
+
+> For a fixed predictor schedule and fixed corrector NFE budget in masked diffusion
+> language models, can aggregate trajectory signals — entropy, confidence margin, or
+> quality mass — predict the marginal value of a corrective refinement loop well enough
+> to outperform uniform corrector placement?
+
+See `docs/thesis_direction.md` for the full research direction, scope, and non-goals.
+
+---
+
+## Repository Structure
 
 ```
-src/mdm_playground/     # Main package (pip install -e .)
-external/               # Upstream repos (remdm, remedi, PRISM, sedd, mdlm) — rsync'd, NOT cloned
-hpc/                    # Bocconi HPC workflow scripts (push.sh, submit.sh, pull.sh)
-configs/                # YAML experiment configs
-scripts/                # Analysis and plotting scripts
-docs/                   # Study documents
-  comparison.md         # 12-paper literature review + unified notation + research directions
-  empirical_analysis.md # Statistical analysis of step-sweep results
-  output/               # PDF and HTML versions of docs
-results/                # Experiment outputs (gitignored)
-figures/                # Generated plots
-tasks/                  # Planning and lessons learned
+thesis/                  # LaTeX thesis chapters (ch2 first draft done)
+research/                # Mathematical worklog, candidate theorems, proof ledger
+docs/                    # Core documentation
+  thesis_direction.md    #   Precise research question, scope, non-goals
+  literature_map.md      #   Categorized paper map with gap analysis
+  reading_plan.md        #   Prioritized reading list with status tags
+  experimental_infrastructure.md  # Repos, checkpoints, setup status
+  implementation_plan.md #   Phased experiment roadmap
+  legacy_cleanup_log.md  #   Archive/deletion log
+  md/                    #   Older study documents (some deprecated)
+  instructions/          #   Claude Code prompts and thesis brief
+src/mdm_playground/      # Main Python package (pip install -e .)
+external/                # Upstream repos (remdm, mdlm, PRISM, sedd, remedi)
+study/                   # Papers organized by topic, notes, guidelines
+scripts/                 # Analysis and plotting scripts
+configs/                 # YAML experiment configs
+hpc/                     # Bocconi HPC workflow scripts
+notebooks/               # Jupyter notebooks (spectral gap, discretization error)
+archive/                 # Deprecated material (old directions, notes)
+figures/                 # Generated plots
 ```
 
 ---
 
-## Study materials
+## Current Status (April 2026)
 
-- `docs/comparison.md` — comprehensive literature review of 12 discrete diffusion papers,
-  unified notation table, 48 study questions, 8 research directions
-- `docs/empirical_analysis.md` — statistical interpretation of step-sweep results,
-  formal metric definitions, 6 research directions
-- PDF/HTML versions in `docs/output/`
+The thesis direction has been refocused from a broad "informed correctors" framing to a
+precise question about **trajectory-level fixed-budget corrector allocation**. The key
+distinction from adjacent work: this thesis targets corrector *scheduling* (when to spend
+corrective effort), not token-selection policies (which tokens to correct), predictor
+schedules (when to unmask), or corrector kernel design (how to correct).
+
+**Writing:** ch2 (Background: Continuous Diffusion) first draft complete.
+**Theory:** Proof worklog started; see `research/`.
+**Experiments:** MDLM-OWT checkpoint available; ReMDM codebase patched for HPC; ProSeCo
+setup in progress.
 
 ---
 
-## HPC workflow (Bocconi cluster)
+## Key Papers Read
+
+MDLM, ReMDM, Zhao et al. (Informed Correctors), PRISM, L&Z Error Bounds.
+See `docs/reading_plan.md` for the full prioritized list.
+
+---
+
+## HPC Workflow (Bocconi Cluster)
 
 ```bash
-bash hpc/push.sh                # rsync code to HPC (excludes checkpoints, results)
-bash hpc/submit.sh t1000p       # run all 3 strategies in parallel (3 GPUs, 1 job slot)
-# Pull results via SSH (rsync broken on macOS):
-ssh 3316152@slogin.hpc.unibocconi.it "python3 -c 'import json; ...'"
+bash hpc/push.sh              # rsync code to HPC
+bash hpc/submit.sh t1000p     # submit job (3 strategies, 3 GPUs)
 ```
 
-See `CLAUDE.md` for full environment setup, known HPC issues, and fixes.
+See `CLAUDE.md` for full environment setup, known issues, and fixes.
 
 ---
 
-## Main package
+## Previous Empirical Results (Archived)
 
-```bash
-pip install -e .
-```
-
-`src/mdm_playground/` contains the inference runner, model adapters (ReMDM, MDLM),
-strategy implementations (baseline, confidence remasking, loop remasking), and metrics.
-
----
-
-## Analysis scripts
-
-```bash
-python scripts/aggregate_results.py --results_dir results/full_eval  # print metrics table
-python scripts/plot_sweep.py                                           # regenerate step-curve figure
-python scripts/stage_owt_reference.py                                  # stage OWT reference on HPC
-```
+Step-sweep experiments (MDLM/ReMDM-conf/ReMDM-loop, T=128/256/512/1000) are archived
+from the earlier thesis phase. Results in `results/combined_comparison.md` and
+`figures/step_sweep.{pdf,png}`.

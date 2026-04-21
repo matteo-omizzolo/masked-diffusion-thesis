@@ -1,0 +1,297 @@
+%% references.bib — thesis bibliography
+%% Entries added as papers are incorporated into writing.
+%% Key naming convention: AuthorYEARkeyword (e.g., sahoo2024mdlm)
+
+%% ---- Core masked diffusion papers ----
+
+@inproceedings{sahoo2024mdlm,
+  title     = {Simple and Effective Masked Diffusion Language Models},
+  author    = {Sahoo, Subham Sekhar and Arriola, Marianne and Schiff, Yair and Gokaslan, Aaron and Marroquin, Edgar and Chiu, Justin T and Rush, Alexander and Kuleshov, Volodymyr},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2024},
+  note      = {arXiv:2406.07524}
+}
+
+@article{lou2024sedd,
+  title   = {Discrete Diffusion Modeling by Estimating the Ratios of the Data Distribution},
+  author  = {Lou, Aaron and Meng, Chenlin and Ermon, Stefano},
+  journal = {arXiv preprint arXiv:2310.16834},
+  year    = {2024}
+}
+
+%% ---- Informed correctors ----
+
+@article{zhao2024informedcorrectors,
+  title   = {Informed Correctors for Discrete Diffusion Models},
+  author  = {Zhao, Yilun and Brekelmans, Rob and Makhzani, Alireza and Grosse, Roger},
+  journal = {arXiv preprint arXiv:2407.21243},
+  year    = {2024},
+  note    = {ICLR 2025}
+}
+
+@article{kim2025prism,
+  title   = {{PRISM}: Provably Robust and Interpretable Self-Correction for Masked Diffusion},
+  author  = {Kim, Minyoung and others},
+  journal = {arXiv preprint arXiv:2510.01384},
+  year    = {2025}
+}
+
+%% ---- Remasking / schedule papers ----
+
+@article{gat2024remdm,
+  title   = {Remasking Discrete Diffusion Models with Inference-Time Scaling},
+  author  = {Gat, Itai and others},
+  journal = {arXiv preprint arXiv:2503.00307},
+  year    = {2025},
+  note    = {NeurIPS 2025}
+}
+
+@article{lavenant2025lz,
+  title   = {Error Bounds and Optimal Schedules for Masked Diffusions with Factorized Approximations},
+  author  = {Lavenant, Hugo and Zanella, Giacomo},
+  journal = {arXiv preprint arXiv:2510.25544},
+  year    = {2025}
+}
+
+%% ---- Discrete Flow Matching ----
+
+@inproceedings{gat2024dfm,
+  title     = {Discrete Flow Matching},
+  author    = {Gat, Itai and Lemos, Neta and Lahner, Zane and Ben-Hamu, Heli and Lipman, Yaron},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2024},
+  note      = {arXiv:2407.15595}
+}
+
+%% ---- MCMC theory ----
+
+@article{ascolani2024entropycontraction,
+  title   = {Entropy Contraction of the {Gibbs} Sampler under Log-Concavity},
+  author  = {Ascolani, Filippo and Lavenant, Hugo and Zanella, Giacomo},
+  journal = {arXiv preprint arXiv:2410.00858},
+  year    = {2024}
+}
+
+@article{secchi2025mwggap,
+  title   = {Spectral Gap of {Metropolis}-within-{Gibbs} under Log-Concavity},
+  author  = {Secchi, Cecilia and Zanella, Giacomo},
+  journal = {arXiv preprint arXiv:2509.26175},
+  year    = {2025}
+}
+
+@article{zanella2020informedproposals,
+  title   = {Informed Proposals for Local {MCMC} in Discrete Spaces},
+  author  = {Zanella, Giacomo},
+  journal = {Journal of the American Statistical Association},
+  volume  = {115},
+  number  = {530},
+  pages   = {852--865},
+  year    = {2020}
+}
+
+@article{diaconis1993comparison,
+  title   = {Comparison Theorems for Reversible {Markov} Chains},
+  author  = {Diaconis, Persi and Saloff-Coste, Laurent},
+  journal = {The Annals of Applied Probability},
+  volume  = {3},
+  number  = {3},
+  pages   = {696--730},
+  year    = {1993}
+}
+
+@article{roberts1997updating,
+  title   = {Updating Schemes, Covariance Structure, Optimal Blocking and Ergodicity for {Gibbs} Samplers},
+  author  = {Roberts, Gareth O. and Sahu, Sujit K.},
+  journal = {Journal of the Royal Statistical Society: Series B},
+  volume  = {59},
+  number  = {2},
+  pages   = {291--317},
+  year    = {1997}
+}
+
+%% ---- Continuous diffusion foundations ----
+
+@inproceedings{ho2020ddpm,
+  title     = {Denoising Diffusion Probabilistic Models},
+  author    = {Ho, Jonathan and Jain, Ajay and Abbeel, Pieter},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2020}
+}
+
+@article{song2021score,
+  title   = {Score-Based Generative Modeling through Stochastic Differential Equations},
+  author  = {Song, Yang and Sohl-Dickstein, Jascha and Kingma, Diederik P and Kumar, Abhishek and Ermon, Stefano and Poole, Ben},
+  journal = {arXiv preprint arXiv:2011.13456},
+  year    = {2021},
+  note    = {ICLR 2021}
+}
+
+@article{song2019ncsn,
+  title   = {Generative Modeling by Estimating Gradients of the Data Distribution},
+  author  = {Song, Yang and Ermon, Stefano},
+  journal = {Advances in Neural Information Processing Systems},
+  year    = {2019},
+  note    = {arXiv:1907.05600}
+}
+
+@article{vincent2011connection,
+  title   = {A Connection Between Score Matching and Denoising Autoencoders},
+  author  = {Vincent, Pascal},
+  journal = {Neural Computation},
+  volume  = {23},
+  number  = {7},
+  pages   = {1661--1674},
+  year    = {2011}
+}
+
+@article{anderson1982reverse,
+  title   = {Reverse-Time Diffusion Equation Models},
+  author  = {Anderson, Brian D. O.},
+  journal = {Stochastic Processes and their Applications},
+  volume  = {12},
+  number  = {3},
+  pages   = {313--326},
+  year    = {1982}
+}
+
+@article{hyvarinen2005estimation,
+  title   = {Estimation of Non-Normalised Statistical Models by Score Matching},
+  author  = {Hyv\"arinen, Aapo},
+  journal = {Journal of Machine Learning Research},
+  volume  = {6},
+  pages   = {695--709},
+  year    = {2005}
+}
+
+@inproceedings{song2020ddim,
+  title     = {Denoising Diffusion Implicit Models},
+  author    = {Song, Jiaming and Meng, Chenlin and Ermon, Stefano},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2021},
+  note      = {arXiv:2010.02502}
+}
+
+@inproceedings{ho2022cfg,
+  title     = {Classifier-Free Diffusion Guidance},
+  author    = {Ho, Jonathan and Salimans, Tim},
+  booktitle = {Workshop on Deep Generative Models and Downstream Applications (NeurIPS)},
+  year      = {2022},
+  note      = {arXiv:2207.12598}
+}
+
+@inproceedings{dhariwal2021diffusionbeats,
+  title     = {Diffusion Models Beat {GAN}s on Image Synthesis},
+  author    = {Dhariwal, Prafulla and Nichol, Alexander},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2021},
+  note      = {arXiv:2105.05233}
+}
+
+%% ---- Token selection policy papers (Gap D context) ----
+
+@inproceedings{kim2025tokenordering,
+  title     = {Train for the Worst, Plan for the Best: Understanding Token Ordering in Masked Diffusions},
+  author    = {Kim, Sungjun and Shah, Vatsal and Kontonis, Vasilis and Kakade, Sham and Chen, Xinyi},
+  booktitle = {International Conference on Machine Learning},
+  year      = {2025},
+  note      = {arXiv:2502.06768}
+}
+
+@inproceedings{kim2025klass,
+  title     = {{KLASS}: {KL}-Guided Fast Inference in Masked Diffusion Models},
+  author    = {Kim, Seongmin and Hong, Jaehyeong and Jung, Wooyoung and Park, Jinwoo and Yun, Sungbin},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2025},
+  note      = {arXiv:2511.05664. NeurIPS 2025 Spotlight. Code: github.com/shkim0116/KLASS}
+}
+
+@article{hong2025upo,
+  title   = {Improving Discrete Diffusion Unmasking Policies Beyond Explicit Reference Policies},
+  author  = {Hong, Chunsan and An, Changyeon and Kim, Seongmin and Ye, Jong Chul},
+  journal = {arXiv preprint arXiv:2510.05725},
+  year    = {2025},
+  note    = {Code: github.com/chunsanHong/UPO}
+}
+
+@article{he2025mdpo,
+  title   = {{MDPO}: Overcoming the Training-Inference Divide of Masked Diffusion Language Models},
+  author  = {He, Zeming and Renz, Joschka and Cao, Feilong and Geiger, Atticus},
+  journal = {arXiv preprint arXiv:2508.13148},
+  year    = {2025},
+  note    = {Code: github.com/autonomousvision/mdpo}
+}
+
+@article{schiff2026proseco,
+  title   = {Learn from Your Mistakes: Self-Correcting Masked Diffusion Models},
+  author  = {Schiff, Yair and Belhasin, Or and Uziel, Guy and Wang, Kevin and Arriola, Marianne and Turok, Natan and Elad, Michael and Kuleshov, Volodymyr},
+  journal = {arXiv preprint arXiv:2602.11590},
+  year    = {2026}
+}
+
+%% ---- Corrector scheduling / entropy papers (Gap B/C context) ----
+
+@article{koh2024eags,
+  title   = {{PLM}-Based Discrete Diffusion Language Models with Entropy-Adaptive {Gibbs} Sampling},
+  author  = {Koh, Hankook and others},
+  journal = {arXiv preprint arXiv:2411.06438},
+  year    = {2024}
+}
+
+@article{chen2025denoisingentropy,
+  title   = {Optimizing Decoding Paths in Masked Diffusion Models by Quantifying Uncertainty},
+  author  = {Chen, Xiaoming and others},
+  journal = {arXiv preprint arXiv:2512.21336},
+  year    = {2025},
+  note    = {Code: github.com/LINs-lab/DenoisingEntropy}
+}
+
+@inproceedings{benhamu2025ebsampler,
+  title     = {Accelerated Sampling from Masked Diffusion Models via Entropy Bounded Unmasking},
+  author    = {Ben-Hamu, Heli and others},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2025},
+  note      = {arXiv:2505.24857}
+}
+
+%% ---- Factorization / corrector theory (Gap E context) ----
+
+@article{li2026codd,
+  title   = {Breaking the Factorization Barrier in Diffusion Language Models},
+  author  = {Li, Weijian and Shao, Zhiling and Wang, Zhiqi and Yu, Wenhao and Van den Broeck, Guy and Liu, Jiaxuan},
+  journal = {arXiv preprint arXiv:2603.00045},
+  year    = {2026}
+}
+
+@inproceedings{deschenaux2026psisamplers,
+  title     = {The Diffusion Duality, Chapter {II}: {$\Psi$}-Samplers and Efficient Curriculum},
+  author    = {Deschenaux, Jérémy and Gulcehre, Caglar and Sahoo, Subham Sekhar},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2026},
+  note      = {arXiv:2602.21185. Code: github.com/s-sahoo/duo}
+}
+
+%% ---- SMC / particle corrector papers ----
+
+@article{hasan2026fkc,
+  title   = {Discrete {Feynman-Kac} Correctors},
+  author  = {Hasan, Ali and Ohanesian, Lucie and Gazizov, Maxim and Bengio, Yoshua and Aspuru-Guzik, Alan and Bondesan, Roberto and Skreta, Marta and Neklyudov, Kirill},
+  journal = {arXiv preprint arXiv:2601.10403},
+  year    = {2026},
+  note    = {Code: github.com/hasanmohsin/discrete\_fkc}
+}
+
+@article{dang2025particlegibbs,
+  title   = {Inference-Time Scaling of Diffusion Language Models with Particle {Gibbs} Sampling},
+  author  = {Dang, Kaiwen and Han, Xingchao and Xu, Haotian and Xu, Jingwei and Srivastava, Nikunj and Ermon, Stefano},
+  journal = {arXiv preprint arXiv:2507.08390},
+  year    = {2025}
+}
+
+%% ---- Evaluation ----
+
+@inproceedings{pillutla2021mauve,
+  title     = {{MAUVE}: Measuring the Gap Between Neural Text and Human Text using Divergence Frontiers},
+  author    = {Pillutla, Krishna and Swayamdipta, Swabha and Zellers, Rowan and Thickstun, John and Welleck, Sean and Choi, Yejin and Harchaoui, Zaid},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2021}
+}
