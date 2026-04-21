@@ -15,7 +15,11 @@ venv/
 
 # Output artifacts (do not commit)
 logs/
-results/
+# In results/, ignore large raw outputs but track summaries
+results/**/generated_sequences.json
+results/**/samples_*.json
+results/**/*.pt
+results/**/*.ckpt
 
 # Data & checkpoints (keep dir structure, not the files)
 data/
@@ -35,3 +39,7 @@ wandb/
 
 # Claude Code
 .claude/
+
+# External repositories (too large to commit; clone locally)
+# ProSeCo: git clone https://github.com/kuleshov-group/proseco external/proseco
+external/proseco/

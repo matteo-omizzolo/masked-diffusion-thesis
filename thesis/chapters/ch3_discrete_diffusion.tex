@@ -1,0 +1,57 @@
+\chapter{Discrete Diffusion Models}
+\label{ch:discrete-diffusion}
+
+%% Status: WRITE AFTER ch2 draft. Material covered by MDLM + ReMDM reading.
+%%
+%% Audience: reader who has read ch2; first contact with discrete state spaces.
+%% Format: ~1200 words + equations.
+
+%% ---------------------------------------------------------------
+\section{Continuous-Time Markov Chains on Token Spaces}
+\label{sec:ctmc}
+
+%% Cover:
+%%   - CTMC formulation: state space \calV^L, rate matrix Q
+%%   - Absorbing (masked) vs. uniform rate matrices
+%%   - Kolmogorov forward equation: \partial_t p(x,t) = p Q
+%%   - Stationary distribution and convergence
+
+%% ---------------------------------------------------------------
+\section{Absorbing Diffusion: Masking as a Forward Process}
+\label{sec:absorbing-diffusion}
+
+%% Cover:
+%%   - Absorbing state \Mask; each position independently absorbed at rate 1
+%%   - Forward process: q(z_t | x) = product over positions of Bernoulli masking
+%%   - Closed-form marginal q_t and posterior q(x | z_t) = p_theta(x | z_t) under assumption
+%%   - Connection to BERT-style masking (not the same, but related)
+
+%% ---------------------------------------------------------------
+\section{Score Entropy and Ratio Estimation}
+\label{sec:score-entropy}
+
+%% Cover:
+%%   - SEDD (Lou et al. 2024, \cite{lou2024sedd}): score entropy objective
+%%   - Ratio \frac{p(x)}{p(z_t)} and why it appears in the reverse process
+%%   - How SEDD relates to continuous score matching: the discrete analogue
+%%   - Brief: why MDLM takes a different (simpler) approach
+
+%% ---------------------------------------------------------------
+\section{The Factorisation Approximation}
+\label{sec:factorisation-approx}
+
+%% Cover:
+%%   - The exact reverse conditional p(z_{t-1} | z_t) requires summing over all x
+%%   - The factorised approximation: \pfact(z_{t-1} | z_t) = \prod_i p_\theta(z_{t-1}^i | z_t)
+%%   - This approximation is the central source of error in MDM sampling
+%%   - Definition of factorisation error \Efact (will be formalised in ch4)
+
+%% ---------------------------------------------------------------
+\section{Summary}
+\label{sec:discrete-summary}
+
+%% Key message:
+%%   - Discrete diffusion inherits the predictor-corrector structure from continuous models
+%%   - The factorisation approximation is unavoidable at scale
+%%   - Reducing factorisation error is the central inference-time challenge
+%%   - Masked diffusion (MDLM) is the focus: absorbing rate matrix, simple training objective

@@ -1,0 +1,13 @@
+{
+  "dry_run": false,
+  "meta": {
+    "steps": 128,
+    "strategy": "mdlm",
+    "upstream_checkpoint_path": "/home/3316152/mdm/checkpoints/mdlm.ckpt",
+    "upstream_returncode": 0
+  },
+  "method": "remdm",
+  "steps": 128,
+  "strategy": "mdlm",
+  "toy": false
+}

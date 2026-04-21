@@ -1,0 +1,83 @@
+%% preamble.tex — packages for MSc thesis
+%% Adapted from Bocconi MasterThesis template (study/guidlines/MasterThesis/preamble.tex)
+
+%% ---- Quotation marks (required by biblatex with babel) ----
+\usepackage{csquotes}
+
+%% ---- Typography and layout ----
+\usepackage{setspace}
+\linespread{1.5}                         % from Bocconi template (1.8 is very wide; 1.5 more standard)
+\usepackage{microtype}                   % better kerning and hyphenation
+\usepackage{parskip}                     % space between paragraphs instead of indent
+
+%% ---- Tables ----
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage[flushleft]{threeparttable}
+
+%% ---- Figures ----
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subcaption}
+
+%% ---- Colors and highlighting ----
+\usepackage{xcolor}
+\usepackage{soul}
+
+%% ---- Algorithms ----
+\usepackage[ruled, vlined, linesnumbered]{algorithm2e}
+
+%% ---- TikZ / diagrams ----
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usetikzlibrary{shapes, arrows, positioning, decorations.pathreplacing}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.15}
+
+%% ---- Section heading spacing (from Bocconi template) ----
+\usepackage{titlesec}
+\titlespacing\chapter{0pt}{12pt plus 4pt minus 2pt}{6pt plus 2pt minus 2pt}
+\titlespacing\section{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\subsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\subsubsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+
+%% ---- Lists ----
+\usepackage{enumitem}
+
+%% ---- Bibliography — biblatex authordate, from Bocconi template ----
+\usepackage[
+  backend=biber,
+  authordate,
+  dashed=false,
+  doi=false,
+  url=false,
+  maxbibnames=9,
+  isbn=false
+]{biblatex-chicago}
+\addbibresource{references.bib}
+\DeclareNameAlias{author}{last-first}
+
+%% ---- Hyperlinks (load last, after biblatex) ----
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+%% ---- Theorem environments ----
+\usepackage{amsthm}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{assumption}[theorem]{Assumption}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+%% ---- TOC depth ----
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{3}

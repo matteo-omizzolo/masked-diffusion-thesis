@@ -1,0 +1,23 @@
+{
+  "backend": "proseco_owt",
+  "T": 64,
+  "K_total": 30,
+  "K_shard": 8,
+  "shard_idx": 0,
+  "shard_count": 4,
+  "B_values": [
+    2,
+    3,
+    4,
+    8
+  ],
+  "cd_max_attempts": 64,
+  "cd_window": 16,
+  "bs_beam_width": 8,
+  "seed_start": 42,
+  "checkpoint": "/home/3316152/mdm/checkpoints/proseco_owt",
+  "corrector_steps": 1,
+  "protocol_a_dir": "/home/3316152/mdm/masked-diffusion-thesis/results/phase1_proseco_owt_full/protocol_a",
+  "timestamp": "2026-04-20T03:13:32",
+  "shard_out_suffix": "shard0-of-4"
+}

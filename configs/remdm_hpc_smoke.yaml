@@ -1,3 +1,7 @@
+# DOCUMENTATION ONLY — not loaded by the CLI.
+# This file documents the smoke test parameters used in hpc/remdm_smoke.sbatch.
+# See hpc/remdm_smoke.sbatch for the actual invocation.
+
 project_name: remdm-hpc-smoke
 seed: 42
 

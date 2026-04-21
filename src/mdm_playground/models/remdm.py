@@ -188,7 +188,7 @@ class ReMDMAdapter(ModelAdapter):
                 f"ReMDM submodule not found at {self._REMDM_ROOT}. "
                 "Run `git submodule update --init --recursive`."
             )
-        external_dir = self.run_output_dir / "external_remdm"
+        external_dir = (self.run_output_dir / "external_remdm").resolve()
         external_dir.mkdir(parents=True, exist_ok=True)
 
         overrides = self._build_hydra_overrides(external_dir)

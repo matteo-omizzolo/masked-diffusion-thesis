@@ -1,200 +1,82 @@
-# Masked Diffusion Thesis
+# Signal-Adaptive Corrector Scheduling for Masked Diffusion Language Models
 
-Research code for MSc thesis on masked diffusion models (RemeDi, ReMDM, PRISM)
-with a unified inference playground and reproducible HPC experiments.
+MSc thesis by Matteo Omizzolo, supervised by Prof. Giacomo Zanella (Bocconi University).
 
 ---
 
-## Quick start
+## Research Question
+
+> For a fixed predictor schedule and fixed corrector NFE budget in masked diffusion
+> language models, can aggregate trajectory signals — entropy, confidence margin, or
+> quality mass — predict the marginal value of a corrective refinement loop well enough
+> to outperform uniform corrector placement?
+
+See `docs/thesis_direction.md` for the full research direction, scope, and non-goals.
+
+---
+
+## Repository Structure
+
+```
+thesis/                  # LaTeX thesis chapters (ch2 first draft done)
+research/                # Mathematical worklog, candidate theorems, proof ledger
+docs/                    # Core documentation
+  thesis_direction.md    #   Precise research question, scope, non-goals
+  literature_map.md      #   Categorized paper map with gap analysis
+  reading_plan.md        #   Prioritized reading list with status tags
+  experimental_infrastructure.md  # Repos, checkpoints, setup status
+  implementation_plan.md #   Phased experiment roadmap
+  legacy_cleanup_log.md  #   Archive/deletion log
+  md/                    #   Older study documents (some deprecated)
+  instructions/          #   Claude Code prompts and thesis brief
+src/mdm_playground/      # Main Python package (pip install -e .)
+external/                # Upstream repos (remdm, mdlm, PRISM, sedd, remedi)
+study/                   # Papers organized by topic, notes, guidelines
+scripts/                 # Analysis and plotting scripts
+configs/                 # YAML experiment configs
+hpc/                     # Bocconi HPC workflow scripts
+notebooks/               # Jupyter notebooks (spectral gap, discretization error)
+archive/                 # Deprecated material (old directions, notes)
+figures/                 # Generated plots
+```
+
+---
+
+## Current Status (April 2026)
+
+The thesis direction has been refocused from a broad "informed correctors" framing to a
+precise question about **trajectory-level fixed-budget corrector allocation**. The key
+distinction from adjacent work: this thesis targets corrector *scheduling* (when to spend
+corrective effort), not token-selection policies (which tokens to correct), predictor
+schedules (when to unmask), or corrector kernel design (how to correct).
+
+**Writing:** ch2 (Background: Continuous Diffusion) first draft complete.
+**Theory:** Proof worklog started; see `research/`.
+**Experiments:** MDLM-OWT checkpoint available; ReMDM codebase patched for HPC; ProSeCo
+setup in progress.
+
+---
+
+## Key Papers Read
+
+MDLM, ReMDM, Zhao et al. (Informed Correctors), PRISM, L&Z Error Bounds.
+See `docs/reading_plan.md` for the full prioritized list.
+
+---
+
+## HPC Workflow (Bocconi Cluster)
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -e .
-git submodule update --init --recursive      # external/remedi, remdm, PRISM
-
-# Smoke check (no GPU, no download)
-pytest tests/ -q                             # 36 tests
-bash scripts/smoke_all.sh                    # toy + dry-run for all methods
+bash hpc/push.sh              # rsync code to HPC
+bash hpc/submit.sh t1000p     # submit job (3 strategies, 3 GPUs)
 ```
+
+See `CLAUDE.md` for full environment setup, known issues, and fixes.
 
 ---
 
-## Unified CLI
+## Previous Empirical Results (Archived)
 
-All three backends are driven through one entry point:
-
-```bash
-python -m mdm_playground.cli.run --help
-```
-
-### RemeDi (direct HF, CPU or GPU)
-
-Requires `maple-research-lab/RemeDi-RL` (downloaded automatically, ~2 GB):
-
-```bash
-python -m mdm_playground.cli.run \
-    --method remedi \
-    --model_id maple-research-lab/RemeDi-RL \
-    --prompt "Explain masked diffusion in one sentence." \
-    --strategy remedi_policy \
-    --steps 32 --max_len 256 --device cpu \
-    --out_dir results/remedi_policy
-```
-
-### ReMDM (subprocess via Hydra)
-
-```bash
-# Toy mode (local, no checkpoint)
-python -m mdm_playground.cli.run --method remdm --toy_mode --steps 16
-
-# Dry-run (generate command, do not execute)
-python -m mdm_playground.cli.run --method remdm --dry_run --steps 256
-
-# Real run (HPC/CUDA only — needs checkpoint)
-python -m mdm_playground.cli.run \
-    --method remdm \
-    --model_id /path/to/remdm.ckpt \
-    --steps 256 --out_dir results/remdm
-```
-
-### PRISM (subprocess via Hydra)
-
-```bash
-python -m mdm_playground.cli.run --method prism --toy_mode
-python -m mdm_playground.cli.run --method prism --dry_run --steps 256
-```
-
-### Strategies
-
-| `--strategy` | Description |
-|---|---|
-| `baseline` | No remasking — commit once and keep |
-| `remedi_policy` | RemeDi paper default: re-rank all positions each step |
-| `threshold` | Remask committed tokens with confidence < `--tau` |
-| `topk` | Remask `--k` lowest-confidence committed tokens |
-| `schedule` | Decaying remask probability (`--schedule linear\|cosine`) |
-
----
-
-## Output format
-
-Each run writes to `--out_dir/`:
-
-| File | Contents |
-|---|---|
-| `run_meta.json` | git commit, method, strategy, timestamp |
-| `summary.json` | method-specific result summary |
-| `<run_id>/trajectory.jsonl` | one JSON object per diffusion step |
-
-Per-step JSONL fields: `step`, `tokens`, `mask_positions`, `confidence` (UPS in [0,1]),
-`unmask_indices`, `remask_indices`.
-
----
-
-## Python API
-
-```python
-from mdm_playground.models.remedi import RemeDiAdapter
-from mdm_playground.strategies import RemediPolicyStrategy, ConfidenceThresholdRemaskStrategy
-from mdm_playground.samplers import run_block_diffusion
-from mdm_playground.core.logging import TrajectoryLogger
-
-adapter = RemeDiAdapter.load("maple-research-lab/RemeDi-RL", device="cpu")
-
-result = run_block_diffusion(
-    adapter=adapter,
-    messages=[{"role": "user", "content": "What is 2+2?"}],
-    strategy=ConfidenceThresholdRemaskStrategy(tau=0.4),
-    steps=8,
-    max_length=64,
-    seed=42,
-)
-print(result["generated_text"])
-```
-
----
-
-## Project structure
-
-```
-src/mdm_playground/           # Main package (pip install -e .)
-├── core/                     # Shared utilities
-│   ├── config.py             # load_yaml()
-│   ├── utils.py              # seed_everything, save_json, git hash
-│   ├── logging.py            # setup_logger, TrajectoryLogger (JSONL + npy)
-│   ├── masks.py              # make_mask, gather_topk_masked
-│   ├── schedules.py          # transfer_schedule, noise schedules
-│   └── metrics.py            # mask_frac_curve, confidence curves
-├── models/                   # Model adapters
-│   ├── base.py               # ModelAdapter (ABC), ModelMeta, ForwardOutput
-│   ├── remedi.py             # RemeDiAdapter (direct HF forward)
-│   ├── remdm.py              # ReMDMAdapter (subprocess, Hydra)
-│   └── prism.py              # PRISMAdapter (subprocess, Hydra)
-├── strategies/               # Pluggable inference strategies
-│   ├── base.py               # StepState, BaseStrategy
-│   ├── unmask.py             # BaselineUnmaskStrategy
-│   ├── remask.py             # Threshold, TopK, Scheduled
-│   └── hybrid.py             # RemediPolicyStrategy
-├── samplers/
-│   └── block_diffusion.py    # run_block_diffusion() (direct-forward models)
-└── cli/
-    └── run.py                # python -m mdm_playground.cli.run
-
-external/                     # Git submodules (not modified)
-├── remedi/                   # maple-research-lab/RemeDi
-├── remdm/                    # upstream ReMDM
-└── PRISM/                    # upstream PRISM
-
-scripts/
-├── smoke_all.sh              # End-to-end smoke for all methods
-└── smoke_infer_remedi.py     # Real RemeDi inference script
-
-tests/
-├── test_infer.py             # 22 unit tests (no checkpoint required)
-└── test_smoke.py             # 14 smoke tests (toy/dry-run)
-
-hpc/                          # Bocconi HPC workflow
-configs/                      # YAML experiment configs
-```
-
----
-
-## Tests
-
-```bash
-pytest tests/ -q                    # 36 fast tests (no checkpoint)
-pytest -m integration               # Real-model tests (needs HF download)
-```
-
----
-
-## HPC (Bocconi)
-
-```bash
-bash hpc/push.sh        # rsync code to cluster
-bash hpc/submit.sh      # sbatch job
-bash hpc/pull.sh        # fetch results
-```
-
-See [hpc/README.md](hpc/README.md) for the full workflow.
-
----
-
-## Deprecated / removed
-
-See [DEPRECATIONS.md](DEPRECATIONS.md) for a full list of removed scripts and
-their replacement commands.
-
----
-
-## Environment
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .                     # installs mdm_playground
-git submodule update --init --recursive
-```
-
-
-
+Step-sweep experiments (MDLM/ReMDM-conf/ReMDM-loop, T=128/256/512/1000) are archived
+from the earlier thesis phase. Results in `results/combined_comparison.md` and
+`figures/step_sweep.{pdf,png}`.

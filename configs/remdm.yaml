@@ -1,3 +1,7 @@
+# DOCUMENTATION ONLY — not loaded by the CLI.
+# This file documents the full parameter space for ReMDM experiments.
+# See hpc/remdm_smoke.sbatch and hpc/remdm_full_eval.sbatch for actual invocations.
+#
 # ReMDM run config
 # 
 # Usage modes (edit toy_mode and dry_run flags):

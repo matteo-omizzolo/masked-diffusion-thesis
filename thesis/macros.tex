@@ -1,0 +1,89 @@
+%% macros.tex — math notation for the thesis
+%% Masked diffusion + informed correctors
+
+%% ---- Math packages ----
+\usepackage{amsmath, amssymb, amsthm, mathtools}
+\usepackage{bm}       % bold math
+\usepackage{bbm}      % blackboard bold indicators
+
+%% ---- Standard probability and information theory ----
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\KL}[2]{\mathrm{KL}\!\left(#1 \,\|\, #2\right)}
+\newcommand{\TV}[2]{\mathrm{TV}\!\left(#1,\, #2\right)}
+\newcommand{\Ent}[1]{\mathrm{H}\!\left[#1\right]}         % Shannon entropy
+\newcommand{\MI}[2]{\mathrm{I}\!\left(#1;\, #2\right)}    % mutual information
+
+%% ---- Token spaces ----
+\newcommand{\calV}{\mathcal{V}}             % vocabulary
+\newcommand{\Mask}{[\textsc{m}]}            % mask token
+\newcommand{\calVm}{\calV \cup \{\Mask\}}   % extended vocabulary with mask
+
+%% ---- Sequences ----
+\newcommand{\seqlen}{L}           % sequence length
+\newcommand{\vocab}{|\calV|}      % vocabulary size
+\newcommand{\clean}{x}            % clean sequence
+\newcommand{\noisy}{z}            % noisy (masked) sequence
+\newcommand{\zt}{z_t}             % noisy sequence at time t
+
+%% ---- Noise schedule ----
+\newcommand{\alphamask}{\alpha}   % masking ratio (fraction unmasked); \alpha itself is a LaTeX primitive
+\newcommand{\alphabar}{\bar{\alpha}}
+
+%% ---- Forward / reverse process distributions ----
+\newcommand{\qfwd}{q}             % forward process
+\newcommand{\ptrue}{\pi}          % true data distribution
+\newcommand{\palg}{p_{\mathrm{alg}}}   % algorithm distribution
+\newcommand{\pfact}{p_{\mathrm{fact}}} % factorised approximation
+\newcommand{\ptheta}{p_\theta}    % neural denoiser
+
+%% ---- L&Z error decomposition ----
+\newcommand{\Efact}{E_{\mathrm{fact}}}
+\newcommand{\Elearn}{E_{\mathrm{learn}}}
+
+%% ---- Corrector notation ----
+\newcommand{\budget}{k}           % remasking budget (number of positions)
+\newcommand{\ndim}{d}             % number of positions / dimensions
+\newcommand{\selset}{S}           % selected set of positions to correct
+\newcommand{\score}{c}            % confidence/quality score per position
+
+%% ---- Gibbs / MCMC ----
+\newcommand{\Gap}{\mathrm{Gap}}   % spectral gap
+\newcommand{\Pgibbs}{P^{\mathrm{GS}}}
+\newcommand{\Pmwg}{P^{\mathrm{MwG}}}
+
+%% ---- Common operators ----
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\sign}{sgn}
+\DeclareMathOperator{\softmax}{softmax}
+
+%% ---- Abs and norm (auto-sized) ----
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+\makeatletter
+\let\oldabs\abs
+\def\abs{\@ifstar{\oldabs}{\oldabs*}}
+\let\oldnorm\norm
+\def\norm{\@ifstar{\oldnorm}{\oldnorm*}}
+\makeatother
+
+%% ---- Differentials ----
+\newcommand{\dif}{\mathop{}\!\mathrm{d}}
+\newcommand{\od}[2]{\frac{\dif #1}{\dif #2}}
+
+%% ---- Ch2 only: continuous diffusion notation ----
+%% (These symbols are reserved for ch2; ch3+ use the masked-diffusion macros above.)
+\newcommand{\pdata}{p_{\mathrm{data}}}   % data distribution
+\newcommand{\pt}{p_t}                    % marginal at time t
+\newcommand{\stheta}{s_\theta}           % score network
+\newcommand{\etheta}{\varepsilon_\theta} % noise-prediction network (DDPM parameterisation)
+\newcommand{\xhat}{\hat{x}}              % denoised estimate \hat{x}_0
+\newcommand{\betanoise}{\beta}           % DDPM per-step noise variance (not masking schedule)
+\newcommand{\abardpm}{\bar{\alpha}}      % DDPM cumulative signal retention \prod(1-\beta_s)
+                                         %   NOTE: reserved for ch2; ch3+ use \alphabar for masking
+\newcommand{\sigmadiff}{\sigma}          % SDE noise level
+\newcommand{\Wt}{W_t}                    % Brownian motion

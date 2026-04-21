@@ -1,3 +1,5 @@
+# NOT YET WIRED — external/PRISM submodule not yet rsync'd or tested.
+# Structure mirrors ReMDMAdapter. Wire up once PRISM checkpoint is available on HPC.
 """PRISM model adapter (subprocess-based).
 
 Calls ``external/PRISM/main.py`` via ``python -u -m main`` with Hydra

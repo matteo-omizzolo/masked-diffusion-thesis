@@ -1,0 +1,23 @@
+[
+  {
+    "strategy": "mdlm",
+    "path": "results/full_eval/mdlm/external_remdm/generated_sequences.json",
+    "gen_ppl": 60.91423797607422,
+    "entropy": 5.5073400449752805,
+    "MAUVE": 0.16996223139159788
+  },
+  {
+    "strategy": "remdm-conf",
+    "path": "results/full_eval/remdm-conf/external_remdm/generated_sequences.json",
+    "gen_ppl": 57.579322814941406,
+    "entropy": 5.498535270690918,
+    "MAUVE": 0.4400220118787404
+  },
+  {
+    "strategy": "remdm-loop",
+    "path": "results/full_eval/remdm-loop/external_remdm/generated_sequences.json",
+    "gen_ppl": 59.6315803527832,
+    "entropy": 5.537603979110718,
+    "MAUVE": 0.39567115553051574
+  }
+]

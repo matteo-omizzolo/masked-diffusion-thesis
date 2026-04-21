@@ -1,0 +1,63 @@
+[
+  {
+    "seed": 54,
+    "B": 2,
+    "method": "beam_search_AG",
+    "beam_width": 8,
+    "G_final": 0.344449520111084,
+    "schedule_final": [
+      38,
+      40
+    ],
+    "n_g_calls": 16,
+    "wall_time": 202.86958837509155
+  },
+  {
+    "seed": 54,
+    "B": 3,
+    "method": "beam_search_AG",
+    "beam_width": 8,
+    "G_final": 0.3799629211425781,
+    "schedule_final": [
+      35,
+      37,
+      39
+    ],
+    "n_g_calls": 24,
+    "wall_time": 305.55135703086853
+  },
+  {
+    "seed": 54,
+    "B": 4,
+    "method": "beam_search_AG",
+    "beam_width": 8,
+    "G_final": 0.37389421463012695,
+    "schedule_final": [
+      35,
+      37,
+      38,
+      40
+    ],
+    "n_g_calls": 32,
+    "wall_time": 410.83553409576416
+  },
+  {
+    "seed": 54,
+    "B": 8,
+    "method": "beam_search_AG",
+    "beam_width": 8,
+    "G_final": 0.5232944488525391,
+    "schedule_final": [
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41
+    ],
+    "n_g_calls": 64,
+    "wall_time": 833.0647177696228
+  }
+]

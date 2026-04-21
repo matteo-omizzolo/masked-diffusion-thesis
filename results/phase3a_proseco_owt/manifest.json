@@ -1,0 +1,16 @@
+{
+  "git_hash": "unknown",
+  "git_dirty": false,
+  "python_version": "3.11.14",
+  "torch_version": "2.10.0+cu128",
+  "cuda_version": "12.8",
+  "checkpoint_sha256_truncated": "5437d1daa14240475db8bdbd",
+  "invocation_command": "scripts/run_phase3a_combinatorial.py --checkpoint /home/3316152/mdm/checkpoints/proseco_owt --protocol_a_dir /home/3316152/mdm/masked-diffusion-thesis/results/phase1_proseco_owt_full/protocol_a --out_dir /home/3316152/mdm/masked-diffusion-thesis/results/phase3a_proseco_owt --T 64 --K 30 --B_values 2,3,4,8 --seed_start 42 --corrector_steps 1 --cd_max_attempts 64 --cd_window 16 --bs_beam_width 8 --shard_count 4 --resume --shard_idx 0",
+  "hpc_job_id": "479941",
+  "hostname": "gnode02",
+  "walltime_seconds": 28680.850337028503,
+  "shard_suffix": "shard0-of-4",
+  "n_seeds_evaluated": 8,
+  "n_cd_rows": 32,
+  "n_bs_rows": 32
+}

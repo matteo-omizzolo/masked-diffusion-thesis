@@ -1,0 +1,100 @@
+[
+  {
+    "seed": 43,
+    "B": 2,
+    "method": "coordinate_descent_G",
+    "G_init": 0.15454578399658203,
+    "G_final": 0.5284719467163086,
+    "schedule_init": [
+      0,
+      32
+    ],
+    "schedule_final": [
+      28,
+      31
+    ],
+    "n_attempts": 26,
+    "n_accepted": 2,
+    "stop_reason": "window",
+    "n_g_calls": 27,
+    "wall_time": 278.53814697265625
+  },
+  {
+    "seed": 43,
+    "B": 3,
+    "method": "coordinate_descent_G",
+    "G_init": 0.23418521881103516,
+    "G_final": 0.6258735656738281,
+    "schedule_init": [
+      0,
+      21,
+      42
+    ],
+    "schedule_final": [
+      29,
+      30,
+      40
+    ],
+    "n_attempts": 51,
+    "n_accepted": 7,
+    "stop_reason": "window",
+    "n_g_calls": 52,
+    "wall_time": 530.0414533615112
+  },
+  {
+    "seed": 43,
+    "B": 4,
+    "method": "coordinate_descent_G",
+    "G_init": 0.22955894470214844,
+    "G_final": 0.6441798210144043,
+    "schedule_init": [
+      0,
+      16,
+      32,
+      48
+    ],
+    "schedule_final": [
+      0,
+      19,
+      28,
+      48
+    ],
+    "n_attempts": 20,
+    "n_accepted": 3,
+    "stop_reason": "window",
+    "n_g_calls": 21,
+    "wall_time": 215.46575284004211
+  },
+  {
+    "seed": 43,
+    "B": 8,
+    "method": "coordinate_descent_G",
+    "G_init": 0.3605074882507324,
+    "G_final": 0.9462947845458984,
+    "schedule_init": [
+      0,
+      8,
+      16,
+      24,
+      32,
+      40,
+      48,
+      56
+    ],
+    "schedule_final": [
+      16,
+      20,
+      29,
+      33,
+      38,
+      41,
+      48,
+      56
+    ],
+    "n_attempts": 38,
+    "n_accepted": 8,
+    "stop_reason": "window",
+    "n_g_calls": 39,
+    "wall_time": 411.92290687561035
+  }
+]

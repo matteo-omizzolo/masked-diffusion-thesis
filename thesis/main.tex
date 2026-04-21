@@ -1,0 +1,80 @@
+%% MSc Thesis — Informed Correctors for Masked Diffusion Models
+%% Matteo Omizzolo, Bocconi University
+%% Supervisor: Prof. Giacomo Zanella
+%%
+%% Structure: report class (chapters), adapted from Bocconi MasterThesis template.
+%% The official template (study/guidlines/MasterThesis/) uses article class for
+%% the literature review section; report is used here for a full multi-chapter thesis.
+%% All preamble settings (font, geometry, biblatex) are identical to the template.
+%%
+%% Compile with: latexmk -pdf main.tex  (or: tectonic main.tex)
+
+\documentclass[12pt, a4paper]{report}
+
+%% Language
+\usepackage[english]{babel}
+
+%% Page geometry — from Bocconi template
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Font — Helvetica, from Bocconi template
+\usepackage[T1]{fontenc}
+\usepackage[scaled]{helvet}
+\renewcommand*{\familydefault}{\sfdefault}
+
+%% Math macros and custom commands for the thesis
+\input{macros}
+
+%% All other packages (biblatex, hyperref, theorem envs, etc.)
+\input{preamble}
+
+%% ---------------------------------------------------------------
+\begin{document}
+
+%% Title page
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+  {\Large\bfseries Informed Correctors for Masked Diffusion Language Models\par}
+  \vspace{1.5cm}
+  {\large Matteo Omizzolo\par}
+  \vspace{0.5cm}
+  {\normalsize MSc Thesis\par
+   Bocconi University\par
+   Supervisor: Prof.\ Giacomo Zanella\par}
+  \vspace{1cm}
+  {\normalsize September 2026\par}
+  \vfill
+\end{titlepage}
+
+%% Abstract
+\input{chapters/abstract}
+
+%% Table of contents
+\tableofcontents
+\newpage
+
+%% ---------------------------------------------------------------
+%% Background chapters (write first — do not depend on gap decision)
+%% ---------------------------------------------------------------
+\input{chapters/ch1_introduction}
+\input{chapters/ch2_background_diffusion}
+\input{chapters/ch3_discrete_diffusion}
+\input{chapters/ch4_masked_diffusion}
+
+%% ---------------------------------------------------------------
+%% Informed correctors chapter (write after reading queue complete)
+%% ---------------------------------------------------------------
+\input{chapters/ch5_informed_correctors}
+
+%% ---------------------------------------------------------------
+%% Contribution, experiments, conclusion (fill after gap decision)
+%% ---------------------------------------------------------------
+\input{chapters/ch6_contribution}
+\input{chapters/ch7_experiments}
+\input{chapters/ch8_conclusion}
+
+%% Bibliography
+\printbibliography[title={Bibliography}]
+
+\end{document}
