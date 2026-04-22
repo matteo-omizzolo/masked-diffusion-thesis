@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/thesis/experiments/PHASE3A_COMBINATORIAL_RESULTS.md` + `docs/thesis/CANONICAL_RESEARCH_DIRECTION.md`
+> **REASON:** Chronicle of Phase 1–2b status prior to Phase 3a mainline; retained for provenance only.
+
+---
+
 # Historical Experimental Status — Phase 1 through Phase 2b
 
 > **⚠ [HISTORICAL / UNDER AUDIT — 2026-04-19]** The headline below was written
