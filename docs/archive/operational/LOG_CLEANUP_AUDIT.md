@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/thesis/maintenance/CLEANUP_LOG.md`
+> **REASON:** Operational snapshot; consolidation log is the canonical provenance record.
+
+---
+
 # Log Cleanup Audit
 
 *Written: 2026-04-18.*

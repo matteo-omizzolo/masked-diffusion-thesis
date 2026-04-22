@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** n/a (operational snapshot)
+> **REASON:** HPC sync inventory from 2026-04-18; superseded by current state.
+
+---
+
 # HPC Sync Inventory
 **Date:** 2026-04-18  
 **Remote:** `3316152@slogin.hpc.unibocconi.it:~/mdm/masked-diffusion-thesis`  

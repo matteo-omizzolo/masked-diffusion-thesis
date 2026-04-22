@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** n/a (rerun completed)
+> **REASON:** One-off Sonnet prompt for a completed rerun.
+
+---
+
 # Prompt for Claude Code (Sonnet) — Signal-Aligned MDLM-conf Re-run
 
 *Copy everything between the `===BEGIN PROMPT===` and `===END PROMPT===` markers

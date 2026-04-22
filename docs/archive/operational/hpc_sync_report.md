@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** n/a (operational snapshot)
+> **REASON:** HPC sync log from 2026-04-18; superseded by current state.
+
+---
+
 # HPC Sync Report
 **Date:** 2026-04-18  
 **Status: COMPLETE**
