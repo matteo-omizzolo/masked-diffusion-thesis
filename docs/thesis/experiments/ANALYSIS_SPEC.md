@@ -199,8 +199,9 @@ Not JSON — a markdown table with three columns per policy at each B:
 its G).
 
 Purpose: produce a correct version of the table currently shown in
-`RESULTS_STATUS.md`, with explicit columns for A and G, for inclusion as a
-replacement table in Workstream H.
+`docs/archive/chronicles/RESULTS_STATUS.md` (archived chronicle), with
+explicit columns for A and G, for inclusion as a replacement table in
+Workstream H.
 
 ---
 
@@ -410,14 +411,14 @@ four tiers, defined as follows:
 | **T1 — confirmed** | n ≥ 30, paired bootstrap CI excludes zero under Bonferroni-corrected α=0.005 | Thesis-grade. Quotable in abstract and main results. |
 | **T2 — suggestive** | n ≥ 30, CI excludes zero at nominal α=0.05 but not after Bonferroni | Appendix or discussion. Qualified as "preliminary evidence". |
 | **T3 — exploratory** | Spearman or sign trend only; no paired test | Appendix only. Explicitly called "hypothesis-generating". |
-| **T4 — inadmissible** | Single seed, or ε_rms-style uninformative metric flagged per THEORY_STRESS_TEST §4 | **Must not appear** in the thesis. |
+| **T4 — inadmissible** | Single seed, or ε_rms-style uninformative metric flagged per `docs/archive/audits/THEORY_STRESS_TEST.md` §4 | **Must not appear** in the thesis. |
 
 **Every Phase 2 JSON must label each headline number with its tier.** Add
 `"tier": "T1"` etc. as a sibling field to `mean`, `se`.
 
 Audit rule: if a claim in `CANONICAL_RESEARCH_DIRECTION.md` or
-`RESULTS_STATUS.md` references a number with no tier label, or a T3/T4 tier,
-the claim must be softened or removed.
+`docs/archive/chronicles/RESULTS_STATUS.md` references a number with no tier
+label, or a T3/T4 tier, the claim must be softened or removed.
 
 ---
 
@@ -466,7 +467,8 @@ regeneration uses.
 ## 9. Connection to Workstream H (narrative update)
 
 Every paragraph in `docs/thesis/CURRENT_INDEX.md` and
-`docs/thesis/experiments/RESULTS_STATUS.md` that cites a Phase 2 number must:
+`docs/archive/chronicles/RESULTS_STATUS.md` (archived chronicle) that cites
+a Phase 2 number must:
 
 1. End with a citation like `[phase2b_proseco_owt/policy_comparison_paired.json
    #data.per_policy_per_B.uniform.8.mean]`.

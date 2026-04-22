@@ -130,7 +130,7 @@ Under (1) binary placement, (2) approximate additivity
 The substantive content is empirical: measure ε, η_B on real models and
 check whether 2 B ε + 2 η_B is small relative to G(Ŝ_B). See
 `research/candidate_theorems.md` (Theorem A), `research/proof_worklog.md`
-(Entry 6), and `docs/experiments/entropy_proxy_experiment.md` for protocols.
+(Entry 6), and `docs/archive/phase1_era/entropy_proxy_experiment.md` for protocols.
 
 ### Supporting results
 
@@ -203,7 +203,7 @@ thesis's value and should be visible throughout.
 10. Is there a distinct low-gain region T_low where Δ_t ≤ δ, such that gating
     Proposition B applies?
 
-See `docs/experiments/entropy_proxy_experiment.md` for Protocol A (ε, Δ_t, s_t)
+See `docs/archive/phase1_era/entropy_proxy_experiment.md` for Protocol A (ε, Δ_t, s_t)
 and Protocol B (η_B, γ, joint G(S)) design details.
 
 ---

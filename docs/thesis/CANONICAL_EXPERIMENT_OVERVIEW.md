@@ -14,13 +14,13 @@ Protocol A/B setup, which now serves as historical context and a prerequisite
 for the Phase 2b / Phase 3a scheduling experiments. Sibling canonical file:
 `CANONICAL_RESEARCH_DIRECTION.md`.
 
-Source specs this synthesizes:
-`docs/experiments/proseco_experiment_definition.md` (math),
-`docs/experiments/proseco_protocol_mapping.md` (implementation),
-`docs/experiments/proseco_backend_audit.md` (backend),
-`docs/experiments/results/result_inventory.md` (runs),
-`docs/experiments/entropy_proxy_experiment.md` (Protocol A/B design),
-`docs/experiments/results/proseco_backend_failure_audit.md` (backend fixes).
+Source specs this synthesizes (all archived; retained for provenance):
+`docs/archive/phase1_era/proseco_experiment_definition.md` (math),
+`docs/archive/phase1_era/proseco_protocol_mapping.md` (implementation),
+`docs/archive/phase1_era/proseco_backend_audit.md` (backend),
+`docs/archive/phase1_era/result_inventory.md` (runs),
+`docs/archive/phase1_era/entropy_proxy_experiment.md` (Protocol A/B design),
+`docs/archive/audits/proseco_backend_failure_audit.md` (backend fixes).
 
 ---
 
@@ -218,15 +218,15 @@ MDLM Gibbs-style heuristic corrector (`backends/mdlm.py`):
 Documented as a structural negative result: even with the signal bug
 fixed, the corrector is a resample-everything kernel that cannot be
 beneficial. The MDLM heuristic is preserved as a diagnostic baseline.
-Details: `docs/experiments/results/result_inventory.md` and
-`docs/experiments/phase1_interpretation.md`.
+Details: `docs/archive/phase1_era/result_inventory.md` and
+`docs/archive/phase1_era/phase1_interpretation.md`.
 
 ## 8. Previous result — ProSeCo run (structural no-op)
 
 **Job 478929** (2026-04-17, T = 64, N = 20, corrector_steps = 2, 59 min
 on A100). After three failed attempts (weights_only bug, then
 ConfigAttributeError from a hand-written minimal OmegaConf — root cause
-documented in `docs/experiments/results/proseco_backend_failure_audit.md`),
+documented in `docs/archive/audits/proseco_backend_failure_audit.md`),
 the backend was fixed to hydrate its config from the checkpoint's
 `hyper_parameters["config"]` and to recompute `p_x0` for signals when the
 cache is None. The pilot then ran cleanly to completion.
@@ -272,5 +272,5 @@ backbone/corrector pairs:
 None of these changes the protocol specification in §§3–6 above. Once a
 pair yields Δ_t ≠ 0, the existing Protocol A/B pipeline, signal extraction,
 and summary computation run unchanged. Full next-step breakdown:
-`docs/implementation_plan.md` (Phase 1) and the status block at the end
-of `docs/experiments/results/result_inventory.md`.
+`docs/archive/phase1_era/implementation_plan.md` (Phase 1) and the status block at the end
+of `docs/archive/phase1_era/result_inventory.md`.

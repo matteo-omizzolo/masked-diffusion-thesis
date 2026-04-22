@@ -30,8 +30,8 @@ Phase 2b established two facts:
 
 - The MC oracle (best-of-100 random schedules per seed) sits at +0.45 paired
   G over uniform at `B ∈ {2, 3, 4}`. The +0.36 gap between mean-profile
-  oracle (`mean_delta_oracle`) and MC oracle is *per-instance* (`RESULTS_STATUS.md`
-  §12.2).
+  oracle (`mean_delta_oracle`) and MC oracle is *per-instance*
+  (`docs/archive/chronicles/RESULTS_STATUS.md` §12.2 — archived chronicle).
 - Greedy single-step rankers — including the cheating ground-truth
   `mean_delta_oracle` — only beat uniform at small `B`, and saturate by `B = 8`
   (`PHASE3_DIRECTION_AUDIT.md` smoking gun #1).
@@ -274,7 +274,7 @@ checkpoint = `~/mdm/checkpoints/proseco_owt`. Wall-clock 28 681 s
 
 ## 8. Cross-references
 
-- Phase 2b verdict: `RESULTS_STATUS.md` §12
+- Phase 2b verdict: `docs/archive/chronicles/RESULTS_STATUS.md` §12 (archived chronicle)
 - Direction audit (PRISM rejection): `PHASE3_DIRECTION_AUDIT.md`
 - Phase 3a/3b plan (pre-result): `PHASE3_ALTERNATIVE_PLAN.md`
 - Theory ledger (post-Phase-3a entry): `docs/thesis/theory/THEORY_STATUS.md`

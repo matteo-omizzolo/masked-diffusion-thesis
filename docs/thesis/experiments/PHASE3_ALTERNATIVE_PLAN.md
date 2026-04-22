@@ -143,7 +143,7 @@ Either way, both Phase 3a and Phase 3b produce thesis content.
 1. `results/phase3a/oracle_gap_closure.json` produced; verdict written.
 2. `THEORY_STATUS.md` shows Refinement A′ and A″ as "stated, informally proven, empirically anchored".
 3. Negative-Result Corollary stated with Phase 2b empirical conditions.
-4. `RESULTS_STATUS.md §13` summarises the Phase 3 result.
+4. `docs/archive/chronicles/RESULTS_STATUS.md §13` summarises the Phase 3 result (archived historical chronicle).
 5. `CANONICAL_RESEARCH_DIRECTION.md` updated with the new "Phase 3 verdict" block.
 6. A two-page Phase 3 PDF status report at `docs/pdf/status/phase3_status_report_2026-04-XX.pdf`.
 
