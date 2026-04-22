@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/thesis/theory/THEORY_STATUS.md` §"Candidate Refinements"
+> **REASON:** Stress-test conclusions encoded upstream in Refinements A′/A″ and the rescoped Negative-Result Corollary. Preserved for provenance.
+
+---
+
 # Theory Stress Test — Theorem A and Supporting Propositions
 
 **Author:** Claude Code (co-advisor review)

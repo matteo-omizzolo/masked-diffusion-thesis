@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/thesis/experiments/PHASE3A_COMBINATORIAL_RESULTS.md`, `docs/thesis/theory/THEORY_STATUS.md`
+> **REASON:** Phase 1 audit that triggered the Phase 2b/3a work; its findings are now encoded in the canonical post-3a docs. Preserved for provenance.
+
+---
+
 # Experiment Critical Audit — Phase 1 ProSeCo-OWT
 
 **Author:** Claude Code (rigorous co-advisor review)

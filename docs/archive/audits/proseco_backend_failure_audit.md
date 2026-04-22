@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/experimental_infrastructure.md`
+> **REASON:** Resolved incident; backend is now operational. Preserved for provenance.
+
+---
+
 # ProSeCo Backend Failure Audit
 *Completed: 2026-04-17*
 
