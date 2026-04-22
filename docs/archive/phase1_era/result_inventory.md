@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/thesis/experiments/PHASE3A_COMBINATORIAL_RESULTS.md` + `docs/archive/chronicles/RESULTS_STATUS.md` §14
+> **REASON:** Phase-1 inventory; current results live in canonical Phase 3a doc.
+
+---
+
 # Result Inventory — Phase 1 Pilot Experiment
 
 > **STATUS UPDATE (April 2026 — ProSeCo pivot):** The MDLM heuristic corrector produced

@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/experimental_infrastructure.md`
+> **REASON:** Backend readiness audit resolved; current state is tracked in the infrastructure doc.
+
+---
+
 # ProSeCo Backend Audit
 
 **Date:** 2026-04-17  

@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/thesis/CANONICAL_RESEARCH_DIRECTION.md`
+> **REASON:** Phase-1-era implementation plan; scope long superseded by the Phase-3a-aware canonical direction.
+
+---
+
 # Implementation Plan: Corrector Scheduling Experiments
 
 **Updated:** April 2026 (restructured after GPT Pro v2 assessment)

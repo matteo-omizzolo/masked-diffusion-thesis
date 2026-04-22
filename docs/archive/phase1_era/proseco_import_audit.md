@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/experimental_infrastructure.md`
+> **REASON:** Import resolved; current backend state is tracked in the infrastructure doc.
+
+---
+
 # ProSeCo Repository Import Audit
 
 **Date:** 2026-04-17  

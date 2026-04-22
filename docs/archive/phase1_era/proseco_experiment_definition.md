@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/thesis/CANONICAL_EXPERIMENT_OVERVIEW.md`
+> **REASON:** Pre-Phase-2b ProSeCo design; canonical Protocol A/B spec lives upstream.
+
+---
+
 # ProSeCo Experiment Definition
 
 **Date:** 2026-04-17  

@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/thesis/CANONICAL_EXPERIMENT_OVERVIEW.md`
+> **REASON:** Pre-Phase-2b experiment spec variant; canonical Protocol A/B now lives in the canonical experiment overview.
+
+---
+
 # Entropy-Proxy Experiment — Full Design
 
 **Created:** April 2026

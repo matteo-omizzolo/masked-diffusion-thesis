@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/thesis/experiments/PHASE3A_COMBINATORIAL_RESULTS.md`
+> **REASON:** Phase-1-era status snapshot; current results live in the canonical Phase 3a doc.
+
+---
+
 # Implementation Status — Scheduling Package and Phase 1 Experiment
 
 **Updated:** April 2026

@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/thesis/CANONICAL_EXPERIMENT_OVERVIEW.md`
+> **REASON:** Knob-mapping superseded by canonical experiment overview.
+
+---
+
 # ProSeCo Protocol Mapping
 
 **Date:** 2026-04-17  

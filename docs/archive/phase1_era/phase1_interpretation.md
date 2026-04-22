@@ -1,3 +1,10 @@
+> **STATUS:** ARCHIVED
+> **ARCHIVED ON:** 2026-04-22
+> **SUPERSEDED BY:** `docs/archive/audits/EXPERIMENT_CRITICAL_AUDIT.md`
+> **REASON:** Phase-1 interpretation; the authoritative audit of the same material is the critical-audit doc.
+
+---
+
 # Phase 1 Pilot — Results Interpretation
 
 **Date:** April 2026
