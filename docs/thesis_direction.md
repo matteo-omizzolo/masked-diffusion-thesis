@@ -1,3 +1,9 @@
+> **STATUS:** CANONICAL
+> **LAST VERIFIED:** 2026-04-22
+> **SCOPE:** Top-level thesis direction, scope, and non-goals. Single source for research-question framing.
+
+---
+
 # Thesis Direction: Signal-Adaptive Corrector Scheduling for Masked Diffusion Language Models
 
 **Author:** Matteo Omizzolo — MSc Thesis, Bocconi University

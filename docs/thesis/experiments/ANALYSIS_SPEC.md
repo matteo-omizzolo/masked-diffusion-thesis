@@ -1,3 +1,9 @@
+> **STATUS:** CANONICAL
+> **LAST VERIFIED:** 2026-04-22
+> **SCOPE:** Tier labels (T1–T4), paired BCa bootstrap protocol, and PASS/NULL/FAIL rules governing all Phase 2+ analyses.
+
+---
+
 # Analysis Output Spec — Phase 2
 
 **Author:** Claude Code (co-advisor review, Workstream D)

@@ -1,3 +1,9 @@
+> **STATUS:** CANONICAL
+> **LAST VERIFIED:** 2026-04-22
+> **SCOPE:** Phase 3a combinatorial scheduling baselines — CD-G and BS-AG closure results under ANALYSIS_SPEC tiers.
+
+---
+
 # Phase 3a — Combinatorial Scheduling Baselines (Results)
 
 *Created: 2026-04-20. Job 479941 (gnode02, ProSeCo-OWT). Wall-clock 7h59m.*

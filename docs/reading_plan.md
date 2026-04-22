@@ -1,3 +1,9 @@
+> **STATUS:** SUPPORTING
+> **LAST VERIFIED:** 2026-04-22
+> **SCOPE:** Ordered reading queue with per-paper status (read / to read / skipped).
+
+---
+
 # Reading Plan: Signal-Adaptive Corrector Scheduling
 
 **Updated:** April 2026

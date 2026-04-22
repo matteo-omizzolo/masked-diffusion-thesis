@@ -1,3 +1,9 @@
+> **STATUS:** CANONICAL
+> **LAST VERIFIED:** 2026-04-22
+> **SCOPE:** Overview of experiment phases, protocols, and results (Phase 1 → Phase 3a).
+
+---
+
 # Canonical Experiment Overview
 
 **Last updated:** 2026-04-18

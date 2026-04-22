@@ -1,3 +1,9 @@
+> **STATUS:** CANONICAL
+> **LAST VERIFIED:** 2026-04-22
+> **SCOPE:** Theorem A and refinements A′/A″; Negative-Result Corollary; active theory items.
+
+---
+
 # Theory Status — Canonical Summary
 
 > **[POST–PHASE-3A — 2026-04-20]** Phase 3a (job 479941, K=30 paired,

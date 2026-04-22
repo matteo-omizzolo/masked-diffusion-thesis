@@ -1,3 +1,9 @@
+> **STATUS:** SUPPORTING
+> **LAST VERIFIED:** 2026-04-22
+> **SCOPE:** Tier A/B backbones, HPC environment notes, and infrastructure readiness.
+
+---
+
 # Experimental Infrastructure
 
 **Updated:** April 2026

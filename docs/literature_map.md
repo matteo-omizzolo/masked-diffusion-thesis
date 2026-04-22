@@ -1,3 +1,9 @@
+> **STATUS:** SUPPORTING
+> **LAST VERIFIED:** 2026-04-22
+> **SCOPE:** Bibliography map for corrector scheduling, signals, and adjacent work.
+
+---
+
 # Literature Map: Signal-Adaptive Corrector Scheduling
 
 **Updated:** April 2026

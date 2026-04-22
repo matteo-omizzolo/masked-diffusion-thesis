@@ -1,3 +1,9 @@
+> **STATUS:** SUPPORTING
+> **LAST VERIFIED:** 2026-04-22
+> **SCOPE:** Direction audit justifying the Phase 3 pivot (PRISM vs alternatives). Supports CANONICAL_RESEARCH_DIRECTION.md.
+
+---
+
 # Phase 3 Direction Audit — PRISM vs Alternatives
 
 *Created: 2026-04-20. Author: research advisor pass on the post–Phase-2b pivot.*
