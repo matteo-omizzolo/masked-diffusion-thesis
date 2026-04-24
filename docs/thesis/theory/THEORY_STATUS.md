@@ -1,5 +1,5 @@
 > **STATUS:** CANONICAL
-> **LAST VERIFIED:** 2026-04-22
+> **LAST VERIFIED:** 2026-04-23 (bounded LLaDA-SFT external-validity probe closed; Honesty Ledger and NV section updated; OWT mainline unchanged)
 > **SCOPE:** Theorem A and refinements A′/A″; Negative-Result Corollary; active theory items.
 
 ---
@@ -144,6 +144,8 @@ as the rank-based calibration error. Under a Gaussian heuristic, the proxy-regre
 | Phase 3a search-class positive | `empirically established on ProSeCo-OWT 2026-04-20` (job 479941, K=30 paired) — CD-G PASS at all B with Δ ∈ [+0.32, +0.38] (closure 74–84 % of MC oracle at B ∈ {2,3,4}); BS-AG PASS at all B with Δ ∈ [+0.15, +0.29] (closure 49–64 %); both still PASS at B=8 where ranker envelope is NULL; closure ratios are empirical descriptors with no theoretical guarantee; CD-G is structural/existence (true-G feedback ≈ 65 × generation cost per cell, not deployable); BS-AG closer to practical (cheap-A ranking + O(B) true-G rollouts) but still requires a true-G evaluator |
 | PRISM pivot | `rejected 2026-04-20, refined reason post-Phase-3a` — PRISM is a learned per-token quality signal, i.e. a member of the ranker class bounded by the rescoped Negative-Result Corollary; even a perfect Δ-predictor cannot exceed `mean_delta_oracle`'s envelope, which is NULL by B=8; rejection is **not** "no recoverable structure exists" (Phase 3a refutes that), but "the recoverable structure does not factor through separable per-step scores"; full rationale in `PHASE3_DIRECTION_AUDIT.md` |
 | Phase 2c MAUVE F-swap | `closed without execution 2026-04-20` — Cohen's d up to ±2 in FAIL cells leaves cell ordering robust to F-metric choice; reopen only if Phase 3a forces defence of small-B win |
+| Bounded LLaDA-SFT external-validity probe | `empirically recorded 2026-04-23` on LLaDA-SFT 8B via ProSeCo backend, K=8, T=64, B ∈ {2, 4}, GPT-2 reference (Tier-3 by construction, n=8 < 30) — **partial transfer verdict scoped to the tested bounded setup:** (i) uniform-not-beaten observation from OWT Phase 2b corroborated (code-named `uniform_is_optimal` gate = PASS); (ii) positive MC-oracle headroom over uniform did **not** transfer at the tested budgets (paired CI at B=4 is [0, 0]; at B=2 is [−4.07, −1.07]); (iii) per-trajectory signal > mean-profile schedule transfers with cohens_d ≈ 7.8 at B=4; three non-discriminable hypotheses (H1 corrector dominance, H2 protocol sparseness, H3 reference mismatch) explain the non-transfer at K=8 and are not adjudicable within thesis scope; **Phase 3a on LLaDA-SFT NOT authorized** (terminal decision: `docs/thesis/next_steps/POST_CROSS_BACKBONE_DECISION.md`); the probe is external-validity evidence only and does not displace the OWT K=30 mainline |
+| Adaptive-budgeted controllers (Theorem A-ad) | `conjecture / non-canonical extension (2026-04-22)` — see `docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md`; reduces to Theorem A when z_t carries no state-conditional information beyond s_t; main-thesis-canonical status pending Protocol C (no new GPU trajectories); the bounded LLaDA-SFT probe does **not** validate, test, or motivate this extension — its Tier-3 scope is orthogonal to the adaptive-extension question |
 | Combining-step (2η vs 3η) | `proved either way`; choice is a write-up convention pinned to η's definition |
 | Stretch C2 contraction | `conjecture` — applicability of Gibbs contraction not established |
 | Stretch C3 margin-as-proxy | `empirical` — calibration question, not a theorem |
@@ -156,4 +158,25 @@ as the rank-based calibration error. Under a Gaussian heuristic, the proxy-regre
 
 **NV verdict on ProSeCo-OWT (post-Phase-2b).** Even with the rank-form refinement and the variance-form η, the L∞-style Theorem A bound stays inert at B ≥ 8 because `mean_delta_oracle` itself — the upper envelope of any single-step ranker — falls into the NULL band by B = 8. The thesis contribution that lands is therefore the **rank-based ε_R + variance-form η_B refinements + Negative-Result Corollary (ranker-class scope)**, not a non-vacuous L∞ Theorem A on this triple.
 
-**Post-Phase-3a addendum (2026-04-20).** Phase 3a does not change the NV verdict for Theorem A as stated (Theorem A is a bound on a *ranker* `Ŝ_B = top-B(ψ)`, which is exactly the policy class the rescoped corollary bounds). What Phase 3a establishes separately is that the gap between the ranker envelope and `G(S_B*)` is largely *closable by procedures outside the ranker class* (CD-G recovers 74–84 %, BS-AG 49–64 % of the MC-oracle headroom at B ∈ {2,3,4}, and both PASS at B = 8). A non-vacuous bound on the search class would be a different theorem (no formal lower-bound currently proven for CD-G or BS-AG). Cross-backbone validation of NV on (MDLM, …) remains **parked** as Tier-2; Phase 3a's positive on ProSeCo-OWT does not by itself motivate cross-backbone replication — the gating question is whether the search-vs-ranker dichotomy is universal, which is out of thesis scope.
+**Post-Phase-3a addendum (2026-04-20).** Phase 3a does not change the NV verdict for Theorem A as stated (Theorem A is a bound on a *ranker* `Ŝ_B = top-B(ψ)`, which is exactly the policy class the rescoped corollary bounds). What Phase 3a establishes separately is that the gap between the ranker envelope and `G(S_B*)` is largely *closable by procedures outside the ranker class* (CD-G recovers 74–84 %, BS-AG 49–64 % of the MC-oracle headroom at B ∈ {2,3,4}, and both PASS at B = 8). A non-vacuous bound on the search class would be a different theorem (no formal lower-bound currently proven for CD-G or BS-AG).
+
+**Post-bounded-LLaDA-SFT addendum (2026-04-23).** A bounded external-validity probe on LLaDA-SFT 8B (K=8, T=64, B ∈ {2, 4}, GPT-2 reference, ProSeCo-style corrector) was completed and is recorded at T3 tier in the Honesty Ledger row above and in `docs/thesis/experiments/CROSS_BACKBONE_REPLICATION_RESULTS.md` §10–§12. **This probe does not revise the NV verdict on the OWT triple** — it measures Theorem A's driving quantities on a *second* (backbone, corrector, F) triple and therefore addresses NV's hypothesis directly, but at K=8 and on the ranker class only. Under the tested bounded setup, positive MC-oracle headroom over uniform was not observed, so the NV hypothesis cannot be discharged on this triple at this bounded setup; whether NV holds at other (T, B, reference) points on LLaDA-SFT is open and outside thesis scope. The OWT K=30 NV discussion above is unchanged, and the overall thesis contribution (rank-based ε_R + variance-form η_B + ranker-class Negative-Result Corollary) lands on OWT K=30 and is not displaced by the bounded LLaDA-SFT probe. Further cross-backbone validation of NV on (MDLM, …) or on LLaDA-SFT at different (T, B, reference) points remains **parked** as Tier-2 / future-work — the gating question is whether the search-vs-ranker dichotomy is universal, which is out of thesis scope.
+
+## Extension Theory (non-canonical; Future-Work candidate)
+
+**Adaptive budgeted controllers (2026-04-22).** A strict-generalisation
+extension of Theorem A to state-conditional, budget-aware policies
+a_t = π(z_t) ∈ {0,1} with z_t = (s_t, b_t, phase(t)) is formalised in
+`docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md`. The proposed
+Theorem A-ad bounds 𝔼[G(S_π*_B)] − 𝔼[G(S_π̂_λ)] ≤ 2Bε̃ + 2η̃_B +
+𝒪(√(B/N_cal)) under state-conditional calibration ε̃ and adaptive
+additivity η̃_B; it **reduces to Theorem A** when z_t carries no
+state-conditional information beyond s_t. The extension is **not
+main-thesis canonical** pending Protocol C (re-use of Phase-2b artefacts
+only, no new GPU trajectories). See
+`docs/thesis/next_steps/ADAPTIVE_CONTROLLER_DIRECTION_AUDIT.md` (Phase-1
+skeptical audit),
+`docs/thesis/next_steps/POST_ADAPTIVE_CONTROLLER_RECOMMENDATION.md` (final
+recommendation), and `research/adaptive_controller_research_notes.md`
+(derivations). Tagged `[Conjecture]`, `[Needs verification]` in
+`research/proof_ledger.md`.

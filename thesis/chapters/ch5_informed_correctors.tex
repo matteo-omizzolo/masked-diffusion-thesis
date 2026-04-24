@@ -6,6 +6,40 @@
 %%
 %% This chapter reviews the informed corrector literature and positions the thesis
 %% contribution relative to it.
+%%
+%% ------------------------------------------------------------------------------------
+%% SCOPE / POSITIONING NOTE (2026-04-23) — read before drafting prose
+%% ------------------------------------------------------------------------------------
+%% The thesis object is held fixed at three levels:
+%%   (i)   a fixed predictor schedule,
+%%   (ii)  a fixed informed corrector kernel (ProSeCo-style annealed refinement),
+%%   (iii) a fixed extra corrector NFE budget B.
+%%
+%% This chapter should make (ii) explicit: the corrector KERNEL choice is held
+%% fixed in the thesis contribution. Kernel design (Zhao et al. locally-balanced
+%% proposals, DFM Gibbs correctors, Barker vs confidence-guided selection) is
+%% reviewed here as LITERATURE, not as a contribution; the thesis contribution
+%% sits one level up, at the trajectory-level allocation of a fixed budget under
+%% a fixed kernel.
+%%
+%% Empirical validation of the thesis object lives in ch7. Summary relevant here:
+%%   - OWT (ProSeCo-OWT checkpoint, K=30, T=64) is the MAIN DISCOVERY BACKBONE.
+%%     All positive claims (ranker-class negative result; search-class positive
+%%     via CD-G / BS-AG) are established on OWT.
+%%   - LLaDA-SFT 8B (ProSeCo-LLaDA-SFT backend) provides a BOUNDED
+%%     EXTERNAL-VALIDITY PROBE at K=8 (T=64, B ∈ {2, 4}, GPT-2 reference).
+%%     Under that bounded setup the uniform-not-beaten observation is
+%%     corroborated at T3 tier; positive MC-oracle headroom did not transfer
+%%     at the tested budgets. Phase 3a on LLaDA-SFT is NOT authorized.
+%%     See docs/thesis/experiments/CROSS_BACKBONE_REPLICATION_RESULTS.md §10–§12
+%%     and docs/thesis/next_steps/POST_CROSS_BACKBONE_DECISION.md for the full
+%%     decision artefact.
+%%
+%% Adaptive-budgeted controllers (Theorem A-ad; state-conditional a_t = π(z_t))
+%% are a Future-Work extension, NOT a thesis-core contribution. Mention in
+%% §"Open Gaps" (below) as an extension direction; do not frame as validated.
+%% Canonical reference: docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md.
+%% ------------------------------------------------------------------------------------
 
 %% ---------------------------------------------------------------
 \section{The Predictor-Corrector Framework for Discrete Diffusion}
@@ -50,7 +84,17 @@
 
 %% Formally state the three candidate open gaps:
 %%   - Gap D: token selection optimality
-%%   - Gap B/C: corrector scheduling
+%%   - Gap B/C: corrector scheduling  <-- THESIS CONTRIBUTION LANDS HERE
 %%   - Gap E: E_fact extension to corrector steps
 %% Reference the L&Z Section 6 future work statement for Gap E.
 %% Reference the absence of any optimality proof in Zhao et al. for Gap D.
+%%
+%% Extension direction (future work, not a thesis-core claim):
+%%   - Adaptive-budgeted controllers (Theorem A-ad, state-conditional a_t = π(z_t))
+%%     strictly generalise the ranker class (Theorem A) to budget-aware policies
+%%     and reduce to Theorem A under a trivial reduction. Main-thesis-canonical
+%%     status pending a non-HPC Protocol C re-use of Phase 2b artefacts. The
+%%     bounded LLaDA-SFT external-validity probe does NOT validate, test, or
+%%     motivate this extension — its Tier-3 scope is orthogonal. See
+%%     docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md and
+%%     docs/thesis/next_steps/POST_ADAPTIVE_CONTROLLER_RECOMMENDATION.md.

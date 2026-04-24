@@ -6,24 +6,89 @@
 %% This chapter will contain the main theorem, its proof (or proof sketch
 %% with clearly stated gaps), and the formal positioning relative to L&Z and Zhao et al.
 %%
-%% Possible structures depending on which gap is chosen:
+%% ------------------------------------------------------------------------------------
+%% SCOPE / POSITIONING NOTE (2026-04-24) — read before drafting prose
+%% ------------------------------------------------------------------------------------
+%% Gap selected (Gap B/C): fixed-budget corrector scheduling under a fixed
+%% predictor and a fixed informed corrector kernel. The chapter states:
 %%
-%% --- If Gap D ---
-%% \section{Optimal Token Selection Under Budget}
-%%   - Formal setup: position-selection policy \pi: z_t -> 2^{[d]}, |\pi| = k
-%%   - One-step \Efact reduction as a function of the selected set S
-%%   - Theorem: confidence-guided selection achieves [optimality / near-optimality] in class C
-%%   - Proof strategy: [entropy contraction argument / submodularity / comparison theorem]
+%%   1. Theorem A (proxy-regret bound): G(S_B*) - G(Ŝ_B) ≤ 2Bε + 2η_B,
+%%      bounding the ranker class `Ŝ_B = top-B(ψ)` for separable per-step ψ
+%%      under (i) binary placement, (ii) approximate additivity with slack η_B,
+%%      (iii) proxy calibration with slack ε.
+%%   2. Refinement A′ (variance-form η_B; σ_ξ from MC residuals, √B-tighter).
+%%   3. Refinement A″ (rank-based ε_R from Spearman ρ(A, G); replaces L∞ ε).
+%%   4. Negative-Result Corollary (ranker-class scope): any separable per-step
+%%      ranker is upper-bounded by the mean_delta_oracle envelope, which on
+%%      ProSeCo-OWT enters the NULL band by B = 8. Phase 3a's CD-G + BS-AG
+%%      search procedures exceed this envelope — the corollary characterises
+%%      the ranker class only and does NOT generalise to "informed scheduling".
 %%
-%% --- If Gap B/C ---
-%% \section{Entropy-Adaptive Corrector Scheduling}
-%%   - Formal setup: NFE budget N, corrector allocation \{n_t\} with \sum n_t = N
-%%   - Theorem: entropy-proportional allocation minimises total path entropy under budget
+%% Empirical anchoring — what the chapter may cite:
+%%   - PRIMARY: OWT K=30 Phase 2b + Phase 3a on ProSeCo-OWT is the MAIN
+%%     DISCOVERY BACKBONE. All theorem-ingredient measurements (ε, η_B, γ, ρ,
+%%     σ_ξ, mean_delta_oracle saturation, MC-oracle headroom +0.45, CD-G/BS-AG
+%%     closure 49-84%) come from OWT.
 %%
-%% --- If Gap E ---
-%% \section{E_fact Reduction via Corrector Steps}
-%%   - Extend L&Z Theorem 1 to include a corrector term
-%%   - Theorem: one corrector step at noise level t reduces \Efact by [bound]
+%%   - BOUNDED EXTERNAL-VALIDITY PROBE: LLaDA-SFT K=8, T=64, B ∈ {2, 4},
+%%     GPT-2 reference (Tier-3, n=8 < 30). Under the tested bounded setup:
+%%     (a) the uniform-not-beaten observation is corroborated; (b) positive
+%%     MC-oracle headroom over uniform did not transfer at the tested budgets;
+%%     (c) per-trajectory > mean-profile ordering transfers. THE THESIS OBJECT
+%%     IS NOT BROADENED BY THIS PROBE. Theorem A's bound is not revised by
+%%     this probe; the bound applies to rankers on any (backbone, corrector, F)
+%%     triple where its assumptions hold, and the LLaDA-SFT probe measures the
+%%     driving quantities on a second triple at T3 tier. The fact that positive
+%%     MC-oracle headroom was not observed at the tested bounded setup on
+%%     LLaDA-SFT is an open question (three non-discriminable hypotheses H1-H3
+%%     in docs/thesis/experiments/CROSS_BACKBONE_REPLICATION_RESULTS.md §11.1),
+%%     not a theorem-level result.
+%%
+%%   - The chapter MUST NOT claim: "LLaDA-SFT contradicts Theorem A" (it does
+%%     not — Theorem A is about the ranker class on any triple where (1)-(3)
+%%     hold; the LLaDA-SFT probe did not test the ranker-vs-MC-oracle gap
+%%     structure at adequate K). It MUST NOT claim: "LLaDA-SFT validates
+%%     Theorem A" (Tier-3 K=8 is not a validation). It MAY NOTE: under the
+%%     tested bounded LLaDA-SFT setup, the ranker-class negative result's
+%%     empirical behaviour (no signal policy beats uniform) is reproduced.
+%%
+%% Future-work extension, NOT a thesis-core claim:
+%%   Theorem A-ad (adaptive-budgeted controllers, state-conditional policies
+%%   a_t = π(z_t) over z_t = (s_t, b_t, phase(t))) strictly generalises
+%%   Theorem A and reduces to it under trivial z_t. Main-thesis-canonical
+%%   status pending a non-HPC Protocol C re-use of Phase 2b artefacts. The
+%%   bounded LLaDA-SFT probe does NOT validate, test, or motivate Theorem A-ad.
+%%   See docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md and
+%%   docs/thesis/next_steps/POST_ADAPTIVE_CONTROLLER_RECOMMENDATION.md.
+%% ------------------------------------------------------------------------------------
+%%
+%% Structure (selected: Gap B/C — fixed-budget corrector scheduling):
+%%
+%% \section{Problem Setup}
+%%   - Fixed predictor schedule Z_0, ..., Z_T
+%%   - One-loop marginal gain \Delta_t := F(y_t^{+1}) - F(y_base)
+%%   - Schedule gain G(S) := F(y^S) - F(y_base), S \subseteq {1, ..., T}
+%%   - Oracle S_B* := argmax_{|S|=B} G(S); ranker \hat{S}_B := top-B by \psi(s_t)
+%%
+%% \section{Theorem A: Proxy-Regret Bound for the Ranker Class}
+%%   - Assumptions (1)-(3); state and prove (combining Lemmas A1 + A2 under
+%%     approximate additivity, with explicit 2\eta_B or 3\eta_B bookkeeping).
+%%
+%% \section{Refinements: Variance-Form \eta_B (A') and Rank-Based \epsilon_R (A'')}
+%%
+%% \section{Negative-Result Corollary (Ranker-Class Scope)}
+%%   - Any separable per-step ranker is upper-bounded by mean_delta_oracle.
+%%   - Empirical anchoring: Phase 2b OWT smoking guns (1)-(3) +
+%%     Phase 3a search-class positive (CD-G + BS-AG exceed this envelope).
+%%   - External-validity note: under the tested bounded LLaDA-SFT setup the
+%%     ranker-class null-observation is reproduced at T3; positive MC-oracle
+%%     headroom was not observed at the tested budgets (open question).
+%%
+%% \section{What Is NOT Claimed}
+%%   - No claim on the search-class G(S_B*) lower bound.
+%%   - No claim that uniform is optimal across masked diffusion.
+%%   - No claim that MC-oracle headroom is generic across backbones.
+%%   - No claim that adaptive-budgeted controllers are validated.
 %%
 %% The chapter should begin with a clear statement of what is being proven,
 %% what assumptions are made, and what the result implies for practice.

@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "source_phase2b_raw_dir": "results/phase2b_proseco_owt",
+    "top_k": 10,
+    "random_baseline_samples": 5000,
+    "seed": 0,
+    "n_mc_rows": 9000,
+    "n_policy_rows": 1500
+  },
+  "data": {
+    "overlap": {
+      "per_B": {
+        "2": {
+          "B": 2,
+          "n_seeds": 30,
+          "top_k": 10,
+          "mean_topk_vs_oracle_jaccard": 0.026666666666666665,
+          "random_jaccard_baseline": 0.022199999999999998,
+          "ratio_topk_vs_random": 1.2012012012012012,
+          "mean_topk_internal_jaccard": 0.05382716049382715,
+          "mean_bottomk_internal_jaccard": 0.06592592592592593
+        },
+        "3": {
+          "B": 3,
+          "n_seeds": 30,
+          "top_k": 10,
+          "mean_topk_vs_oracle_jaccard": 0.032,
+          "random_jaccard_baseline": 0.02708,
+          "ratio_topk_vs_random": 1.1816838995568686,
+          "mean_topk_internal_jaccard": 0.05274074074074074,
+          "mean_bottomk_internal_jaccard": 0.0488888888888889
+        },
+        "4": {
+          "B": 4,
+          "n_seeds": 30,
+          "top_k": 10,
+          "mean_topk_vs_oracle_jaccard": 0.04698412698412699,
+          "random_jaccard_baseline": 0.03605142857142857,
+          "ratio_topk_vs_random": 1.3032528486641661,
+          "mean_topk_internal_jaccard": 0.049439153439153435,
+          "mean_bottomk_internal_jaccard": 0.0566984126984127
+        }
+      }
+    },
+    "variance": {
+      "per_B": {
+        "2": {
+          "B": 2,
+          "n_seeds": 30,
+          "n_points": 3000,
+          "var_total_G": 0.030895262824470634,
+          "var_between_seed_means": 0.010094560047615641,
+          "var_within_seed": 0.021340292617004063,
+          "within_share": 0.6907302500790333,
+          "between_share": 0.3267348818156106
+        },
+        "3": {
+          "B": 3,
+          "n_seeds": 30,
+          "n_points": 3000,
+          "var_total_G": 0.040812535096403396,
+          "var_between_seed_means": 0.015251124702998307,
+          "var_within_seed": 0.02631937074593222,
+          "within_share": 0.6448844866843769,
+          "between_share": 0.3736872670853106
+        },
+        "4": {
+          "B": 4,
+          "n_seeds": 30,
+          "n_points": 3000,
+          "var_total_G": 0.04821641386596312,
+          "var_between_seed_means": 0.019283574230672357,
+          "var_within_seed": 0.029858134651539917,
+          "within_share": 0.6192524963499482,
+          "between_share": 0.3999379606347082
+        }
+      }
+    }
+  }
+}

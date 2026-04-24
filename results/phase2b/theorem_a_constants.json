@@ -1,0 +1,208 @@
+{
+  "meta": {
+    "source_mc_raw_path": "results/phase2b_proseco_owt/mc_raw.json",
+    "top_k": 10,
+    "gamma_quantile": 0.95,
+    "rho_n_resamples": 1000,
+    "rho_alpha": 0.05,
+    "rho_seed": 0,
+    "n_mc_rows": 9000
+  },
+  "data": {
+    "sigma_xi": {
+      "per_B": {
+        "2": {
+          "B": 2,
+          "n_seeds": 30,
+          "n_points": 3000,
+          "sigma_xi_pooled": 0.17361533091499834,
+          "sigma_xi_per_seed_mean": 0.14046111041148696,
+          "sigma_xi_per_seed_se": 0.009995370289473357,
+          "sigma_xi_per_seed_std": 0.05474689778161499
+        },
+        "3": {
+          "B": 3,
+          "n_seeds": 30,
+          "n_points": 3000,
+          "sigma_xi_pooled": 0.239870317325423,
+          "sigma_xi_per_seed_mean": 0.19018059634569282,
+          "sigma_xi_per_seed_se": 0.010423620669946456,
+          "sigma_xi_per_seed_std": 0.057092521718067855
+        },
+        "4": {
+          "B": 4,
+          "n_seeds": 30,
+          "n_points": 3000,
+          "sigma_xi_pooled": 0.30899368744275607,
+          "sigma_xi_per_seed_mean": 0.23281192588097455,
+          "sigma_xi_per_seed_se": 0.012592695005062623,
+          "sigma_xi_per_seed_std": 0.06897303114055431
+        }
+      }
+    },
+    "rho": {
+      "per_B": {
+        "2": {
+          "B": 2,
+          "n_seeds": 30,
+          "n_points": 3000,
+          "rho_per_seed_mean": 0.544012885679448,
+          "rho_per_seed_se": 0.053016045940986516,
+          "rho_per_seed_std": 0.29038084271608516,
+          "rho_pooled": 0.6008864445596822,
+          "rho_pooled_ci_lo": 0.5706319415416866,
+          "rho_pooled_ci_hi": 0.6279152569481615
+        },
+        "3": {
+          "B": 3,
+          "n_seeds": 30,
+          "n_points": 3000,
+          "rho_per_seed_mean": 0.4384335186684814,
+          "rho_per_seed_se": 0.03950316780877683,
+          "rho_per_seed_std": 0.21636776101778993,
+          "rho_pooled": 0.5424680607527727,
+          "rho_pooled_ci_lo": 0.5156547799063723,
+          "rho_pooled_ci_hi": 0.5716896697641313
+        },
+        "4": {
+          "B": 4,
+          "n_seeds": 30,
+          "n_points": 3000,
+          "rho_per_seed_mean": 0.3594003400340034,
+          "rho_per_seed_se": 0.03812327007247204,
+          "rho_per_seed_std": 0.20880974984554546,
+          "rho_pooled": 0.46160194205834953,
+          "rho_pooled_ci_lo": 0.4297621495785172,
+          "rho_pooled_ci_hi": 0.491878454577407
+        }
+      }
+    },
+    "sigma_delta": {
+      "per_B": {
+        "2": {
+          "B": 2,
+          "n_points": 3000,
+          "sigma_delta_pooled": 0.1757704833709876,
+          "G_mean": 0.19195014746983846
+        },
+        "3": {
+          "B": 3,
+          "n_points": 3000,
+          "sigma_delta_pooled": 0.20202112537158928,
+          "G_mean": 0.26423346940676373
+        },
+        "4": {
+          "B": 4,
+          "n_points": 3000,
+          "sigma_delta_pooled": 0.2195823623744929,
+          "G_mean": 0.320170961300532
+        }
+      }
+    },
+    "gamma": {
+      "per_B": {
+        "2": {
+          "B": 2,
+          "n_points": 3000,
+          "gamma_upper": 0.3756026983261106,
+          "quantile": 0.95,
+          "gamma_max": 1.224318027496338,
+          "gamma_median": 0.07723140716552734
+        },
+        "3": {
+          "B": 3,
+          "n_points": 3000,
+          "gamma_upper": 0.16785475413004539,
+          "quantile": 0.95,
+          "gamma_max": 0.3892345428466797,
+          "gamma_median": 0.045469204584757485
+        },
+        "4": {
+          "B": 4,
+          "n_points": 3000,
+          "gamma_upper": 0.10840030511220279,
+          "quantile": 0.95,
+          "gamma_max": 0.21407858530680338,
+          "gamma_median": 0.03200113773345947
+        }
+      }
+    },
+    "low_gain_share": {
+      "per_B": {
+        "2": {
+          "B": 2,
+          "top_k": 10,
+          "n_seeds": 30,
+          "share_mean": 0.8860134472415496,
+          "share_se": 0.02945206699837756,
+          "share_std": 0.1613156146016486,
+          "share_min": 0.43727317315914555,
+          "share_max": 1.0
+        },
+        "3": {
+          "B": 3,
+          "top_k": 10,
+          "n_seeds": 30,
+          "share_mean": 0.884619709565794,
+          "share_se": 0.025262988108202947,
+          "share_std": 0.13837108456847516,
+          "share_min": 0.555151842494424,
+          "share_max": 1.0
+        },
+        "4": {
+          "B": 4,
+          "top_k": 10,
+          "n_seeds": 30,
+          "share_mean": 0.8757086136943711,
+          "share_se": 0.027759775285416594,
+          "share_std": 0.1520465511509708,
+          "share_min": 0.4955522180277616,
+          "share_max": 1.0
+        }
+      }
+    },
+    "plugin_bound": {
+      "per_B": {
+        "2": {
+          "B": 2,
+          "epsilon_R": 0.07015238255965812,
+          "eta_B_variance_form": 0.17361533091499834,
+          "eta_B_pairwise_form": 0.3756026983261106,
+          "bound_A_prime_plus_A_double_prime": 0.6278401920686292,
+          "bound_prop_C_plus_A_double_prime": 1.0318149268908536,
+          "bound_tighter_eta": 0.6278401920686292,
+          "sigma_xi_used": 0.17361533091499834,
+          "rho_used": 0.6008864445596822,
+          "sigma_delta_used": 0.1757704833709876,
+          "gamma_used": 0.3756026983261106
+        },
+        "3": {
+          "B": 3,
+          "epsilon_R": 0.09243111726017049,
+          "eta_B_variance_form": 0.2937799409433848,
+          "eta_B_pairwise_form": 0.5035642623901362,
+          "bound_A_prime_plus_A_double_prime": 1.1421465854477924,
+          "bound_prop_C_plus_A_double_prime": 1.5617152283412952,
+          "bound_tighter_eta": 1.1421465854477924,
+          "sigma_xi_used": 0.239870317325423,
+          "rho_used": 0.5424680607527727,
+          "sigma_delta_used": 0.20202112537158928,
+          "gamma_used": 0.16785475413004539
+        },
+        "4": {
+          "B": 4,
+          "epsilon_R": 0.11822271746066673,
+          "eta_B_variance_form": 0.4369830634692187,
+          "eta_B_pairwise_form": 0.6504018306732168,
+          "bound_A_prime_plus_A_double_prime": 1.8197478666237714,
+          "bound_prop_C_plus_A_double_prime": 2.2465854010317674,
+          "bound_tighter_eta": 1.8197478666237714,
+          "sigma_xi_used": 0.30899368744275607,
+          "rho_used": 0.46160194205834953,
+          "sigma_delta_used": 0.2195823623744929,
+          "gamma_used": 0.10840030511220279
+        }
+      }
+    }
+  }
+}

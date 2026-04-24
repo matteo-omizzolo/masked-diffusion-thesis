@@ -349,3 +349,68 @@ All questions cross-reference `docs/experiments/entropy_proxy_experiment.md`
 and `docs/gpt_pro_assessment_response.md`. Q10–Q12 originate from
 `docs/thesis/theory/THEORY_STRESS_TEST.md` and
 `docs/thesis/experiments/EXPERIMENT_CRITICAL_AUDIT.md`.
+
+---
+
+## Adaptive-Extension Open Questions (Q-adapt-*; added 2026-04-22)
+
+Arising from `docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md` (Future-Work
+extension theory). These are **not in scope for the main thesis** but are
+needed if the adaptive extension is promoted from Future Work to a formal
+thesis claim. Priority ordering is **below** Q1–Q12.
+
+### Q-adapt-1 — Is Δ_open > 0 at thesis-relevant B? **[CENTRAL to extension]**
+
+No current thesis result bounds Δ_open := 𝔼[G(S_π*_B)] − 𝔼[G(S_B*)]. The
+Phase-2b MC-oracle +0.45 paired headroom is a noisy surrogate, not a bound
+on Δ_open. Without Δ_open > 0, the adaptive extension cannot outperform the
+open-loop regime even with a perfect state-conditional proxy.
+
+**Action.** Protocol C (see theory doc §4.2). Estimate Δ_open on the
+8-seed LLaDA-SFT Phase-2b platform via paired replay, no new GPU
+trajectories.
+
+**Severity.** Critical to adaptive extension; not critical to main thesis.
+
+### Q-adapt-2 — Does state conditioning shrink ε → ε̃? **[CENTRAL to extension]**
+
+A-ad F1's regret bound 2B ε̃ + 2 η̃_B improves on open-loop 2Bε + 2η_B only
+if ε̃ < ε. No direct measurement yet.
+
+**Action.** Residuals Δ_t(z) − ψ̃_bucket(z) on bucketed state z = (s_t, b_t,
+phase(t)), re-using Phase-2b artefacts.
+
+**Severity.** Critical to adaptive extension.
+
+### Q-adapt-3 — What is the η̃_B slack under the threshold policy?
+
+Open-loop Refinement A′ estimates η_B via σ_ξ from 9,000 MC rows. Under the
+threshold-λ policy the row distribution shifts (conditions on ψ̃ > λ), so
+σ_ξ may differ.
+
+**Action.** Replay threshold policy, compare G(S_π̂) to Σ a_t · Δ̂_t.
+
+**Severity.** High for any formal A-ad statement.
+
+### Q-adapt-4 — Does the (s_t, b_t, phase(t)) state abstraction suffice?
+
+The minimal state was chosen to keep the calibration budget tractable. A
+fuller state (e.g. including predictor hidden representation) could shrink
+ε̃ further but would require a function approximator and is out of scope.
+
+**Action.** Diagnostic only — run A-ad F1 on the minimal state; if
+Δ_close/Δ_open < 0.5, report the negative result and do not expand state.
+
+**Severity.** Medium; a hard scope-creep guard.
+
+### Q-adapt-5 — Does the Particle-Gibbs / cSMC realisation (F3) beat the
+deterministic threshold policy (F1) empirically at the thesis's
+(T, B, backbone) scale?
+
+The theorem A-ad F3 adds 𝒪(1/√N) + log|Z|/β over A-ad F1. If ε̃ is small,
+these terms dominate for N ≤ 8 particles — in which case the F1 policy is
+the correct deployment.
+
+**Action.** Beyond scope of Protocol C. Parked as open research.
+
+**Severity.** Deferred (not needed for thesis).

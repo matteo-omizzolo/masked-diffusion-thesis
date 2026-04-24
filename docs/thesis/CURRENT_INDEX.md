@@ -33,7 +33,10 @@ for the research-question framing, scope, and non-goals.
 | 8 | `docs/thesis/experiments/PHASE3A_COMBINATORIAL_RESULTS.md` | Phase 3a result report |
 | 9 | `docs/thesis/theory/THEORY_STATUS.md` | Theorem A, Propositions B/C, Refinements A′/A″ |
 | 10 | `docs/thesis/theory/NEXT_THEORY_STEPS.md` | Next theory tasks (Half B merge target) |
-| 11 | `docs/thesis/experiments/CROSS_BACKBONE_IMPLEMENTATION_AUDIT.md` | Cross-backbone replication implementation audit (active run) |
+| 11 | `docs/thesis/experiments/CROSS_BACKBONE_IMPLEMENTATION_AUDIT.md` | Cross-backbone replication implementation audit |
+| 12 | `docs/thesis/experiments/CROSS_BACKBONE_REPLICATION_RESULTS.md` | Bounded LLaDA-SFT replication results (external-validity probe; Tier-3) |
+| 13 | `docs/thesis/next_steps/POST_CROSS_BACKBONE_DECISION.md` | Terminal go/no-go decision for Phase 3a on LLaDA-SFT |
+| 14 | `docs/thesis/next_steps/ZANELLA_MEETING_WRITEUP.md` | Post-cross-backbone meeting brief (OWT mainline + bounded LLaDA-SFT probe) |
 
 ---
 
@@ -117,6 +120,7 @@ theory documents listed in §2.
 | `results/phase2b_proseco_owt/` | Phase 2b raw paired policy rows and MC oracle samples |
 | `results/phase2b/` | Phase 2b paired BCa confidence intervals and MC-oracle summary |
 | `results/phase1_proseco_owt_full/` | Prerequisite chronology artifact for Phase 2b |
+| `results/cross_backbone/proseco_llada_sft_bounded/` | Bounded LLaDA-SFT external-validity probe (Protocol A + Phase 2b raw + aggregates) |
 
 Legacy Phase 1, Phase 2a, and old smoke/eval outputs are archived.
 
@@ -173,7 +177,10 @@ Repository-level legacy (code, scripts, old results) lives under `archive/`.
 
 See `docs/thesis/CANONICAL_RESEARCH_DIRECTION.md` (§ "Immediate next milestone")
 and `docs/thesis/experiments/PHASE3_ALTERNATIVE_PLAN.md` for the binding
-next-action spec. No per-phase result summaries appear in this index.
+next-action spec. The bounded cross-backbone replication on LLaDA-SFT is closed
+by `docs/thesis/next_steps/POST_CROSS_BACKBONE_DECISION.md` (Phase 3a on that
+backbone is **not** authorized under this decision; re-opening precondition is
+stated in §6 of that file). No per-phase result summaries appear in this index.
 
 ---
 

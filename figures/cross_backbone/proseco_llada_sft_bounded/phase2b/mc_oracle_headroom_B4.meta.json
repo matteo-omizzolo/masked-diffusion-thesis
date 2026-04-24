@@ -1,0 +1,6 @@
+{
+  "source": "results/phase2b/mc_oracle.json",
+  "fields": [
+    "data.per_trajectory.*.B_to_argmax_G"
+  ]
+}

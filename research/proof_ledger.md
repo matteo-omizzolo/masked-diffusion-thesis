@@ -252,5 +252,25 @@
 | MI monotonicity (old C3) | `[Incorrect as stated]` `[Refuted]` — preserved in history only |
 | Systematic-scan citation | `[Incorrect as stated]` — corrected to random-scan |
 
+### Adaptive Extension (added 2026-04-22; extension only — not main-thesis canonical)
+
+| Object | Provenance tags |
+|--------|-----------------|
+| Adaptive object (state z_t, action a_t, budget b_t) | `[Definition]` `[Novel framing in thesis context]` |
+| Theorem A-ad F1 (CMDP threshold regret 2Bε̃+2η̃_B) | `[Adapted from Altman 1999 + Paternain et al. 2019 + open-loop Theorem A structure]` `[Conjecture]` `[Depends on state-conditional calibration ε̃]` `[Depends on adaptive additivity η̃_B]` `[Needs verification]` |
+| Theorem A-ad F3 (conditional SMC + (A-ad F1) with 1/√N + log\|Z\|/β) | `[Adapted from Del Moral 2004 Ch. 7 + Andrieu-Doucet-Holenstein 2010 + A-ad F1]` `[Conjecture]` `[Needs verification]` `[Depends on SMC ergodicity]` |
+| Framework F1 as primary normative frame | `[Borrowed — CMDP textbook]` `[Analogy to open-loop Theorem A]` |
+| Framework F2 as formal glue only | `[Borrowed — Todorov 2009, Kappen et al. 2012, Levine 2018]` `[Definition]` — no independent regret claim attempted |
+| Framework F3 as algorithmic realisation | `[Borrowed — Del Moral 2004, ADH 2010]` `[Empirically motivated via PG-DLM arXiv:2507.08390 and E-SMC arXiv:2512.21336]` |
+| Framework F4 (adaptive submodularity) as foil | `[Borrowed — Golovin-Krause 2011]` `[Refuted for this problem]` — Prop C's γ > 0 falsifies monotone diminishing-returns hypothesis |
+| z_t = (s_t, b_t, phase(t)) sufficient-state heuristic | `[Heuristic]` `[Empirically motivated by 62% within-seed variance]` `[Needs verification]` |
+| Protocol C (pilot, bounded, no new GPU) | `[Definition]` `[Novel — this study]` |
+
+Details: `docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md` and
+`research/adaptive_controller_research_notes.md` (scratch derivations).
+Phase-1 skeptical audit: `docs/thesis/next_steps/ADAPTIVE_CONTROLLER_DIRECTION_AUDIT.md`.
+
+---
+
 See `docs/gpt_pro_assessment_response.md` for the item-level audit that drove
 these entries.

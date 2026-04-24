@@ -2,7 +2,7 @@
 
 **Author:** Matteo Omizzolo — MSc Thesis, Bocconi University
 **Supervisor:** Prof. Giacomo Zanella
-**Last updated:** 2026-04-20 (Phase 3a complete — search-class positive on ProSeCo-OWT; Negative-Result Corollary rescoped to ranker class; PRISM rejection upheld with refined reason)
+**Last updated:** 2026-04-23 (bounded LLaDA-SFT external-validity probe closed — Phase 2b partial-transfer verdict, Phase 3a NOT authorized on that backbone; OWT Phase 2b / Phase 3a remains the main discovery backbone and is not displaced)
 
 > **Phase-3a-aware framing (2026-04-20).** Phase 3a (job 479941, K=30 paired,
 > combinatorial baselines on ProSeCo-OWT) closes the Phase 3 empirical
@@ -19,7 +19,8 @@
 > > prune candidates — recover most of the oracle headroom.**
 >
 > Phase 2b's three smoking guns (mean_delta_oracle ceiling at B=8; top-10 MC
-> ∩ oracle Jaccard ≈ 1.5× random; top-10 MC internal Jaccard ≈ bottom-10)
+> ∩ oracle Jaccard ≈ 1.2–1.3× random baseline across B ∈ {2,3,4} per
+> `combinatorial_diagnostics.json`; top-10 MC internal Jaccard ≈ bottom-10)
 > still hold and still falsify the PRISM premise (PRISM is a learned
 > per-token quality signal, i.e. a member of the ranker class bounded by the
 > rescoped Negative-Result Corollary). The PRISM rejection therefore stands
@@ -230,7 +231,11 @@ All four appear directly in the theorems and are measured on real trajectories.
 - Smoking guns for the "scheduling is combinatorial, not signal-driven"
   hypothesis: (i) `mean_delta_oracle` uses ground-truth Δ_t and saturates by
   B=8; (ii) top-10 MC schedules overlap `mean_delta_oracle`'s picks at only
-  ~1.5× random baseline; (iii) top-10 MC schedules show internal Jaccard
+  1.20 / 1.18 / 1.30× random baseline at B ∈ {2,3,4} (observed in
+  `results/phase2b/combinatorial_diagnostics.json`; prior "~1.5×" figure
+  used an analytic E[|∩|]/E[|∪|] baseline, which over-states the ratio
+  versus the exact MC baseline used by `random_jaccard_baseline`);
+  (iii) top-10 MC schedules show internal Jaccard
   indistinguishable from bottom-10. Together: the +0.45 headroom is not
   recoverable by any greedy single-step ranker, learned or otherwise.
 - Variance decomposition at B=4: 62 % of total G-variance across MC schedules
@@ -348,6 +353,31 @@ Full report: `docs/thesis/experiments/PHASE3A_COMBINATORIAL_RESULTS.md`.
   ProSeCo-OWT is sufficient for the chapter contract). Alt-D Phase 2c
   MAUVE F-swap is **not** triggered (Phase 3a's search-class positive is
   the load-bearing result; no need to defend the small-B ranker win).
+- **Bounded cross-backbone appendix probe (ProSeCo-LLaDA-SFT) — CLOSED 2026-04-23.**
+  Infrastructure under `hpc/cross_backbone_proseco_llada_sft_{bounded,resume_phase2b}.sbatch`
+  and `src/mdm_playground/scheduling/backends/proseco_llada_sft.py`. Protocol A
+  and Phase 2b at K=8, T=64, B ∈ {2, 4}, GPT-2 reference, ProSeCo-style
+  corrector completed on 2026-04-22; analysis 2026-04-23. The run is an
+  **external-validity probe** for the OWT K=30 mainline and is treated as
+  bounded / Tier-3 evidence only (`n = 8 < 30`; CIs ~1.94× wider than
+  OWT's K=30; corrector semantic shift: LLaDA is time-agnostic, corrector
+  iteration is argmax rather than annealed-σ). The probe yields a
+  **partial-transfer verdict scoped to the tested bounded setup**:
+  (a) the uniform-not-beaten observation from OWT Phase 2b is corroborated
+  at T3 tier; (b) positive MC-oracle headroom over uniform did **not**
+  transfer at the tested budgets (paired bootstrap CI at B=4 is [0, 0] and
+  at B=2 is [−4.07, −1.07]); (c) per-trajectory signal dominance over the
+  mean-profile schedule transfers with large effect (cohens_d ≈ 7.8 at B=4).
+  The verdict is **not** "uniform is optimal across masked diffusion corrector
+  scheduling" — it is bounded external-validity evidence only. Three
+  non-discriminable hypotheses (corrector dominance H1, protocol sparseness
+  H2, reference mismatch H3) explain the non-transfer at K=8; discrimination
+  is outside thesis scope. **Phase 3a on LLaDA-SFT is NOT authorized** by
+  the current decision (terminal node:
+  `docs/thesis/next_steps/POST_CROSS_BACKBONE_DECISION.md`); re-opening
+  precondition is documented in §6 of that file. The OWT K=30 Phase 2b /
+  Phase 3a mainline is **not displaced** by this probe. Full result report:
+  `docs/thesis/experiments/CROSS_BACKBONE_REPLICATION_RESULTS.md` §10–§12.
 
 ## Immediate next milestone (Phase 3b — theory finalisation)
 

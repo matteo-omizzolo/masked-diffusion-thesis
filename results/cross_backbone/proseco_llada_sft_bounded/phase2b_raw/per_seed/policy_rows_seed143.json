@@ -1,0 +1,402 @@
+[
+  {
+    "seed": 143,
+    "B": 2,
+    "policy": "uniform",
+    "signal_kind": "none",
+    "signal_name": null,
+    "allocation_policy": "uniform",
+    "G": 5.88516740873456,
+    "A": 0.7643799781799316,
+    "residual": 5.120787430554628,
+    "f_base": -5.933979034423828,
+    "f_schedule": -0.04881162568926811,
+    "schedule_steps": [
+      0,
+      32
+    ],
+    "budget": 2,
+    "wall_time": 230.1442904472351
+  },
+  {
+    "seed": 143,
+    "B": 2,
+    "policy": "front",
+    "signal_kind": "none",
+    "signal_name": null,
+    "allocation_policy": "front",
+    "G": 5.88516740873456,
+    "A": 2.024747848510742,
+    "residual": 3.860419560223818,
+    "f_base": -5.933979034423828,
+    "f_schedule": -0.04881162568926811,
+    "schedule_steps": [
+      0,
+      1
+    ],
+    "budget": 2,
+    "wall_time": 222.3998372554779
+  },
+  {
+    "seed": 143,
+    "B": 2,
+    "policy": "back",
+    "signal_kind": "none",
+    "signal_name": null,
+    "allocation_policy": "back",
+    "G": 1.0140514373779297,
+    "A": 1.5647740364074707,
+    "residual": -0.550722599029541,
+    "f_base": -5.933979034423828,
+    "f_schedule": -4.919927597045898,
+    "schedule_steps": [
+      62,
+      63
+    ],
+    "budget": 2,
+    "wall_time": 222.39946246147156
+  },
+  {
+    "seed": 143,
+    "B": 2,
+    "policy": "middle",
+    "signal_kind": "none",
+    "signal_name": null,
+    "allocation_policy": "middle",
+    "G": 0.05776262283325195,
+    "A": 0.5142822265625,
+    "residual": -0.45651960372924805,
+    "f_base": -5.933979034423828,
+    "f_schedule": -5.876216411590576,
+    "schedule_steps": [
+      31,
+      32
+    ],
+    "budget": 2,
+    "wall_time": 222.40396547317505
+  },
+  {
+    "seed": 143,
+    "B": 2,
+    "policy": "entropy_top_B_pt",
+    "signal_kind": "per_trajectory_signal",
+    "signal_name": "entropy",
+    "allocation_policy": "top_B",
+    "G": 1.0140514373779297,
+    "A": 1.5647740364074707,
+    "residual": -0.550722599029541,
+    "f_base": -5.933979034423828,
+    "f_schedule": -4.919927597045898,
+    "schedule_steps": [
+      62,
+      63
+    ],
+    "budget": 2,
+    "wall_time": 222.41958045959473
+  },
+  {
+    "seed": 143,
+    "B": 2,
+    "policy": "entropy_bot_B_pt",
+    "signal_kind": "per_trajectory_signal",
+    "signal_name": "entropy",
+    "allocation_policy": "bottom_B",
+    "G": 0.4429340362548828,
+    "A": -0.533818244934082,
+    "residual": 0.9767522811889648,
+    "f_base": -5.933979034423828,
+    "f_schedule": -5.491044998168945,
+    "schedule_steps": [
+      3,
+      8
+    ],
+    "budget": 2,
+    "wall_time": 222.41085243225098
+  },
+  {
+    "seed": 143,
+    "B": 2,
+    "policy": "margin_top_B_pt",
+    "signal_kind": "per_trajectory_signal",
+    "signal_name": "inverse_margin",
+    "allocation_policy": "top_B",
+    "G": 1.0140514373779297,
+    "A": 1.5647740364074707,
+    "residual": -0.550722599029541,
+    "f_base": -5.933979034423828,
+    "f_schedule": -4.919927597045898,
+    "schedule_steps": [
+      62,
+      63
+    ],
+    "budget": 2,
+    "wall_time": 222.40825295448303
+  },
+  {
+    "seed": 143,
+    "B": 2,
+    "policy": "quality_top_B_pt",
+    "signal_kind": "per_trajectory_signal",
+    "signal_name": "quality_mass_proxy",
+    "allocation_policy": "top_B",
+    "G": 1.0140514373779297,
+    "A": 1.5647740364074707,
+    "residual": -0.550722599029541,
+    "f_base": -5.933979034423828,
+    "f_schedule": -4.919927597045898,
+    "schedule_steps": [
+      62,
+      63
+    ],
+    "budget": 2,
+    "wall_time": 222.41668391227722
+  },
+  {
+    "seed": 143,
+    "B": 2,
+    "policy": "entropy_top_B_mp",
+    "signal_kind": "mean_profile_signal",
+    "signal_name": "entropy",
+    "allocation_policy": "top_B",
+    "G": 5.88516740873456,
+    "A": 1.5918612480163574,
+    "residual": 4.293306160718203,
+    "f_base": -5.933979034423828,
+    "f_schedule": -0.04881162568926811,
+    "schedule_steps": [
+      0,
+      63
+    ],
+    "budget": 2,
+    "wall_time": 222.39707827568054
+  },
+  {
+    "seed": 143,
+    "B": 2,
+    "policy": "mean_delta_oracle",
+    "signal_kind": "mean_delta",
+    "signal_name": null,
+    "allocation_policy": "top_B",
+    "G": 1.0140514373779297,
+    "A": 1.5647740364074707,
+    "residual": -0.550722599029541,
+    "f_base": -5.933979034423828,
+    "f_schedule": -4.919927597045898,
+    "schedule_steps": [
+      62,
+      63
+    ],
+    "budget": 2,
+    "wall_time": 222.4134554862976
+  },
+  {
+    "seed": 143,
+    "B": 4,
+    "policy": "uniform",
+    "signal_kind": "none",
+    "signal_name": null,
+    "allocation_policy": "uniform",
+    "G": 5.88516740873456,
+    "A": 0.9417791366577148,
+    "residual": 4.943388272076845,
+    "f_base": -5.933979034423828,
+    "f_schedule": -0.04881162568926811,
+    "schedule_steps": [
+      0,
+      16,
+      32,
+      48
+    ],
+    "budget": 4,
+    "wall_time": 224.1115424633026
+  },
+  {
+    "seed": 143,
+    "B": 4,
+    "policy": "front",
+    "signal_kind": "none",
+    "signal_name": null,
+    "allocation_policy": "front",
+    "G": 5.88516740873456,
+    "A": 1.5745859146118164,
+    "residual": 4.310581494122744,
+    "f_base": -5.933979034423828,
+    "f_schedule": -0.04881162568926811,
+    "schedule_steps": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "budget": 4,
+    "wall_time": 224.10366559028625
+  },
+  {
+    "seed": 143,
+    "B": 4,
+    "policy": "back",
+    "signal_kind": "none",
+    "signal_name": null,
+    "allocation_policy": "back",
+    "G": 0.8351435661315918,
+    "A": 2.777268886566162,
+    "residual": -1.9421253204345703,
+    "f_base": -5.933979034423828,
+    "f_schedule": -5.098835468292236,
+    "schedule_steps": [
+      60,
+      61,
+      62,
+      63
+    ],
+    "budget": 4,
+    "wall_time": 224.11794567108154
+  },
+  {
+    "seed": 143,
+    "B": 4,
+    "policy": "middle",
+    "signal_kind": "none",
+    "signal_name": null,
+    "allocation_policy": "middle",
+    "G": 0.34797000885009766,
+    "A": 1.4869475364685059,
+    "residual": -1.1389775276184082,
+    "f_base": -5.933979034423828,
+    "f_schedule": -5.5860090255737305,
+    "schedule_steps": [
+      30,
+      31,
+      32,
+      33
+    ],
+    "budget": 4,
+    "wall_time": 224.11607837677002
+  },
+  {
+    "seed": 143,
+    "B": 4,
+    "policy": "entropy_top_B_pt",
+    "signal_kind": "per_trajectory_signal",
+    "signal_name": "entropy",
+    "allocation_policy": "top_B",
+    "G": 5.88516740873456,
+    "A": 2.898383617401123,
+    "residual": 2.986783791333437,
+    "f_base": -5.933979034423828,
+    "f_schedule": -0.04881162568926811,
+    "schedule_steps": [
+      0,
+      61,
+      62,
+      63
+    ],
+    "budget": 4,
+    "wall_time": 224.10165786743164
+  },
+  {
+    "seed": 143,
+    "B": 4,
+    "policy": "entropy_bot_B_pt",
+    "signal_kind": "per_trajectory_signal",
+    "signal_name": "entropy",
+    "allocation_policy": "bottom_B",
+    "G": -0.011158943176269531,
+    "A": -1.5585675239562988,
+    "residual": 1.5474085807800293,
+    "f_base": -5.933979034423828,
+    "f_schedule": -5.945137977600098,
+    "schedule_steps": [
+      3,
+      7,
+      8,
+      10
+    ],
+    "budget": 4,
+    "wall_time": 224.13326454162598
+  },
+  {
+    "seed": 143,
+    "B": 4,
+    "policy": "margin_top_B_pt",
+    "signal_kind": "per_trajectory_signal",
+    "signal_name": "inverse_margin",
+    "allocation_policy": "top_B",
+    "G": 0.8351435661315918,
+    "A": 2.777268886566162,
+    "residual": -1.9421253204345703,
+    "f_base": -5.933979034423828,
+    "f_schedule": -5.098835468292236,
+    "schedule_steps": [
+      60,
+      61,
+      62,
+      63
+    ],
+    "budget": 4,
+    "wall_time": 224.11386609077454
+  },
+  {
+    "seed": 143,
+    "B": 4,
+    "policy": "quality_top_B_pt",
+    "signal_kind": "per_trajectory_signal",
+    "signal_name": "quality_mass_proxy",
+    "allocation_policy": "top_B",
+    "G": 0.8351435661315918,
+    "A": 2.777268886566162,
+    "residual": -1.9421253204345703,
+    "f_base": -5.933979034423828,
+    "f_schedule": -5.098835468292236,
+    "schedule_steps": [
+      60,
+      61,
+      62,
+      63
+    ],
+    "budget": 4,
+    "wall_time": 224.12718677520752
+  },
+  {
+    "seed": 143,
+    "B": 4,
+    "policy": "entropy_top_B_mp",
+    "signal_kind": "mean_profile_signal",
+    "signal_name": "entropy",
+    "allocation_policy": "top_B",
+    "G": 5.88516740873456,
+    "A": 2.898383617401123,
+    "residual": 2.986783791333437,
+    "f_base": -5.933979034423828,
+    "f_schedule": -0.04881162568926811,
+    "schedule_steps": [
+      0,
+      61,
+      62,
+      63
+    ],
+    "budget": 4,
+    "wall_time": 224.10105395317078
+  },
+  {
+    "seed": 143,
+    "B": 4,
+    "policy": "mean_delta_oracle",
+    "signal_kind": "mean_delta",
+    "signal_name": null,
+    "allocation_policy": "top_B",
+    "G": 0.8144879341125488,
+    "A": 2.8884668350219727,
+    "residual": -2.073978900909424,
+    "f_base": -5.933979034423828,
+    "f_schedule": -5.119491100311279,
+    "schedule_steps": [
+      58,
+      61,
+      62,
+      63
+    ],
+    "budget": 4,
+    "wall_time": 224.11779832839966
+  }
+]
