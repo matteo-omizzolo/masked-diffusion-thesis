@@ -132,21 +132,29 @@ in two places creates drift.
 ## 4. Theory package (theorem stack)
 
 Formal statements, assumptions, proofs, and falsifiers live in
-`research/candidate_theorems.md`. Summary of the stack:
+`research/candidate_theorems.md` §0–§7. Summary of the active stack:
 
 | § | Object | Status | Role |
 |---|---|---|---|
-| §1 | Theorem A — marginal proxy regret: G(S_B^*) − G(Ŝ_B) ≤ 2Bε + 2η_B | Proved | Baseline; tested by (A2)/(A3) diagnostics |
-| §1 | Refinements A′ (variance form), A″ (rank form) | Proved | Empirically anchored variants of Theorem A |
-| §1 | Negative-Result Corollary (separable-ψ envelope) | Proved | Documents ranker class failure on ProSeCo-OWT |
-| §2 | Theorem B — exact pairwise regret: G(S_B^*) − G(Ŝ) ≤ 2ζ_B + ω_B | Proved | **Central new theorem** |
-| §2 | Theorem B — estimated pairwise regret: G(S_B^*) − G(Ŝ_Q̂) ≤ 2ζ_B + 2α_B + ω_B | Proved (constant 2 derived; not 4) | Operational form for held-out evaluation |
-| §3 | Proposition C — regime diagnostics (U_B, R_B, I_B, P_B, C_B) | Definition + classification protocol | Regime taxonomy / framework |
-| §4 | Theorem D — online controller: V_1 − 𝔼[F | π̂] ≤ 2Tδ | Proof sketch (standard ADP) | Optional / appendix unless Phase 4 promotes |
-| §5 | Proposition E — burn-in exclusion via L_F-Lipschitz F | Proof sketch | Optional / side lemma |
+| §1 | Theorem A — marginal proxy regret 2Bε + 2η_B | Proved | Baseline; tested by (A2)/(A3) |
+| §1 | Refinements A′ (variance), A″ (rank) | Proved under modeling assumptions (mixing/Gaussian-A) | Empirically anchored, assumption-dependent |
+| §1 | Negative-Result Corollary | Proved; **scoped to separable per-step rankers only** | Documents ranker class limitation on ProSeCo-OWT |
+| §2.1 | Theorem B exact: G(S_B^*) − G(Ŝ) ≤ 2ζ_B + ω_B | Proved | Generic surrogate-regret inequality |
+| §2.2 | Theorem B estimated: ≤ 2ζ_B + 2α_B + ω_B | Proved (constant 2; the 4α_B form is not adopted) | Operational form (uniform bound) |
+| §2.3 | Theorem B′ finite candidate pool: ≤ κ_B + 2ζ_{B,C} + 2α_{B,δ} + ω_B w.p. ≥ 1 − δ | Proved | **High-probability experimentally usable form** |
+| §2.4 | Diagnostic / population / feature-conditioned hierarchy | Definition | Distinguishes Levels 1 / 2 / 3 of pairwise scheduler |
+| §3 | Diagnostic Framework C — regime classification (U_B, R_B, I_B, P_B, C_B) | Definition + protocol | Regime taxonomy |
+| §4 | Theorem D — online controller 2Tδ ADP loss | Proof sketch | Optional / appendix; first to cut |
+| §5 | Lemma E — burn-in exclusion under clipped/Lipschitz F_C | Conditional sketch (F = −GPT-2 NLL is **not** Lipschitz without clipping) | Optional side lemma |
 
-The thesis backbone is **A → B → C**. D and E are appendix unless empirical
-results promote them.
+> **Honesty.** Theorem B's inequality is a generic surrogate-regret statement —
+> a short standard argument. Its scientific value comes from the empirical
+> question of whether Q is a substantially better approximation to G than A
+> on masked diffusion trajectories. The thesis claim is *not* "Theorem B
+> solves corrector scheduling"; it is "Theorem B identifies the falsifiable
+> condition under which interaction-aware scheduling is justified."
+
+The backbone is **A → B → C**. D and E are appendix unless promoted by empirical results.
 
 ---
 
@@ -157,14 +165,15 @@ Before coding, create a table like this in the active plan.
 | Theory item | Assumption / prediction | Measured quantity | Experiment | Possible outcome |
 |---|---|---|---|---|
 | Theorem A (A2) | |G − A| ≤ η_B | η_B from Phase 0/2b residuals | Theorem A non-vacuous | Move to Theorem B |
-| Theorem A (A3) | |Δ − ψ| ≤ ε; rankers ≈ A top-B | ε, ε_R, ρ(A,G) Phase 0 | Marginal regime II | Negative-Result Corollary; → B |
+| Theorem A (A3) | |Δ − ψ| ≤ ε; rankers ≈ A top-B | ε, ε_R, ρ(A,G) Phase 0 | Marginal regime II | Negative-Result Corollary (scoped); → B |
 | Theorem A util. | 2Bε + 2η_B < ranker headroom | plug-in vs measured headroom | Theorem A operative | Bound is structural, not predictive |
-| Theorem B (B2) | ζ_B < η_B; P_B > R_B | Phase 1 sparse pairwise (ζ_B, ρ(Q,G)) | Interaction regime III | Higher-order / chaotic (regime IV) |
-| Theorem B (B3) | |Q − Q̂| ≤ α_B; held-out Q̂ ≈ Q | Phase 1/2 train/test split | Pairwise scheduler buildable | Surrogate undersampled / optimizer bound |
-| Theorem B util. | G(Ŝ_Q̂) > G(rankers) | Phase 2 held-out evaluation | **Theorem B is central result** | CD-G/BS-AG remain comparison only |
-| Proposition C | Diagnostics stable at K=30 | U_B, R_B, I_B, P_B, C_B with BCa CI | Diagnostic framework valid | Single-backbone case study |
-| Theorem D | Compact z_t admits small ‖V−V̂‖_∞ | Phase 4 (only if reached) | Online controller in main | Stays appendix (Protocol C generalizes) |
-| Proposition E | L_F·|R_t|/D bounds Δ_t at burn-in | Phase 0 audit of R_t and L_F | Exclusion lemma in main | Side remark only |
+| Theorem B (B2) | ζ_B < η_B; P_B > R_B | Phase 1 sparse pairwise | Interaction regime III | Higher-order / chaotic (regime IV) |
+| Theorem B′ (B3′) | |Q − Q̂|≤ α_{B,δ} on candidate pool C_B | Phase 1/2 held-out seeds, paired CRN | Pairwise scheduler buildable on C_B | Surrogate undersampled |
+| Theorem B′ κ_B | candidate pool C_B near MC oracle | Phase 2 pool comparison | Within-pool regret meaningful for full oracle | Restrict claim to C_B |
+| Theorem B util. | G(Ŝ_Q̂) > G(rankers) on **held-out trajectories** (Level 3) | Phase 2 held-out feature-conditioned eval | **Theorem B central; Level-3 deployable** | Population scheduler only or non-deployable |
+| Diagnostic Framework C | Diagnostics stable at K=30 | U_B, R_B, I_B, P_B, C_B with BCa CI | Diagnostic framework valid | Single-backbone case study |
+| Theorem D | Compact z_t admits small ‖V−V̂‖_∞ | Phase 4 (only if reached) | Online controller in main | Stays appendix |
+| Lemma E | clipped F_C is L_F-Lipschitz; small R_t ⇒ small Δ_t | Phase 0 audit of R_t, F sensitivity | Side lemma in main | Side remark only |
 
 Detailed table (with exact theorem references): `research/candidate_theorems.md` §7.
 
@@ -187,29 +196,46 @@ Verify that previous results are real before extending them.
 
 ### Required checks
 
-1. Read and document the code path for:
-   - base generation;
-   - branch generation;
-   - scheduled generation;
-   - corrector invocation;
-   - F scoring;
-   - random seed control.
-2. Add assertions or tests for:
-   - same seed gives same base output;
-   - schedule S = empty equals base;
-   - repeated schedule evaluation is deterministic if expected;
-   - applying one corrector at t matches Protocol A branch definition;
-   - B budget counts NFEs consistently.
-3. Run a smoke test:
-   - K = 3 seeds;
-   - T = 64;
-   - B in {2,4};
-   - policies: uniform, mean_delta_oracle, CD-G, BS-AG.
-4. Run a critical replication:
-   - K = 30 if feasible;
-   - T = 64;
-   - B in {2,3,4,8};
-   - uniform, marginal rankers, MC oracle best-of-100, CD-G, BS-AG.
+**Step 1 — Code path audit (before any run).** Read and document the code path for
+base generation, branch generation, scheduled generation, corrector invocation,
+F scoring, random seed control.
+
+**Step 2 — Pre-flight assertions (BLOCKING; required before K=3 smoke).** Implement
+or manually verify the following invariants. K=3 smoke must not run until they
+exist or are verified:
+
+  PF1  **Deterministic base.** Same seed + same config gives same base tokens
+       and same F score (bit-equal F up to floating-point tolerance).
+  PF2  **Empty schedule equals base.** `run_with_schedule({})` produces the
+       same tokens and F score as `run_base`.
+  PF3  **Single-correction equivalence.** `run_with_schedule({t})` equals the
+       Protocol A branch at t (same base trajectory, single corrector loop
+       at step t).
+  PF4  **Budget accounting.** |S| = B; total extra forward passes equal
+       c_corr · B (c_corr = 2 for ProSeCo annealed refinement); schedules
+       with the same |S| have the same compute cost.
+  PF5  **CRN consistency.** Base and any branch with schedule S use common
+       random numbers everywhere except along the corrector path itself.
+  PF6  **F-scoring consistency.** Same token sequence gives same F score
+       across two independent invocations.
+  PF7  **Corrector action set.** ProSeCo corrects only positions in the
+       revisable set R_t (typically already-unmasked / committed positions).
+  PF8  **Signal/action-set consistency.** H_t, M_t^{-1}, QM_t are computed
+       over the *same* R_t the corrector acts on (avoid the historical
+       "signals over wrong positions" bug).
+
+If any pre-flight assertion fails, **stop** and fix before smoke.
+
+**Step 3 — K=3 smoke (only after Step 2 passes).**
+   - K = 3 seeds; T = 64; B ∈ {2, 4}.
+   - Policies: uniform, mean_delta_oracle, CD-G, BS-AG (cheap subset).
+   - Expected: qualitative match against existing
+     `results/phase2b/policy_comparison_paired.json` and
+     `results/phase3a_proseco_owt/oracle_gap_closure.json` keys.
+
+**Step 4 — K=30 critical replication (only after Step 3 matches qualitatively).**
+   - K = 30; T = 64; B ∈ {2, 3, 4, 8}.
+   - Policies: uniform, marginal rankers, MC oracle best-of-100, CD-G, BS-AG.
 
 ### Models
 
@@ -230,11 +256,16 @@ Qualitatively reproduce:
 
 ---
 
-## Phase 1 — Pairwise interaction diagnostics on ProSeCo-OWT
+## Phase 1 — Pairwise interaction diagnostics on ProSeCo-OWT (Level 1–2)
 
 ### Purpose
 
-Determine whether schedule interactions are structured enough to support Theorem B.
+Determine whether schedule interactions are structured enough to support
+Theorem B. Phase 1 operates at **Level 1 (diagnostic)** and **Level 2
+(population)** of the hierarchy in `research/candidate_theorems.md` §2.4:
+it uses true counterfactual G({t,t'}) calls to estimate ξ_i and ξ̄, and
+optimises Q̄ as a single global schedule. It does **not** yet test a
+deployable feature-conditioned scheduler (that is Phase 2 / Level 3).
 
 ### Research questions
 
@@ -304,11 +335,25 @@ Produce:
 
 ---
 
-## Phase 2 — Interaction-aware scheduler
+## Phase 2 — Interaction-aware scheduler (Level 2 → Level 3)
 
 ### Purpose
 
-Test whether a pairwise surrogate scheduler can outperform separable rankers without using true G feedback at inference.
+Test whether a pairwise surrogate scheduler can outperform separable rankers.
+Phase 2 has two sub-stages corresponding to the hierarchy in
+`research/candidate_theorems.md` §2.4:
+
+- **Phase 2a — Population (Level 2).** Optimise Q̄ from training-seed Δ̄_t,
+  ξ̄_{t,t'} estimates; choose a single global schedule; evaluate on held-out
+  seeds. This is a partially practical claim: the schedule is good *on
+  average* but not trajectory-conditioned.
+- **Phase 2b — Feature-conditioned (Level 3).** Build Q̂_i from cheap
+  observable features s_t of trajectory i, train on training seeds, evaluate
+  on held-out seeds with **no true G_i calls at inference**. This is the
+  only stage that supports a deployable inference-time scheduler claim.
+
+Phase 2b runs **only if** Phase 2a beats rankers. Theorem B / B′ is
+"central deployable" only at Level 3.
 
 ### Research questions
 
@@ -511,7 +556,7 @@ Test whether corrector timing can be approximated as an online finite-horizon bu
 ### State
 
 ```text
-z_t = (phase_t, H_t, M_t^{-1}, Q_t, u_t, b_t)
+z_t = (phase_t, H_t, M_t^{-1}, QM_t, u_t, b_t)
 ```
 
 Optional:

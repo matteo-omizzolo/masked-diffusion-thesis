@@ -9,20 +9,23 @@
 ## Active theorem stack (theory-first programme — 2026-05)
 
 The stack has been reframed for the theory-first phase. Detailed statements,
-proofs, and theory-to-experiment map are in `research/candidate_theorems.md`;
-this file is a one-page summary.
+proofs, and theory-to-experiment map are in `research/candidate_theorems.md`
+§0–§7; this file is a one-page summary.
 
 | § | Object | Status | Role |
 |---|---|---|---|
 | §1 | **Theorem A** — marginal proxy regret 2Bε + 2η_B | Proved | Baseline; tested by (A2)/(A3) |
-| §1 | Refinements A′ (variance form), A″ (rank form) | Proved | Empirically anchored variants |
-| §1 | Negative-Result Corollary (separable-ψ envelope) | Proved | Ranker-class bound on ProSeCo-OWT |
-| §2 | **Theorem B** — pairwise regret 2ζ_B + 2α_B + ω_B | Proved | **Central new theorem** |
-| §3 | **Proposition C** — regime diagnostics (U_B, R_B, I_B, P_B, C_B) | Definition + classification | Regime taxonomy framework |
-| §4 | Theorem D — online controller 2Tδ ADP loss | Proof sketch | Optional / appendix |
-| §5 | Proposition E — burn-in exclusion via Lipschitz F | Proof sketch | Optional / side lemma |
+| §1 | Refinements A′ (variance form), A″ (rank form) | Proved under modeling assumptions | Empirically anchored, assumption-dependent |
+| §1 | Negative-Result Corollary | Proved; **scoped to separable per-step rankers only** | Ranker-class bound on ProSeCo-OWT |
+| §2.1 | Theorem B exact | Proved | Generic surrogate-regret inequality |
+| §2.2 | Theorem B estimated 2ζ_B + 2α_B + ω_B | Proved (constant 2 derived) | Operational form (uniform bound) |
+| §2.3 | **Theorem B′** finite candidate pool / high-prob | Proved | **Experimentally usable form** |
+| §2.4 | Diagnostic / population / feature-conditioned hierarchy | Definition | Levels 1 / 2 / 3 of pairwise scheduler |
+| §3 | **Diagnostic Framework C** — regime classification | Definition + protocol | Regime taxonomy (renamed from Proposition C) |
+| §4 | Theorem D — online controller 2Tδ ADP loss | Proof sketch | Optional / appendix; first to cut |
+| §5 | Lemma E — burn-in exclusion under clipped F_C | Conditional sketch | Optional / side lemma; F = −GPT-2 NLL is **not** Lipschitz without clipping |
 
-**Backbone:** Theorem A → Theorem B → Proposition C. D and E are appendix.
+**Backbone:** Theorem A → Theorem B → Diagnostic Framework C. D and E are appendix.
 
 Plan: `docs/06_theory_first_research_plan.md`.
 

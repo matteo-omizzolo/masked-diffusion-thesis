@@ -8,6 +8,10 @@
 > timing programme. All material *after* the "Historical Provenance" divider below is
 > retained as technical provenance and should not be treated as the current thesis
 > structure unless explicitly referenced here.
+>
+> **Backbone.** Theorem A (marginal baseline) → Theorem B (pairwise surrogate
+> regret, central new theorem) → Diagnostic Framework C (regime classification).
+> Theorem D and Proposition E are optional / appendix-grade.
 
 ## 0. Formal problem setup
 
@@ -18,50 +22,46 @@ steps with time index t ∈ {1, …, T}. A **corrector schedule** is a subset
 
   S ⊆ {1, …, T},   |S| = B,
 
-where B is a fixed corrector NFE budget and at most one corrector loop is applied
-per step (binary placement). Let y^S denote the final sample produced when the
-corrector is applied at exactly the times in S, and let y^∅ denote the
-corrector-free baseline.
+with at most one corrector loop per step (binary placement). The integer B is
+the **fixed corrector-placement budget**; the corresponding extra-NFE budget is
 
-Let F : Y → ℝ be a trajectory-level quality functional (e.g. F = − GPT-2 NLL on
-a fixed window). Define the **joint schedule gain**
+  B_NFE := c_corr · B,
 
-  G(S) := F(y^S) − F(y^∅).
+where c_corr is the number of extra forward passes per corrector placement
+(c_corr = 2 for ProSeCo annealed refinement). All schedules with |S| = B have
+equal compute cost. We use "placement budget" by default and note "NFE budget"
+only when emphasising compute.
 
-Define the **oracle top-B schedule**
+Let y^S denote the final sample produced when the corrector is applied at
+exactly the times in S, and y^∅ the corrector-free baseline. Let
+F : Y → ℝ be a trajectory-level quality functional. In experiments we use
+F = − GPT-2 NLL on a fixed 512-token window; F is treated as a **relative
+within-run** metric, not an absolute-quality claim.
 
-  S_B^* ∈ argmax_{|S|=B} G(S).
+Define the **joint schedule gain** and **oracle**
 
-The thesis question is: under what conditions can S_B^* be approximated by a
-computable policy that does not query G(·) on every candidate schedule?
+  G(S) := F(y^S) − F(y^∅),       S_B^* ∈ argmax_{|S|=B} G(S).
 
-### 0.2 Marginal gain and additive surrogate
+S_B^* is exact in theorem statements; in experiments it is approximated by the
+**MC oracle** (best-of-N random schedules, paired CRN), which is a practical
+upper bound — *not* an exhaustive (T choose B) maximizer.
 
-Define the **single-step marginal gain**
+### 0.2 Marginal gain, additive surrogate, and pairwise surrogate
 
-  Δ_t := G({t}).
+Define the **single-step marginal gain** Δ_t := G({t}), the **additive
+surrogate**
 
-Define the **additive (first-order) surrogate**
+  A(S) := ∑_{t ∈ S} Δ_t,
 
-  A(S) := ∑_{t ∈ S} Δ_t.
+and the **operational second difference**
 
-A(·) ignores all interactions between corrector placements.
+  ξ_{t,t'} := G({t, t'}) − Δ_t − Δ_{t'}    (t ≠ t').
 
-### 0.3 Signals and separable rankers
-
-Let s_t denote observable trajectory signals at step t (entropy H_t, inverse
-margin M_t^{-1}, quality mass Q_t, revisable fraction u_t, normalized phase t/T,
-…). A **separable ranker** is any policy of the form
-
-  Ŝ_B(ψ) := top-B_t  ψ(s_t),
-
-i.e. one that scores each step *independently* and selects the B largest scores.
-
-### 0.4 Pairwise interaction and pairwise surrogate
-
-Define the **pairwise interaction**
-
-  ξ_{t,t'} := G({t, t'}) − Δ_t − Δ_{t'},   t ≠ t'.
+> **Operational caveat.** ξ_{t,t'} is the discrete second difference of the
+> schedule-value function G; it is **not** a claim that the neural dynamics
+> decompose mechanistically into local pairwise effects. ξ aggregates direct
+> effects, downstream state changes, altered context at later steps, stochastic
+> sensitivity, and metric effects. We use the term "pairwise" operationally.
 
 Define the **pairwise (second-order) surrogate**
 
@@ -69,46 +69,105 @@ Define the **pairwise (second-order) surrogate**
 
 Q(·) captures all pair effects but ignores triples and higher orders.
 
-### 0.5 Online state
+### 0.3 Signals and separable rankers
 
-For the online direction, define a compact state
+Let s_t denote observable trajectory signals at step t. Active signals:
 
-  z_t = (t/T, H_t, M_t^{-1}, Q_t, u_t, b_t, h_t),
+  H_t        — aggregate entropy over the revisable set;
+  M_t^{-1}   — inverse confidence margin over the revisable set;
+  QM_t       — PRISM-style "quality mass" over the revisable set;
+  u_t        — revisable / unmasked fraction;
+  φ_t = t/T  — normalized phase.
 
-where b_t ∈ {0, …, B} is the **remaining correction budget** and h_t is an
-optional compact history summary. Distinguish:
+> **Notation.** We write **QM_t** for the quality-mass signal to avoid collision
+> with the pairwise surrogate Q(S). Historical result files use `Q_t` for the
+> same signal; treat the two as identical.
+
+A **separable ranker** is any policy of the form
+Ŝ_B(ψ) := top-B_t  ψ(s_t), scoring each step independently.
+
+The corrector acts on the **revisable set** R_t (ProSeCo: already-unmasked
+positions). Signals must be computed over the same R_t the corrector acts on;
+historical bug-#1 (signals computed over wrong positions) must not reappear.
+
+### 0.4 Online state
+
+For the online direction (Theorem D), define a compact state
+
+  z_t = (φ_t, H_t, M_t^{-1}, QM_t, u_t, b_t, h_t),
+
+where b_t ∈ {0, …, B} is the remaining placement budget and h_t an optional
+compact history summary. We distinguish:
 
 - **Offline schedule selection.** Choose S after observing/estimating
-  trajectory-level quantities (Δ_t, ξ_{t,t'}) for the whole trajectory.
+  trajectory-level quantities for the whole trajectory.
 - **Online control.** At each step t observe z_t and choose
-  a_t ∈ {0, 1} (correct/skip) under the budget constraint ∑_t a_t = B.
+  a_t ∈ {0, 1} under ∑_t a_t = B.
 
-### 0.6 Randomness conventions
+### 0.5 Levels of analysis (seed-wise / population / feature-conditioned)
 
-Let i index seeds. Quantities G_i(S), Δ_{i,t}, ξ_{i,t,t'} are seed-wise; their
-seed-averages are 𝔼_i G(S), 𝔼_i Δ_t, 𝔼_i ξ_{t,t'}. Empirical estimators use
-K paired seeds with common random numbers (CRN) so that variance reductions
-are valid. All bounds below are stated **either** seed-wise (worst-case over a
-sample) or in expectation; we mark which.
+The objects G, Δ, ξ, Q can live at three different levels. The level matters
+for what experiments can establish.
+
+**Level 1 — Seed-wise schedule value.** For seed i, fix the trajectory and
+its predictor randomness (CRN); evaluate
+
+  G_i(S),   Δ_{i,t} = G_i({t}),   ξ_{i,t,t'},   Q_i(S).
+
+These are well-defined objects on a single trajectory. Computing them requires
+counterfactual G-evaluations on the *same* trajectory; they are diagnostic
+quantities, not deployable signals.
+
+**Level 2 — Population / mean schedule value.** Average over a paired-seed
+distribution:
+
+  Ḡ(S) := 𝔼_i[G_i(S)],   Δ̄_t := 𝔼_i[Δ_{i,t}],
+  ξ̄_{t,t'} := 𝔼_i[ξ_{i,t,t'}],   Q̄(S) := A(S; Δ̄) + Σ ξ̄_{t,t'}.
+
+Empirical estimators average over K paired seeds. Optimizing Q̄ produces a
+**single global schedule** that is good on average; it does not adapt to
+per-instance trajectory features.
+
+**Level 3 — Feature-conditioned / held-out scheduler.** Build
+
+  Q̂_i(S) — estimated from observable features of trajectory i,
+
+trained/calibrated on **other** seeds and evaluated on held-out seed i. This
+is the only level that supports a **trajectory-conditioned** scheduler at
+inference without true G_i queries. It is the level required to claim a
+*deployable* scheduler.
+
+**Theorem-level convention.** Theorem A applies at any level provided its
+assumptions are stated at that level. Theorem B is stated for an arbitrary G
+and arbitrary surrogates Q, Q̂; instantiating it at Levels 1, 2, 3 produces
+diagnostic, population, and feature-conditioned forms. The thesis must not
+claim a deployable scheduler unless the Level-3 form has empirically supported
+assumptions on held-out seeds.
+
+### 0.6 Randomness and pairing
+
+All paired comparisons (G(S) − G(uniform), G(S) − A(S), etc.) use **common
+random numbers** (CRN): same seed, same predictor randomness, same tokenizer
+draws — the only thing that differs is the corrector schedule. Estimators
+report point estimates with BCa bootstrap 95 % CIs over seeds. Quantities
+without subscript i are seed-averaged; seed-wise quantities carry the i index.
 
 ---
 
 ## 1. Theorem A — Marginal/ranker baseline (active main theorem, baseline)
 
-**Role in thesis.** Theorem A is the *baseline* theory-first theorem. It states
-the conditions under which a separable ranker is provably near the oracle. It is
-**not** intended as the central new contribution; rather, the experiments will
-test whether its assumptions hold, and Theorem B takes over when they do not.
+**Role.** Theorem A is the *baseline* theory-first theorem: it states the
+conditions under which a separable ranker is provably near the oracle. It is
+**not** the central new contribution; the experiments test whether its
+assumptions hold, and Theorem B takes over when they do not.
 
 ### 1.1 Statement (proved)
 
 Assume:
 
-  (A1) **Binary placement.** k_t ∈ {0, 1}, ∑_t k_t = B.
-  (A2) **Approximate additivity.** ∃ η_B ≥ 0 such that
-       |G(S) − A(S)| ≤ η_B   for all |S| ≤ B.
-  (A3) **Proxy calibration.** ∃ ε ≥ 0 such that
-       |Δ_t − ψ(s_t)| ≤ ε    for all t.
+  (A1) Binary placement, ∑_t k_t = B, k_t ∈ {0, 1}.
+  (A2) Approximate additivity. ∃ η_B ≥ 0 with |G(S) − A(S)| ≤ η_B for all |S| ≤ B.
+  (A3) Proxy calibration. ∃ ε ≥ 0 with |Δ_t − ψ(s_t)| ≤ ε for all t.
 
 Let Ŝ_B = top-B_t ψ(s_t). Then
 
@@ -116,397 +175,408 @@ Let Ŝ_B = top-B_t ψ(s_t). Then
 
 ### 1.2 Proof
 
-By (A2), |G(S) − A(S)| ≤ η_B at S = S_B^* and at S = Ŝ_B. Hence
+By (A2) at S = S_B^* and S = Ŝ_B,
 
-  G(S_B^*) − G(Ŝ_B) ≤ A(S_B^*) − A(Ŝ_B) + 2 η_B.   (★)
+  G(S_B^*) − G(Ŝ_B) ≤ A(S_B^*) − A(Ŝ_B) + 2 η_B.    (★)
 
-Let S_A^* = argmax_{|S|=B} A(S). By Lemma A1 applied to A, S_A^* is the B
-indices of largest Δ_t, hence A(S_B^*) ≤ A(S_A^*). By Lemma A2 applied with
-the proxy ψ to the values Δ_t,
+Let S_A^* = argmax_{|S|=B} A(S). By Lemma A1 (below) S_A^* is the B indices of
+largest Δ_t, so A(S_B^*) ≤ A(S_A^*). By Lemma A2 with proxy ψ on Δ-values,
+A(S_A^*) − A(Ŝ_B) ≤ 2 B ε. Substituting into (★) gives the bound. ∎
 
-  A(S_A^*) − A(Ŝ_B) ≤ 2 B ε.
+Lemma A1 (oracle top-B under exact additivity), Lemma A2 (calibration regret
+under exact additivity, swap-by-swap exchange) are stated and proved in the
+Historical Provenance section below.
 
-Substituting into (★) gives the bound. ∎
+### 1.3 Refinements A′, A″ (status: proved under modeling assumptions)
 
-(Lemmas A1, A2, and the careful exchange argument are stated in §3 below.)
+**Refinement A′ (variance form).** Under a *mixing/cancellation hypothesis* on
+the family (ξ_{t,t'}) — namely that summed pairwise interactions across a
+random size-B schedule satisfy a √B central-limit-like behaviour — one obtains
 
-### 1.3 Empirical observables (what the experiments measure)
+  𝔼|G(S) − A(S)| ≤ σ_ξ · √(B / 2).
 
-| Quantity         | Definition                                          | Test of    |
-|------------------|-----------------------------------------------------|------------|
-| η_B              | sup_{|S|=B} |G(S) − A(S)| (or its 95th percentile)  | (A2)       |
-| η̄_B (variance)  | √(𝔼[(G(S) − A(S))²])                                | (A2) soft  |
-| ε                | sup_t |Δ_t − ψ(s_t)|                                | (A3)       |
-| ρ(A, G)          | Spearman ρ between A(S) and G(S) over schedules     | (A2) soft  |
-| ε_R              | (1 − |ρ_B|) · σ_Δ where ρ_B = Spearman ρ(A,G)       | (A3) soft  |
-| ranker headroom  | G(Ŝ_B) − G(uniform)                                 | usefulness |
+Status: **proved under the mixing/cancellation hypothesis**; the hypothesis is
+explicit and may not hold in all regimes.
 
-Refinement A′ (variance form: 𝔼|G − A| ≤ σ_ξ √(B/2) under mixing) and
-Refinement A″ (rank form ε_R) are retained as anchored variants; see §3.
+**Refinement A″ (rank form).** Under a *Gaussian-A hypothesis* on the joint
+distribution of (A(S_A^*) − A(Ŝ_B)) over the schedule sample, the calibration
+penalty admits the rank-based form ε_R := (1 − |ρ_B|) σ_Δ where ρ_B is the
+Spearman correlation between A and G. Status: **proved under the Gaussian-A
+hypothesis**; empirically this is the operative form on ProSeCo-OWT.
 
-### 1.4 Falsifiers (when Theorem A's hypothesis is empirically rejected)
+Both refinements are *empirically anchored but assumption-dependent*. They
+are not universal.
 
-Theorem A is *empirically useful* in regime R only if, on R,
+### 1.4 Negative-Result Corollary (scoped)
 
-  2 B ε + 2 η_B  <  G(Ŝ_B) − G(uniform).
+For any policy of the form Ŝ_B = top-B(ψ) with **separable per-step ψ**, the
+gain G(Ŝ_B) is upper-bounded by the `mean_delta_oracle` envelope, which on
+ProSeCo-OWT enters the no-detectable-gain band by B = 8.
 
-The bound is **vacuous** (assumptions hold but bound dominates the gain) if
-either η_B is large or ε is large relative to the available headroom. The
-*regime is wrong for marginal scheduling* if additionally any of:
+> **Scope.** This corollary characterises the **separable per-step ranker
+> class only**. It does **not** imply: (i) all informed scheduling fails;
+> (ii) all PRISM-like ideas fail; (iii) search procedures (CD-G, BS-AG) are
+> bounded by this envelope; (iv) pairwise / online policies are bounded.
+> CD-G and BS-AG explicitly exceed the ranker envelope by operating on
+> schedules rather than per-step scores.
 
-  (F-A1) ρ(A, G) is small (rankers cannot beat uniform);
-  (F-A2) the Negative-Result Corollary kicks in: Ŝ_B for separable ψ is
-         dominated by mean_delta_oracle, which itself enters the no-gain
-         band at the tested B;
-  (F-A3) MC-oracle headroom G(S_B^*) − G(uniform) is large but no top-B
-         ranker (including the *cheating* ψ = Δ̂_t with paired Monte Carlo
-         estimates of Δ_t) closes more than a small fraction of it.
+### 1.5 Empirical observables and falsifiers
 
-(F-A2) and (F-A3) together are the situation observed on ProSeCo-OWT at
-B ≥ 8. They *motivate* moving to Theorem B.
+| Quantity | Definition | Tests |
+|---|---|---|
+| η_B | sup_{|S|≤B} |G(S) − A(S)| (or 95th percentile / RMS) | (A2) |
+| ε | sup_t |Δ_t − ψ(s_t)| | (A3) |
+| ρ(A, G) | Spearman over schedules | (A2) soft |
+| ε_R | (1 − |ρ_B|)·σ_Δ | (A3) soft |
+| ranker headroom | G(Ŝ_B) − G(uniform) | usefulness of A |
 
-### 1.5 Status
+Theorem A is *empirically useful in regime R* only if 2Bε + 2η_B < ranker
+headroom in R. The bound is **vacuous** if either η_B or ε swamps the gain.
+The **regime is wrong for marginal scheduling** if any of:
 
-**Proved** under (A1)–(A3). Refinement A′ proved under a mixing/cancellation
-hypothesis on (ξ_{t,t'}). Refinement A″ proved under a Gaussian-A hypothesis.
-LaTeX prose in `thesis/chapters/ch6_contribution.tex` is TODO.
+  (F-A1) ρ(A, G) is small;
+  (F-A2) Negative-Result Corollary kicks in (separable rankers ≪ MC-oracle);
+  (F-A3) MC-oracle headroom large but no top-B ranker (including the
+         cheating ψ = paired Δ̂_t) closes more than a small fraction of it.
+
+Status: **proved** under (A1)–(A3); refinements proved under further explicit
+hypotheses; LaTeX prose in `thesis/chapters/ch6_contribution.tex` is TODO.
 
 ---
 
 ## 2. Theorem B — Pairwise surrogate regret (proposed central theorem)
 
-**Role in thesis.** Theorem B is the **proposed central new theorem**. It is the
-natural successor of Theorem A in the regime where rankers fail but the
-schedule-search procedures (CD-G, BS-AG) recover most of the oracle headroom —
-namely, when G(·) admits a useful pairwise approximation Q(·).
+**Role.** Theorem B is the proposed central new theorem. The inequality
+itself is a generic surrogate-regret statement; what makes it scientifically
+valuable is the empirical hypothesis that Q is a substantially better
+approximation to G than A.
 
-### 2.1 Statement — exact pairwise surrogate (proved)
+> **Honesty paragraph.** Theorem B is a generic surrogate-regret theorem — a
+> short standard argument. Its thesis value comes from whether the pairwise
+> approximation hypothesis is empirically true for masked diffusion corrector
+> timing on the tested (model, corrector, F, B) triple, not from the
+> inequality alone. Theorem B is "central" because it formalises a
+> **falsifiable interaction hypothesis** and hands the experiments a clean
+> set of quantities (ζ_B, α_B, P_B vs η_B, R_B, ranker headroom) to estimate.
 
-Assume binary placement (A1) and:
+### 2.1 Theorem B (exact-Q form)
 
-  (B2) **Pairwise additivity.** ∃ ζ_B ≥ 0 such that
-       |G(S) − Q(S)| ≤ ζ_B   for all |S| ≤ B,
-       where Q(S) = ∑_{t ∈ S} Δ_t + ∑_{t<t', t,t'∈S} ξ_{t,t'}.
+Assume (A1) and:
 
-Let S_Q^* = argmax_{|S|=B} Q(S) and let Ŝ be any schedule satisfying
+  (B2) Pairwise additivity. ∃ ζ_B ≥ 0 with |G(S) − Q(S)| ≤ ζ_B for all |S| ≤ B.
 
-  Q(S_Q^*) − Q(Ŝ) ≤ ω_B   (surrogate optimization gap).
-
-Then
+Let S_Q^* = argmax_{|S|=B} Q(S) and let Ŝ satisfy
+Q(S_Q^*) − Q(Ŝ) ≤ ω_B (surrogate optimization gap). Then
 
   G(S_B^*) − G(Ŝ) ≤ 2 ζ_B + ω_B.
 
-**Proof.** By (B2) at S = S_B^* and S = Ŝ:
+**Proof.** By (B2),  G(S_B^*) ≤ Q(S_B^*) + ζ_B ≤ Q(S_Q^*) + ζ_B  and
+G(Ŝ) ≥ Q(Ŝ) − ζ_B ≥ Q(S_Q^*) − ω_B − ζ_B. Subtract. ∎
 
-  G(S_B^*) ≤ Q(S_B^*) + ζ_B ≤ Q(S_Q^*) + ζ_B,
-  G(Ŝ)    ≥ Q(Ŝ)    − ζ_B ≥ Q(S_Q^*) − ω_B − ζ_B.
+### 2.2 Theorem B (estimated-Q̂ form)
 
-Subtract:
+Assume (A1), (B2), and
 
-  G(S_B^*) − G(Ŝ)  ≤  [Q(S_Q^*) + ζ_B] − [Q(S_Q^*) − ω_B − ζ_B]  =  2 ζ_B + ω_B. ∎
+  (B3) Surrogate estimation error. ∃ α_B ≥ 0 with |Q(S) − Q̂(S)| ≤ α_B
+       for all |S| ≤ B.
 
-### 2.2 Statement — estimated pairwise surrogate (proved)
-
-In practice we do not have Q exactly; we estimate Δ̂_t, ξ̂_{t,t'} from a finite
-training pool and form Q̂(S) = ∑_{t ∈ S} Δ̂_t + ∑_{t<t', t,t'∈S} ξ̂_{t,t'}.
-
-Assume in addition to (A1), (B2):
-
-  (B3) **Surrogate estimation error.** ∃ α_B ≥ 0 such that
-       |Q(S) − Q̂(S)| ≤ α_B   for all |S| ≤ B.
-
-Let Ŝ_Q̂ satisfy Q̂(argmax_{|S|=B} Q̂(S)) − Q̂(Ŝ_Q̂) ≤ ω_B. Then
-
-  G(S_B^*) − G(Ŝ_Q̂) ≤ 2 ζ_B + 4 α_B + ω_B.
-
-**Proof.** From §2.1 with Q̂ in place of Q (treating Q̂ as the "true" surrogate):
-the pairwise-surrogate regret of Ŝ_Q̂ relative to Q̂ is at most ω_B. Convert
-back to G via two error sources, each applied twice:
-
-(a) ζ_B at S_B^* and at Ŝ_Q̂ (two applications): contributes 2 ζ_B.
-(b) α_B converts Q̂-optimality to Q-optimality. Specifically, for any
-    Ŝ achieving Q̂(Ŝ) ≥ Q̂(S_Q^*) − ω_B,
-
-      Q(Ŝ) ≥ Q̂(Ŝ) − α_B ≥ Q̂(S_Q^*) − ω_B − α_B ≥ Q(S_Q^*) − 2 α_B − ω_B,
-
-    so Ŝ has Q-optimization gap at most 2 α_B + ω_B. Plug into §2.1 with
-    optimization gap 2 α_B + ω_B:
-
-      G(S_B^*) − G(Ŝ_Q̂) ≤ 2 ζ_B + (2 α_B + ω_B).
-
-Wait — that gives 2 α_B, not 4 α_B. Let us redo carefully. The cleanest bound
-is **2 ζ_B + 2 α_B + ω_B**. The 4 α_B figure that appears in some derivations
-arises only if α_B is defined as a one-sided rather than two-sided uniform
-bound, or if Q̂ is also used (incorrectly) in place of G when reasoning about
-S_B^*. Under the symmetric two-sided definition |Q − Q̂| ≤ α_B used here, the
-correct constant is 2.
-
-**Final bound (corrected).**
+Let Ŝ_Q̂ satisfy Q̂(S_Q̂^*) − Q̂(Ŝ_Q̂) ≤ ω_B where S_Q̂^* maximises Q̂. Then
 
   G(S_B^*) − G(Ŝ_Q̂) ≤ 2 ζ_B + 2 α_B + ω_B.
 
-This is the version we adopt. We flag the 2-vs-4 distinction explicitly because
-the looser bound is occasionally seen in the resource-allocation literature and
-we do not want to silently inherit it. ∎
+**Proof.** Convert the Q̂-optimization gap to a Q-optimization gap. For any
+S with Q̂(Ŝ_Q̂) ≥ Q̂(S_Q̂^*) − ω_B,
 
-### 2.3 Empirical observables
+  Q(Ŝ_Q̂) ≥ Q̂(Ŝ_Q̂) − α_B
+          ≥ Q̂(S_Q̂^*) − ω_B − α_B
+          ≥ Q̂(S_Q^*) − ω_B − α_B            (since S_Q̂^* maximises Q̂)
+          ≥ Q(S_Q^*) − 2 α_B − ω_B.
 
-| Quantity   | Definition                                                     | Test of |
-|------------|----------------------------------------------------------------|---------|
-| ζ_B        | sup_{|S|≤B} |G(S) − Q(S)| (or 95th-percentile / RMS variant)   | (B2)    |
-| α_B        | sup_{|S|≤B} |Q(S) − Q̂(S)| on held-out seeds                  | (B3)    |
-| ω_B        | Q̂(argmax Q̂) − Q̂(Ŝ_Q̂); algorithmic optimization gap         | optimizer |
-| P_B        | Spearman ρ(Q(S), G(S)) over a schedule sample                  | (B2) soft |
-| ζ_B / η_B  | improvement of pairwise approx over additive approx            | regime gate |
-| held-out gain | G(Ŝ_Q̂) − G(uniform) on test seeds                          | usefulness |
+So Ŝ_Q̂ has Q-optimization gap at most ω_B + 2 α_B. Apply §2.1 with this
+gap to obtain  G(S_B^*) − G(Ŝ_Q̂) ≤ 2 ζ_B + (ω_B + 2 α_B). ∎
 
-ξ_{t,t'} estimation must use **paired seeds with CRN**, since G is a paired
-quality difference and ξ is a difference of differences.
+> **Constant 2 α_B (not 4 α_B).** Under the symmetric two-sided definition
+> |Q − Q̂| ≤ α_B used here, the correct constant is 2. A 4 α_B form arises
+> only under one-sided definitions or if Q̂ is also (incorrectly) used in
+> place of G when reasoning about S_B^*. We adopt 2 α_B.
 
-### 2.4 Falsifiers and predictions
+### 2.3 Theorem B′ — finite candidate pool / high-probability form
 
-Theorem B is *useful* in regime R if, on R:
+The uniform bound (B3) over all (T choose B) schedules is unrealistic. In
+practice estimation error is controlled only over a finite **candidate pool**
+C_B ⊆ {S : |S| = B} (sampled schedules, beam candidates, MC-oracle pool).
 
-  P_B > R_B,                       (pairwise predicts better than additive)
-  ζ_B < η_B,                       (pairwise approximation tighter)
-  G(Ŝ_Q̂) − G(uniform) > G(Ŝ_ranker) − G(uniform).   (recovers ranker headroom)
+Assume (A1) and:
 
-Theorem B is *falsified as a useful theory* on R if:
+  (B2′) Pairwise additivity over C_B.
+        ζ_{B,C} := sup_{S ∈ C_B} |G(S) − Q(S)|.
+  (B3′) High-probability estimation over C_B.
+        With probability ≥ 1 − δ over the training pool,
+        sup_{S ∈ C_B} |Q(S) − Q̂(S)| ≤ α_{B,δ}.
 
-  (F-B1) ζ_B ≈ η_B (pairwise approximation does not improve);
-  (F-B2) α_B is so large that 2 α_B swamps 2 ζ_B − 2 η_B improvement;
-  (F-B3) Held-out pairwise scheduler does not beat top-B rankers.
+Let S_C^* = argmax_{S ∈ C_B} G(S) be the **pool oracle** and let Ŝ
+approximately maximise Q̂ over C_B with optimization gap ω_B. Then with
+probability ≥ 1 − δ,
 
-If (F-B1) holds, the regime is *higher-order or chaotic* (Proposition C-IV).
-If (F-B2) holds, the surrogate is undersampled — try larger training pool
-or shrinkage. If (F-B3) holds while ζ_B < η_B, the optimizer is the
-bottleneck (ω_B); use CD-G as comparison.
+  G(S_C^*) − G(Ŝ) ≤ 2 ζ_{B,C} + 2 α_{B,δ} + ω_B.
 
-### 2.5 Status
+To compare against the **full oracle**, introduce the candidate-pool
+approximation term
 
-Theorem B (exact-Q form) and Theorem B (estimated-Q̂ form): **proved** under
-(A1), (B2), (B3). The proof is short and standard; see §2.1, §2.2 above. The
-non-trivial work is empirical: estimate ζ_B, α_B, P_B with valid seed splits,
-and compare against η_B, R_B, ranker headroom from Theorem A diagnostics.
+  κ_B := G(S_B^*) − G(S_C^*) ≥ 0.
+
+Then with probability ≥ 1 − δ,
+
+  G(S_B^*) − G(Ŝ) ≤ κ_B + 2 ζ_{B,C} + 2 α_{B,δ} + ω_B.
+
+**Proof.** Apply §2.2's argument restricted to C_B; the κ_B term is the
+definition. ∎
+
+> **Honesty.** κ_B is **not directly estimable** against the true
+> S_B^*. In experiments we estimate it relative to the MC-oracle pool, which
+> itself is a practical upper bound. The thesis must not claim full-space
+> regret unless C_B is argued to contain (or arbitrarily approximate) the
+> full oracle.
+
+### 2.4 Diagnostic / population / feature-conditioned hierarchy
+
+Theorem B can be instantiated at three levels (cf. §0.5). They differ in
+what experimental claim they support.
+
+| Level | Form | Allowed inputs | Supports claim of |
+|---|---|---|---|
+| 1. Diagnostic | uses true ξ_i from counterfactual G-calls | true G_i({t,t'}) | structural pairwise hypothesis |
+| 2. Population | optimises Q̄ to choose one global schedule | mean Δ̄_t, ξ̄_{t,t'} estimated over training seeds | global schedule good on average |
+| 3. Feature-conditioned | builds Q̂_i from observable features of trajectory i | only s_t-style features of held-out seed | **deployable inference-time scheduler** |
+
+Phase 1 tests Levels 1–2. Phase 2 tests Level 3. The thesis claims
+"interaction-aware scheduling beats rankers" only at the level demonstrated;
+**deployability** requires Level 3.
+
+### 2.5 Empirical observables
+
+| Quantity | Definition | Tests |
+|---|---|---|
+| ζ_B (or ζ_{B,C}) | sup over schedule pool of |G − Q| | (B2) / (B2′) |
+| α_B (or α_{B,δ}) | sup over schedule pool of |Q − Q̂|, paired held-out seeds | (B3) / (B3′) |
+| ω_B | optimizer gap Q̂(argmax) − Q̂(Ŝ_Q̂) | optimizer |
+| P_B | Spearman ρ(Q(S), G(S)) | (B2) soft |
+| ζ_B / η_B | improvement ratio of pairwise vs additive approximation | regime gate |
+| held-out gain | G(Ŝ_Q̂) − G(uniform) on test seeds | usefulness, Level 3 |
+| κ_B (against MC oracle) | G(S^MC-oracle) − G(S_C^*) | candidate-pool tightness |
+
+Pairs ξ_{i,t,t'} must be estimated using paired CRN — they are differences of
+differences and are very noisy without pairing.
+
+### 2.6 Falsifiers
+
+Theorem B is *useful* on regime R if ζ_B < η_B and P_B > R_B and
+G(Ŝ_Q̂) − G(uniform) > G(Ŝ_ranker) − G(uniform).
+
+Theorem B is *falsified as a useful theory* on R if any of:
+  (F-B1) ζ_B ≈ η_B (pairwise approximation no better than additive);
+  (F-B2) α_B is so large that 2 α_B swamps 2 (η_B − ζ_B);
+  (F-B3) Held-out (Level 3) Q̂-scheduler does not beat top-B rankers.
+
+(F-B1) → regime IV (higher-order / chaotic). (F-B2) → undersampled
+surrogate; consider shrinkage or larger training pool. (F-B3) → optimizer or
+feature-conditioning is the bottleneck; use CD-G as comparison.
+
+Status: §2.1, §2.2, §2.3 statements **proved** under stated assumptions; the
+non-trivial work is empirical estimation of ζ_B, α_B, P_B, κ_B with valid
+seed splits.
 
 ---
 
-## 3. Proposition C — Regime diagnostics (definition + classification)
+## 3. Diagnostic Framework C — Regime classification
 
-**Role in thesis.** A clean diagnostic taxonomy. Not a theorem; rather a
-statistical framework for classifying a (model, corrector, F, B) triple into
-one of five *regimes*, each of which prescribes the appropriate policy class.
-This is what gives the thesis a framework beyond a single empirical case.
+**Role.** A diagnostic taxonomy. Not a theorem; rather a statistical
+framework for classifying a (model, corrector, F, B) triple into one of five
+regimes, each with a recommended policy class. Renamed from "Proposition C"
+because it is a definition + protocol, not a proven proposition.
 
-### 3.1 Diagnostics (definitions)
+### 3.1 Diagnostics
 
-For a fixed (model, corrector, F, B) triple and a population of paired seeds:
+For a fixed (model, corrector, F, B) triple over a paired-seed sample:
 
-  U_B := G(S_B^{oracle}) − G(S_B^{uniform})         (timing usefulness / headroom)
-  R_B := ρ(A(S), G(S))                              (marginal rankability; Spearman)
-  I_B := σ(G(S) − A(S)) / (σ(A(S)) + δ)             (interaction strength; δ tiny)
-  P_B := ρ(Q(S), G(S))                              (pairwise predictability; Spearman)
-  C_B(method) := [G(method) − G(uniform)] / [G(oracle) − G(uniform)]
-                                                      (closure ratio; defined when
-                                                       denominator is statistically
-                                                       positive at chosen K)
+  U_B := G(S_B^{MC-oracle}) − G(S_B^{uniform})    (timing usefulness; headroom)
+  R_B := ρ(A(S), G(S))                             (marginal rankability; Spearman)
+  I_B := σ(G(S) − A(S)) / (σ(A(S)) + δ)            (interaction strength; δ small)
+  P_B := ρ(Q(S), G(S))                             (pairwise predictability; Spearman)
+  C_B(method) := [G(method) − G(uniform)] / [G(MC-oracle) − G(uniform)]
+                                                   (closure ratio; defined when
+                                                    denominator is statistically positive)
 
-S_B^{oracle} is in practice replaced by the MC-oracle (best-of-N random
-schedules), used as a paired upper bound. All quantities are point estimates
-with BCa bootstrap 95 % CIs over seeds.
+S_B^{MC-oracle} is the best-of-N MC schedule (N = 100 in current data); not the
+exhaustive (T choose B) maximizer. All quantities are point estimates with
+BCa bootstrap 95 % CIs over seeds.
 
-"High" / "low" are **statistical comparisons** (CIs that exclude a baseline,
-or comparisons between regimes), not universal thresholds. We report values;
-classification decisions are taken at meeting points with the supervisor.
+### 3.2 Operational "high"/"low"
 
-### 3.2 Regime taxonomy
+"High" / "low" are **statistical comparisons**, not universal thresholds.
+Specifically:
+
+- "U_B > 0" means the BCa CI for U_B excludes 0.
+- "R_B high" / "P_B > R_B" means the bootstrap CI of P_B − R_B excludes 0.
+- "I_B high" means I_B's BCa CI lies above the analogous quantity at a
+  reference (for instance, ξ-shuffled control).
+- "C_B(method) statistically positive" means CI excludes 0.
+
+We do not impose universal numerical thresholds; classification decisions are
+taken at supervisor meetings against the measured CIs.
+
+### 3.3 Regime taxonomy
 
 | Regime | Diagnostic signature | Appropriate policy class |
-|--------|----------------------|--------------------------|
-| **I. No-op**          | U_B ≈ 0 (CI includes 0)                                               | corrector timing not meaningful at this B; no policy beats uniform |
-| **II. Marginal/rankable** | U_B > 0; R_B high; I_B low; ranker headroom ≈ U_B                   | top-B-by-ψ rankers (Theorem A) |
-| **III. Interaction-driven** | U_B > 0; R_B low or moderate; I_B high; P_B > R_B                 | pairwise surrogate scheduler / CD-G / BS-AG (Theorem B) |
-| **IV. Higher-order / chaotic** | U_B > 0; R_B low; P_B low; only true-G search closes any headroom | search procedures with G feedback (CD-G); no compact predictive surrogate |
-| **V. Online-decision**  | Offline structure exists *and* compact z_t has predictive value *and* budget-aware policy improves over non-budget-aware ranker | online controller (Theorem D) |
+|---|---|---|
+| **I. No-op** | U_B ≈ 0 | corrector timing not meaningful at this B |
+| **II. Marginal/rankable** | U_B > 0; R_B high; I_B low; ranker C_B ≈ 1 | top-B-by-ψ rankers (Theorem A) |
+| **III. Interaction-driven** | U_B > 0; R_B low/moderate; I_B high; P_B > R_B | pairwise surrogate / CD-G / BS-AG (Theorem B) |
+| **IV. Higher-order / chaotic** | U_B > 0; R_B low; P_B low; only true-G search closes any C_B | search with G feedback (CD-G); no compact predictive surrogate |
+| **V. Online-decision** | offline structure exists *and* compact z_t has predictive value *and* budget-aware policy beats non-budget-aware ranker | online controller (Theorem D) |
 
-### 3.3 Empirical classification of ProSeCo-OWT at B ∈ {2,3,4,8}
+### 3.4 Provisional classification of ProSeCo-OWT
 
-Under the **prior baseline** (April 2026 results, to be confirmed by Phase 0):
+Under the prior baseline (April 2026 results, to be confirmed by Phase 0):
+U_B > 0 at B ∈ {2,3,4} (MC-oracle headroom +0.45); R_B moderate;
+ε_R 0.07 → 0.39 across B; separable rankers do not recover U_B
+(Negative-Result Corollary); CD-G/BS-AG close 49–84 % of U_B.
 
-  U_B > 0 at B ∈ {2,3,4} (MC-oracle +0.45);
-  R_B moderate; ε_R = 0.07 → 0.39 across B;
-  ranker headroom ≪ U_B at all tested B (Negative-Result Corollary);
-  CD-G, BS-AG close 49–84 % of U_B.
+This **provisionally** places ProSeCo-OWT into Regime III or IV at
+B ∈ {2,3,4}. Phase 1 (interaction diagnostics) is the experiment that
+distinguishes them.
 
-This **provisionally** places ProSeCo-OWT at B ∈ {2,3,4} into Regime III or IV.
-Phase 1 (interaction diagnostics) is the experiment that distinguishes them.
+### 3.5 Use in the thesis
 
-### 3.4 Use in the thesis
-
-Proposition C is *not* a universality claim. It is a **diagnostic protocol**:
-given a new (model, corrector, F, B), measure U_B, R_B, I_B, P_B, classify the
-regime, choose the policy class. The thesis claim is that this protocol — and
-the per-regime policy recommendation — is well-defined and operationally useful.
-
-### 3.5 Status
-
-Definitional. The empirical content is contributed by Phase 0 (existing ProSeCo
-diagnostics) and Phase 1 (Q-vs-G diagnostics).
+Diagnostic Framework C is **not** a universality claim. It is a
+diagnostic *protocol*: given a new (model, corrector, F, B), measure
+(U_B, R_B, I_B, P_B, C_B), classify the regime, choose the policy class.
+The thesis claim is that this protocol — together with the per-regime
+policy recommendation — is well-defined and operationally useful. Status:
+**definitional**; empirical content is contributed by Phase 0 + Phase 1.
 
 ---
 
 ## 4. Theorem D — Online budgeted controller (optional / appendix)
 
-**Role in thesis.** Optional. Theorem D abstracts "when to correct" as a
-finite-horizon budgeted online decision problem. It is intriguing because it is
-the only direction that produces a *deployable* inference-time scheduler. We
-include it as **appendix-grade** unless Phase 4 produces a clear empirical win.
+**Role.** Optional, appendix-grade. Theorem D abstracts "when to correct" as
+a finite-horizon budgeted online decision problem. Conceptually useful but
+**generic**; does not by itself establish that current trajectory signals
+are a sufficient state. Empirical value depends on a separate
+state-sufficiency test that has so far been negative (Protocol C).
 
-### 4.1 Setup
+### 4.1 Setup and statement (proof sketch)
 
-States z_t ∈ 𝒵 (compact, see §0.5). Action a_t ∈ {0,1}. Budget b_t evolves as
+State z_t ∈ 𝒵, action a_t ∈ {0,1}, budget recursion b_{t+1} = b_t − a_t,
+b_1 = B, terminal reward F(y_T). Value function
 
-  b_{t+1} = b_t − a_t,   b_1 = B,   constraint b_{T+1} ≥ 0.
+  V_t(z, b) = sup_π 𝔼[F(y_T) | z_t = z, b_t = b, π],
 
-A **policy** π is a map (z_t, b_t) ↦ a_t. The state evolves according to a
-predictor/corrector kernel P_t depending on a_t. Terminal reward F(y_T).
-Define the value function
-
-  V_t(z, b) = sup_π 𝔼[F(y_T) | z_t = z, b_t = b, π].
-
-V_t satisfies the Bellman recursion
-
-  V_t(z, b) = max_{a ∈ {0,1}, a ≤ b} 𝔼[ V_{t+1}(z_{t+1}, b − a) | z, a ].
-
+Bellman recursion V_t(z, b) = max_{a ≤ b} 𝔼[V_{t+1}(z_{t+1}, b − a) | z, a].
 Let V̂_t be an approximation and π̂ its one-step-greedy policy.
 
-### 4.2 Statement (proof sketch)
-
-**Performance-loss lemma (standard).** If
-
-  |V_t(z, b) − V̂_t(z, b)| ≤ δ   for all reachable (t, z, b),
-
-and π̂ is one-step-greedy with respect to V̂, then
+**Performance-loss bound (standard ADP).** If |V_t(z, b) − V̂_t(z, b)| ≤ δ
+for all reachable (t, z, b), then
 
   V_1(z_1, B) − 𝔼[F(y_T) | π̂] ≤ 2 T δ.
 
-**Proof sketch.** Standard suboptimality bound for approximate dynamic
-programming: at each step the greedy gap relative to the true V is at most
-2δ (one δ each from the V̂ over- and underestimates that can swap the argmax),
-and errors do not compound multiplicatively under bounded-reward dynamics —
-they aggregate over T decision points. ∎
+**Proof sketch.** Standard ADP suboptimality: at each step the greedy gap
+relative to true V is at most 2δ; errors aggregate over T decision points
+because all T greedy choices depend on V̂_{t+1} accuracy, including those
+choosing a_t = 0. A sharper c B δ form is **not** available in general;
+adopting it requires structural assumptions we cannot currently justify. ∎
 
-**Honesty about the constant.** A sharper c B δ form is *not* available in
-general: even though only B of the T steps actually take action a_t = 1, the
-**greedy tie-breaking** at a_t = 0 steps still depends on V̂_{t+1}(z, b) being
-accurate, so all T steps contribute to the approximation budget. We adopt
-the 2 T δ form; if a future analysis exploits structure to shave it to c B δ,
-that is a strictly tighter result.
+### 4.2 Connection to Protocol C and falsifiers
 
-### 4.3 Empirical observables
+Protocol C tested z_t = (signal_quartile, phase) on 12 buckets and found
+ε̃ / ε ∈ [0.983, 0.986] — essentially no bucket-level value-function
+approximation. Under Theorem D this means either z_t is too coarse or the
+conditional gain is unstructured at that resolution. Phase 4 (only if
+reached) should test richer continuous z_t with a learned approximator.
 
-  ‖V̂ − V‖_∞ on reachable states (or its proxy: held-out predicted-vs-realized
-  gain calibration error);
-  budget-aware threshold policy gain G_π̂ − G(uniform);
-  comparison with non-budget-aware top-B rankers.
+Theorem D is *useful* if (a) some compact z_t admits small ‖V − V̂‖_∞ and
+(b) the resulting π̂ beats the best Theorem-A or Theorem-B policy at the
+same B. Otherwise it stays in the appendix as the formal companion to
+Protocol C's honest negative.
 
-### 4.4 Connection to Protocol C and falsifiers
-
-Protocol C tested z_t = (signal_quartile, phase(t)) on 12 buckets, with bucket-
-mean conditioning. It found ε̃ / ε ∈ [0.983, 0.986], i.e. essentially no
-bucket-level value-function approximation. Under Theorem D, this means
-either (i) z_t is too coarse to carry the value function, or (ii) the
-conditional gain is genuinely unstructured at that resolution. Phase 4
-should test richer z_t (continuous H_t, M_t^{-1}, u_t, b_t) with a learned
-value approximator, not bucketing.
-
-Theorem D is *useful* if (a) some compact z_t admits |V − V̂|_∞ small, and
-(b) the resulting π̂ beats the best Theorem-A or Theorem-B policy under the
-same budget. If neither holds, Protocol C's negative result generalizes and
-Theorem D stays in the appendix.
-
-### 4.5 Status
-
-Statement and proof sketch above are standard ADP. The theorem itself is
-generic; its thesis value depends on Phase 4's empirical outcome. Marked
-**optional / appendix** unless Phase 4 promotes it.
+Status: standard ADP; thesis value depends on Phase 4. **Optional /
+appendix unless promoted by empirical result.** First to cut if time tightens.
 
 ---
 
-## 5. Optional Proposition E — Low-action exclusion / burn-in
+## 5. Lemma E — Burn-in exclusion under bounded-Lipschitz F (optional)
 
-**Role.** Optional. A sufficient condition under which early-trajectory steps
-have provably small Δ_t.
+**Role.** Optional side lemma. The naive Lipschitz statement against F = −GPT-2
+NLL is **fragile**: a single token change can dramatically alter later-token
+likelihoods, so F is not Lipschitz in normalized Hamming distance in general.
 
-### 5.1 Statement
+### 5.1 Conditional statement
 
-Suppose the corrector at step t can modify only positions in a revisable set
-R_t ⊆ {1, …, D} (typical for ProSeCo: R_t ⊆ already-unmasked positions). Suppose
-F is L_F-Lipschitz with respect to normalized Hamming distance d_H:
+Let F_C be a **clipped or bounded-Lipschitz surrogate** of F (e.g. clipped
+per-token NLL contributions) satisfying
 
-  |F(y) − F(y')| ≤ L_F · d_H(y, y'),   d_H(y, y') = #{i : y_i ≠ y'_i} / D.
+  |F_C(y) − F_C(y')| ≤ L_F · d_H(y, y').
 
-Then |Δ_t| ≤ L_F · |R_t| / D. In particular, if |R_t| / D ≤ τ, then
-|Δ_t| ≤ L_F τ, so excluding step t from the candidate schedule costs at most
-L_F τ of additive surrogate value, hence at most B L_F τ + 2 η_B of joint
-gain by Theorem A's combining argument.
+Then |Δ_t^{F_C}| ≤ L_F · |R_t| / D, and excluding step t from the candidate
+schedule costs at most L_F · |R_t| / D in the additive surrogate (and at most
+B L_F · |R_t| / D + 2 η_B in joint gain by Theorem A's combining argument).
 
-### 5.2 Use
+> **Warning.** The actual experimental F = −GPT-2 NLL is **not** guaranteed
+> to satisfy a normalized-Hamming Lipschitz condition without clipping. Use
+> Lemma E as intuition or apply to a clipped surrogate F_C; do not rely on it
+> in the main theorem stack.
 
-Justifies excluding burn-in steps where R_t ≈ ∅. **Optional**: if Phase 0
-confirms that ProSeCo-OWT's R_t is essentially zero for t ≤ T_burn, this gives
-a clean exclusion lemma; otherwise it is a side remark.
+### 5.2 Empirical alternative
 
-### 5.3 Status
+The operational way to justify burn-in exclusion is to **measure** R_t, TCR_t,
+Δ_t directly (Phase 0). If R_t ≈ ∅ for t ≤ T_burn implies measured
+Δ_t ≈ 0, that is the empirical statement; Lemma E is then optional commentary.
 
-Conditional definition + standard Lipschitz argument. Status: **proof sketch**;
-can be promoted to a clean Lemma if (i) L_F is reported and (ii) burn-in is
-empirically nonzero.
+Status: **conditional sketch**; appendix or side lemma only.
 
 ---
 
-## 6. Backbone: central vs optional contributions
+## 6. Backbone and contribution classification
 
-**Main body:**
-- §0 problem formalization;
-- §1 Theorem A (marginal baseline);
-- §2 Theorem B (pairwise surrogate, **central new theorem**);
-- §3 Proposition C (regime diagnostic framework);
-- §4–6 of `02_experiments.md` / `06_theory_first_research_plan.md` covering
-  experiments that *test* (A2), (A3), (B2), (B3) and classify regimes.
+**Main body of thesis:**
+- §0 Formal setup, levels of analysis, notation.
+- §1 Theorem A (marginal baseline) + Refinements A′, A″ (assumption-dependent).
+- §2 Theorem B exact, Theorem B estimated, **Theorem B′ (finite candidate pool)**.
+- §3 Diagnostic Framework C.
+- Negative-Result Corollary scoped to separable rankers.
+- Experiments testing (A2)/(A3)/(B2)/(B2′)/(B3)/(B3′).
 
 **Appendix / optional:**
-- §4 Theorem D (online controller abstraction);
-- §5 Proposition E (burn-in exclusion);
-- Refinement A′, A″ as variance/rank-form refinements of Theorem A;
-- Negative-Result Corollary (separable-ψ envelope on ProSeCo-OWT);
-- Theorem A-ad (Protocol C's honest negative);
+- §4 Theorem D online controller; first to cut.
+- §5 Lemma E burn-in (conditional/clipped form).
+- Theorem A-ad (Protocol C honest negative).
 - Stretch C2 (Gibbs contraction; not on critical path).
 
-The backbone narrative is therefore:
+Backbone narrative:
 
-> Theorem A says when marginal rankers should work. Diagnostics test (A2)/(A3).
+> Theorem A says when separable rankers should work. Diagnostics test (A2)/(A3).
 > If rankers fail (Negative-Result Corollary regime), Theorem B says when
-> pairwise scheduling should work. Diagnostics test (B2)/(B3). Proposition C
-> classifies which regime applies. Theorem D and Proposition E are appendix.
+> pairwise scheduling should work; Theorem B′ is the high-probability,
+> finite-pool, experimentally usable form. Diagnostic Framework C classifies
+> which regime the (model, corrector, F, B) triple is in. Theorem D and
+> Lemma E are optional / appendix.
 
 ---
 
 ## 7. Theory-to-experiment map
 
-| Theorem / object | Assumption / prediction               | Empirical test (Phase) | If supported                    | If falsified                             |
-|------------------|---------------------------------------|------------------------|---------------------------------|------------------------------------------|
-| Theorem A (A2)   | |G − A| ≤ η_B                         | η_B from Phase 0/2b     | Theorem A bound non-vacuous     | Move to Theorem B (pairwise)             |
-| Theorem A (A3)   | |Δ − ψ| ≤ ε; ranker top-B ≈ A top-B   | ε, ε_R, ρ(A,G) Phase 0  | Marginal regime (II)            | Negative-Result Corollary; → B           |
-| Theorem A util.  | 2Bε + 2η_B < ranker headroom          | plug-in bound vs gain   | Theorem A is operative          | Theorem A vacuous; bound is structural   |
-| Theorem B (B2)   | |G − Q| ≤ ζ_B; ζ_B < η_B; P_B > R_B   | Phase 1 sparse pairwise | Interaction regime (III) → C    | Higher-order/chaotic (IV)                |
-| Theorem B (B3)   | |Q − Q̂| ≤ α_B; held-out Q̂ ≈ Q       | Phase 1/2 train/test     | Pairwise scheduler buildable   | Optimizer or surrogate undersampled      |
-| Theorem B util.  | G(Ŝ_Q̂) > G(rankers)                  | Phase 2 held-out gain    | Theorem B is central result    | Surrogate insufficient; CD-G as comp.    |
-| Proposition C    | regime diagnostics stable at K=30     | Phase 0 + Phase 1        | Diagnostic framework valid     | Single-backbone case study               |
-| Theorem D        | compact z_t admits small ‖V−V̂‖_∞     | Phase 4 (only if reached) | Online controller in main      | Stays in appendix; Protocol C generalizes|
-| Proposition E    | L_F · |R_t|/D bounds Δ_t at burn-in   | Phase 0 audit of R_t     | Exclusion lemma in main        | Side remark only                         |
-
----
+| Theorem / object | Assumption / prediction | Empirical test (Phase) | If supported | If falsified |
+|---|---|---|---|---|
+| Theorem A (A2) | |G − A| ≤ η_B | η_B from Phase 0/2b residuals | Theorem A non-vacuous | → Theorem B |
+| Theorem A (A3) | |Δ − ψ| ≤ ε; rankers ≈ A top-B | ε, ε_R, ρ(A,G) Phase 0 | Marginal regime II | Negative-Result Corollary; → B |
+| Theorem A util | 2Bε + 2η_B < ranker headroom | plug-in vs measured | Theorem A operative | Bound structural, not predictive |
+| Theorem B (B2) | ζ_B < η_B; P_B > R_B | Phase 1 sparse pairwise | Interaction regime III | → Regime IV |
+| Theorem B (B3)/(B3′) | |Q − Q̂| ≤ α_B (or α_{B,δ}) on C_B | Phase 1/2 train/test split | Pairwise scheduler buildable | Surrogate undersampled |
+| Theorem B′ κ_B | candidate pool C_B near MC oracle | Phase 2 pool comparison | Full-pool regret meaningful | Restrict claim to within-pool |
+| Theorem B util | G(Ŝ_Q̂) > G(rankers), held-out (Level 3) | Phase 2 held-out evaluation | **Theorem B is central result** | CD-G / BS-AG remain comparison |
+| Diagnostic C | diagnostics stable at K=30 | Phase 0 + Phase 1 | Diagnostic framework valid | Single-backbone case study |
+| Theorem D | compact z_t admits small ‖V−V̂‖_∞ | Phase 4 (if reached) | Online controller in main | Appendix only |
+| Lemma E | clipped F_C is L_F-Lipschitz; R_t small ⇒ Δ_t small | Phase 0 audit of R_t, L_F | Side lemma in main | Side remark only |
 
 ## Historical Provenance
 

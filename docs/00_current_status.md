@@ -10,7 +10,7 @@
 ### Phase 1 — Protocol A (signal calibration)
 50 OWT trajectories × T = 64 steps, ProSeCo-OWT backbone.
 Per-step marginal gain Δ_t and per-step signals (entropy H_t, inverse margin M_t^{-1},
-quality mass Q_t) measured for every (seed, step). Spearman ρ(ψ, Δ_t) ≈ 0.10–0.15
+quality mass QM_t — historical files use `Q_t`) measured for every (seed, step). Spearman ρ(ψ, Δ_t) ≈ 0.10–0.15
 (weak but positive). MC-oracle headroom over uniform = **+0.45 paired G** at B ∈ {2,3,4}.
 
 ### Phase 2b — Policy comparison + MC oracle
@@ -27,7 +27,9 @@ CD-G (coordinate descent, true-G feedback) and BS-AG (beam search, cheap-A pruni
 Both PASS at every B ∈ {2, 3, 4, 8}. Recovery:
 - CD-G: 74–84 % of +0.45 MC-oracle headroom at B ∈ {2, 3, 4}.
 - BS-AG: 49–64 % of +0.45 headroom at B ∈ {2, 3, 4}.
-**Primary positive result.** PRISM pivot rejected: PRISM is in the ranker class.
+**Primary positive result.** PRISM, used as a separable per-step score, falls in
+the ranker class limited by the Negative-Result Corollary; a non-separable PRISM
+use is not pursued for this thesis but is not ruled out.
 
 ### Cross-backbone (LLaDA-SFT bounded probe, K = 8)
 T = 64, B ∈ {2, 4}, GPT-2 reference. Uniform-not-beaten transfers (Tier 3). MC-oracle
@@ -63,10 +65,22 @@ Best after-uncertainty close ratio = +0.015 (entropy, B=2); negative at B ≥ 3.
 | Greedy signal rankers as primary method | Negative result — correct. Not a failure. |
 | Protocol C (adaptive controller on OWT) | Honest negative. Appendix F only. |
 | MC-oracle headroom on LLaDA-SFT | Does not transfer at tested resolution. |
-| PRISM pivot | Rejected. PRISM is in the ranker class. |
+| PRISM pivot | Not pursued as thesis pillar. Separable PRISM signals fall in the ranker class; non-separable use not ruled out. |
 | Theorem A L∞ form | Empirically vacuous at every B ∈ {4, 8, 16}. A″ rank-based form is load-bearing. |
-| ReMDM-loop, MDLM Phase 1 | Archived. Backend issues and near-zero Δ_t. |
+| ReMDM-loop, MDLM Phase 1 | Archived. Backend issues and near-zero Δ_t. See abandoned-backend lessons table below. |
 | Full-scale HPC new runs | Gated — pending theory scaffold + Phase 0 audit. |
+
+---
+
+## Abandoned-backend lessons (compact)
+
+| Backend / corrector | Result | Lesson | Status |
+|---|---|---|---|
+| MDLM heuristic corrector (Gibbs-style one-shot resample of all masked positions) | All Δ_t ≤ 0 in Phase 1 (job 478600) | Resampling 97 % masked positions with < 5 % context is a known-bad corrector design | Documented negative; not a scheduling platform |
+| MDLM/ReMDM-loop on legacy framework (Phase 1 era) | Near-zero Δ_t; backend mismatch and Bug #1 (signals over wrong positions) | Signals must be computed over the same revisable set R_t the corrector acts on; backend choice is not interchangeable | Abandoned as scheduling platform; useful as negative control |
+| LLaDA-SFT bounded probe (K=8, T=64, B ∈ {2,4}) | Uniform-not-beaten transfers; MC-oracle headroom does not transfer at tested resolution | Phase 3a-style schedule search is not authorised on this backbone without resolving metric/protocol issues | Pre-registered no-go for full Phase 3a |
+
+Raw legacy result files were removed in the May 2026 cleanup; git history preserves them.
 
 ---
 

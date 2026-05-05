@@ -24,7 +24,7 @@ BS-AG) recover 49–84 % of oracle headroom on ProSeCo-OWT. Theorem A + Refineme
 **Current phase (May 2026):** Theory-first reassessment and Phase 0 reproducibility
 planning. Goal: reframe the baseline into a cleaner theory-first study of marginal,
 interaction-aware, and online corrector timing. No full-scale HPC runs until the theory
-scaffold (Theorem B/C/D) and Phase 0 reproducibility audit are complete.
+scaffold (Theorem A/B/B′ + Diagnostic Framework C; D/E optional) and Phase 0 reproducibility audit are complete.
 
 **Key distinction:** This thesis targets corrector *scheduling* (when to spend corrective
 effort across the trajectory), not token-selection policies (which tokens to correct),
@@ -158,8 +158,11 @@ Key points:
   over uniform at B ∈ {2,3,4} on ProSeCo-OWT. Both pass at B = 8.
 - **Theory (Phase 3b).** Theorem A + Refinements A′/A″ + Negative-Result Corollary
   formally proved. Theorem A-ad in Appendix F (honest negative Protocol C).
-- **Current phase:** Theory-first reassessment. Formalize Theorem B/C/D → Phase 0
-  reproducibility audit → interaction diagnostics → writing.
+- **Current phase:** Theory-first reassessment. Theorem stack formalized
+  (Theorem A baseline; Theorem B + B′ central; Diagnostic Framework C;
+  Theorem D + Lemma E optional/appendix). Next: Phase 0 pre-flight assertions
+  PF1–PF8 (blocking) → K=3 smoke → K=30 replication → Phase 1 interaction
+  diagnostics → writing.
 - **No full-scale HPC** until theory scaffold and Phase 0 are complete.
 - **Backbone:** ProSeCo-OWT only (LLaDA-SFT probe inconclusive).
 - **Reading:** ProSeCo, PRISM, MDLM, ReMDM, L&Z Error Bounds done.
@@ -206,7 +209,7 @@ No full-scale HPC runs until the theory scaffold and Phase 0 reproducibility aud
 
 ## Next steps (current — May 2026)
 
-1. Opus theory pass — formalize Theorem B, Proposition C, Theorem D.
+1. Opus theory pass ✅ — Theorem A/B/B′ + Diagnostic Framework C; D/E optional.
 2. Phase 0 reproducibility audit — reproduce ProSeCo-OWT baseline locally (K=3 smoke first).
 3. Interaction diagnostics — only after Phase 0 passes.
 4. Pairwise scheduler — only if interaction diagnostics show structure.

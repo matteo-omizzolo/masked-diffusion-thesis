@@ -31,10 +31,11 @@ headroom on ProSeCo-OWT.
 - **Phase 1 OWT.** 50 trajectories × T = 64; per-step Δ_t and signals measured
   on ProSeCo-OWT. MC-oracle headroom over uniform = **+0.45 paired G**
   at B ∈ {2, 3, 4} (95 % CI excludes 0). Raw: `results/phase1_proseco_owt_full/`.
-- **Phase 2b OWT.** All greedy single-step rankers (including cheating
-  oracle-score ranker) fail to beat uniform by B = 8. Additivity residual
-  σ_ξ and Spearman ρ(A,G) measured. Raw: `results/phase2b_proseco_owt/`,
-  `results/phase2b/`.
+- **Phase 2b OWT.** Separable per-step rankers (including the cheating
+  paired-Δ̂_t oracle-score ranker) do not recover the available MC-oracle
+  headroom and saturate as B grows; the mean-Δ̂_t oracle envelope enters the
+  no-detectable-gain band by B = 8. Additivity residual σ_ξ and ρ(A,G)
+  measured. Raw: `results/phase2b_proseco_owt/`, `results/phase2b/`.
 - **Phase 3a OWT.** CD-G recovers 74–84 %, BS-AG 49–64 % of +0.45 headroom
   at B ∈ {2, 3, 4}; both still pass at B = 8. This is the primary positive
   result. Raw: `results/phase3a_proseco_owt/`.
@@ -62,10 +63,13 @@ headroom on ProSeCo-OWT.
 
 - **LLaDA-SFT Phase 3a:** Pre-registered no-go.
 - **Adaptive controller (Protocol C):** Closed with honest negative. Appendix F only.
-- **Greedy ranker as primary method:** Negative result. Search procedures are
-  the right policy class.
-- **PRISM pivot:** Rejected. PRISM is in the ranker class bounded by the
-  Negative-Result Corollary.
+- **Greedy ranker as primary method:** Negative result for the *separable
+  per-step ranker class*. Schedule-search and pairwise-aware procedures are
+  the right policy class for the observed headroom on ProSeCo-OWT.
+- **PRISM pivot:** Not pursued as a thesis pillar. PRISM-style quality
+  signals, **when used as separable per-step scores**, fall within the
+  ranker class limited by the Negative-Result Corollary; a non-separable
+  use of PRISM is not ruled out and remains optional / future work.
 
 ---
 
@@ -73,18 +77,24 @@ headroom on ProSeCo-OWT.
 
 We are no longer in "writing only" mode. The current phase is **theory-first reassessment**:
 
-1. **Opus theory pass** — formalize Theorem B (pairwise surrogate regret), Proposition C
-   (separable ranker failure construction), and Theorem D (online budgeted controller abstraction).
-2. **Phase 0 reproducibility audit** — reproduce the ProSeCo-OWT baseline locally before
-   any new HPC experiments.
-3. **Interaction diagnostics** — only if Phase 0 passes; run sparse pairwise Δ_t maps to
-   test whether corrector placements interact.
-4. **Pairwise scheduler** — only if interaction diagnostics show structure.
-5. **Regime map** — only after the primary pipeline is trustworthy.
+1. **Opus theory pass ✅ (2026-05).** Theorem stack formalized in
+   `research/candidate_theorems.md` §0–§7: Theorem A (marginal baseline),
+   Theorem B exact / estimated / **B′ finite-pool high-probability**,
+   **Diagnostic Framework C** (regime classification; renamed from Proposition C),
+   Theorem D (optional/appendix), Lemma E (optional/conditional).
+2. **Phase 0 reproducibility audit** — code-path audit + **pre-flight assertions
+   PF1–PF8 (blocking)** + K=3 smoke + K=30 critical replication.
+3. **Phase 1 interaction diagnostics** — only if Phase 0 passes; sparse pairwise
+   ξ̂_{t,t'} estimation at Levels 1–2.
+4. **Phase 2 pairwise scheduler** — Phase 2a population (Level 2) → Phase 2b
+   feature-conditioned (Level 3, deployable) only if 2a beats rankers.
+5. **Phase 3 regime map** — optional secondary backbone.
 6. **LaTeX writing** — ch3, ch4, ch5, ch7, Abstract, Introduction, Conclusion.
 
-> No full-scale new HPC experiments until the theory scaffold and Phase 0 audit are complete.
-> ProSeCo-OWT remains the baseline. See `docs/05_next_steps.md` for the sequential plan.
+> No full-scale new HPC experiments until pre-flight assertions PF1–PF8 are
+> implemented or manually verified, K=3 smoke matches existing keys, and the
+> theory scaffold is stable. ProSeCo-OWT remains the baseline.
+> See `docs/05_next_steps.md` Gate 2 for the blocking pre-flight checklist.
 > Full theory-first plan: `docs/06_theory_first_research_plan.md`.
 
 ---

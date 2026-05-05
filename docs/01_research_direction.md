@@ -24,7 +24,7 @@ corrector loops should be placed.
 The thesis formalizes this as a **proxy-regret problem**: given a trajectory-level
 quality functional F, each step t has an unknown one-loop marginal gain
 Δ_t = F(y_t^{+1}) − F(y_base). A signal-driven proxy ψ(s_t) derived from aggregate
-trajectory signals (entropy H_t, inverse margin M_t^{-1}, quality mass Q_t) is used
+trajectory signals (entropy H_t, inverse margin M_t^{-1}, quality mass QM_t — historical files use `Q_t`) is used
 to pick a budget-B schedule Ŝ_B.
 
 **Thesis story (empirical verdict, April 2026):** fixed-budget corrector allocation is

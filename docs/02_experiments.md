@@ -28,7 +28,7 @@ Checkpoint: `~/mdm/checkpoints/mdlm.ckpt` on HPC. Staged on HPC via `scripts/sta
 ## Phase 1 — Protocol A (signal calibration)
 
 **What:** Measure per-step Δ_t = F(y_t^{+1}) − F(y_base) and per-step signals
-(H_t, M_t^{-1}, Q_t) for each of 50 seeds × T = 64 steps.
+(H_t, M_t^{-1}, QM_t — historical files use `Q_t`) for each of 50 seeds × T = 64 steps.
 
 **Verdict:** Signal-to-gain Spearman ρ ≈ 0.10–0.15. Weak but positive.
 Low-gain T_low region confirmed at early steps (R_t ≈ ∅). MC-oracle headroom = +0.45.

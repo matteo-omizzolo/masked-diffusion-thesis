@@ -12,30 +12,56 @@
 
 Theorem stack formalized in `research/candidate_theorems.md` §0–§7:
 
-- **Theorem A** (marginal proxy regret) — proved, baseline.
-- **Theorem B** (pairwise surrogate regret, exact and estimated forms) — proved;
-  the estimated form has constant 2α_B (verified, not 4α_B).
-- **Proposition C** (regime diagnostics: U_B, R_B, I_B, P_B, C_B) — definition +
-  classification protocol.
-- **Theorem D** (online controller, 2Tδ ADP loss) — proof sketch; appendix-grade.
-- **Proposition E** (burn-in exclusion via Lipschitz F) — proof sketch; optional.
+- **Theorem A** (marginal proxy regret) — proved; baseline.
+- **Theorem B** exact (§2.1), estimated (§2.2; constant 2α_B, not 4α_B), and
+  **B′** finite-candidate-pool / high-probability form (§2.3).
+- §2.4 Levels of analysis — Level 1 diagnostic / Level 2 population /
+  Level 3 feature-conditioned (deployable).
+- **Diagnostic Framework C** (renamed from Proposition C; regime
+  classification U_B, R_B, I_B, P_B, C_B with operational CI-based comparisons).
+- **Theorem D** — proof sketch; **optional / appendix; first to cut**.
+- **Lemma E** — conditional sketch; F = −GPT-2 NLL is not Lipschitz without
+  clipping; optional / side lemma.
 
-Theory-to-experiment map: `research/candidate_theorems.md` §7. Backbone is **A → B → C**.
+Theory-to-experiment map: `research/candidate_theorems.md` §7. Backbone is
+**A → B → Diagnostic Framework C**.
 
 ---
 
 ### Gate 2 — Phase 0 reproducibility audit (prerequisite for any new HPC)
 
-Before launching any new experiment, reproduce the existing ProSeCo-OWT baseline:
+Before launching any new experiment, reproduce the existing ProSeCo-OWT baseline.
 
-**Phase 0 checklist:**
+**Step 2a — code path audit.**
 - [ ] Local script import checks: `python -c "import src.mdm_playground"` passes.
 - [ ] Stage ProSeCo-OWT checkpoint: `python scripts/stage_proseco_owt.py`.
-- [ ] K=3 smoke on ProSeCo-OWT: verify G(S), A(S), Δ_t, F all consistent.
-- [ ] Compare against existing Phase 2b + Phase 3a result keys in `results/`.
-- [ ] Only then plan full K=30 replication.
 
-Do not launch K=30 until the K=3 smoke matches existing results qualitatively.
+**Step 2b — pre-flight assertions (BLOCKING; no smoke until these pass).**
+The following invariants must be implemented as tests under `tests/` (or
+manually verified) before any HPC submission, including K=3 smoke:
+
+- [ ] **PF1 deterministic base** — same seed + config ⇒ same base tokens and F.
+- [ ] **PF2 empty schedule = base** — `run_with_schedule({}) == run_base`.
+- [ ] **PF3 single-correction = Protocol A branch** — `run_with_schedule({t})`
+      equals the Protocol A single-corrector branch at step t.
+- [ ] **PF4 budget accounting** — |S| = B; total extra forward passes = c_corr · B;
+      schedules with same |S| have same compute cost.
+- [ ] **PF5 CRN consistency** — base and any branch share random numbers
+      everywhere except the corrector path.
+- [ ] **PF6 F-scoring consistency** — same token sequence ⇒ same F score.
+- [ ] **PF7 corrector action set** — ProSeCo corrects only positions in R_t.
+- [ ] **PF8 signal/action-set consistency** — H_t, M_t^{-1}, QM_t are computed
+      over the same R_t the corrector acts on (avoid historical Bug #1).
+
+**Step 2c — K=3 smoke (only after Step 2b passes).**
+- [ ] K=3 seeds, T=64, B ∈ {2,4}; uniform + mean_delta_oracle + CD-G + BS-AG.
+- [ ] Compare against existing `results/phase2b/` and
+      `results/phase3a_proseco_owt/oracle_gap_closure.json` keys.
+
+**Step 2d — K=30 critical replication (only after Step 2c matches qualitatively).**
+
+Do not launch Phase 1 until Step 2c passes. Do not launch K=30 until Step 2c
+matches qualitatively.
 
 ---
 
@@ -122,7 +148,8 @@ Once the theory scaffold (Gate 1) is stable, writing can proceed in parallel:
 - Full-scale HPC runs before Phase 0 passes.
 - LLaDA-SFT Phase 3a (pre-registered no-go).
 - Online controller experiments until Gate 3–4 are complete.
-- PRISM pivot — rejected.
+- PRISM pivot — not pursued as a thesis pillar (separable PRISM falls in
+  ranker class; non-separable use is optional / future).
 - Stretch C2 (Gibbs contraction) — not applicable.
 - Third-backbone replication (out of thesis scope unless supervisor approves).
 
