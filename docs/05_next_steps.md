@@ -8,23 +8,30 @@
 
 ## Sequential research gates (do in order)
 
-### Gate 1 — Opus theory pass ✅ (2026-05)
+### Gate 1 — Opus theory pass ✅ (2026-05; tightened 2026-05-06)
 
 Theorem stack formalized in `research/candidate_theorems.md` §0–§7:
 
-- **Theorem A** (marginal proxy regret) — proved; baseline.
-- **Theorem B** exact (§2.1), estimated (§2.2; constant 2α_B, not 4α_B), and
-  **B′** finite-candidate-pool / high-probability form (§2.3).
-- §2.4 Levels of analysis — Level 1 diagnostic / Level 2 population /
-  Level 3 feature-conditioned (deployable).
-- **Diagnostic Framework C** (renamed from Proposition C; regime
-  classification U_B, R_B, I_B, P_B, C_B with operational CI-based comparisons).
-- **Theorem D** — proof sketch; **optional / appendix; first to cut**.
-- **Lemma E** — conditional sketch; F = −GPT-2 NLL is not Lipschitz without
-  clipping; optional / side lemma.
+- **Theorem A** (uniform marginal proxy regret 2Bε + 2η_B) — proved; baseline.
+- **Diagnostics A′ (additivity scale), A″ (rankability)** — demoted from
+  "proved refinements" to **empirical diagnostics**; do not control
+  selected-schedule regret without finite-pool conversion.
+- **Theorem A as B′(Q := A)** (§2.7) — safe finite-pool regret form.
+- **Empirical Ranker-Class Limitation** — replaces "Negative-Result Corollary";
+  formal part for time-only / seed-averaged separable ψ; empirical part on
+  tested separable rankers.
+- **Theorem B / B′** — central rigorous interaction framework.
+  B exact (§2.1), B estimated (§2.2; constant 2α_B), B′ finite-candidate-pool /
+  high-probability with κ_B and **no-leakage data-dependence caveat** (§2.3).
+- **Levels 1 / 2 / 3** (§2.4) and **level-specific metrics** (§2.6)
+  P_B^seed / P_B^pop / P_B^feat, C_B^pop / C_B^feat.
+- **Diagnostic Framework C** — regime classification with disciplined notation
+  U_B^{MC,N} vs U_B^{pool} vs U_B^* (the last unobservable, never reported).
+- **Theorem D** — proof sketch; optional / appendix; first to cut.
+- **Lemma E** — conditional / clipped F_C only; optional side lemma.
 
 Theory-to-experiment map: `research/candidate_theorems.md` §7. Backbone is
-**A → B → Diagnostic Framework C**.
+**A → B / B′ → Diagnostic Framework C**.
 
 ---
 
@@ -127,7 +134,10 @@ Once the theory scaffold (Gate 1) is stable, writing can proceed in parallel:
 4. **ch7 — Discussion / Limitations** (~5–8 pages)
    - Single-backbone scope caveat.
    - CD-G as structural existence result.
-   - Empirically vacuous L∞ bound; operative Refinement A″.
+   - Theorem A's uniform L∞ bound is empirically vacuous; the operative
+     selected-schedule form is the finite-pool corollary (Theorem A as
+     B′(Q := A)). A′ and A″ are reported as diagnostics, not regret
+     refinements.
    - Future: interaction-aware scheduling, multi-backbone replication.
 
 5. **Abstract + Introduction** — write last.
@@ -136,10 +146,12 @@ Once the theory scaffold (Gate 1) is stable, writing can proceed in parallel:
 
 ### Theory clean-up tasks (run in parallel with writing)
 
-7. Clean LaTeX proof of Theorem A combining step in `thesis/chapters/ch6_contribution.tex`.
-8. Write Refinement A′ order-statistics derivation in ch6.
-9. Write Refinement A″ rank-based derivation in ch6.
-10. Add Negative-Result Corollary formal environment in ch6.
+7. Clean LaTeX proof of Theorem A combining step in `thesis/chapters/ch6_contribution.tex`
+   (uniform form), then state the finite-pool corollary as the operative form.
+8. State Theorem B / B′ in ch6 with the no-leakage candidate-pool caveat.
+9. Report A′ and A″ diagnostics in ch5 / ch7 (not as theorems).
+10. Add the Empirical Ranker-Class Limitation (formal time-only part + empirical
+    part on tested rankers) in ch6.
 
 ---
 

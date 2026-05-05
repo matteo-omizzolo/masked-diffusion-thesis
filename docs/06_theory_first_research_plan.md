@@ -136,16 +136,18 @@ Formal statements, assumptions, proofs, and falsifiers live in
 
 | § | Object | Status | Role |
 |---|---|---|---|
-| §1 | Theorem A — marginal proxy regret 2Bε + 2η_B | Proved | Baseline; tested by (A2)/(A3) |
-| §1 | Refinements A′ (variance), A″ (rank) | Proved under modeling assumptions (mixing/Gaussian-A) | Empirically anchored, assumption-dependent |
-| §1 | Negative-Result Corollary | Proved; **scoped to separable per-step rankers only** | Documents ranker class limitation on ProSeCo-OWT |
+| §1.1–§1.2 | Theorem A — marginal proxy regret 2Bε + 2η_B (uniform form) | Proved | Baseline; tested on candidate pool C_B |
+| §1.3 | Diagnostics A′ (additivity scale), A″ (rankability) | **Empirical diagnostics** (demoted from "proved") | Do not control selected-schedule regret without finite-pool conversion |
+| §1.4 | Theorem A as B′(Q := A) — safe finite-pool form | Corollary of B′ | Rigorous selected-schedule consequence of A |
+| §1.5 | Empirical Ranker-Class Limitation (replaces "Negative-Result Corollary") | Formal part (time-only ψ) + empirical part (tested rankers on ProSeCo-OWT) | Carefully scoped negative result |
 | §2.1 | Theorem B exact: G(S_B^*) − G(Ŝ) ≤ 2ζ_B + ω_B | Proved | Generic surrogate-regret inequality |
-| §2.2 | Theorem B estimated: ≤ 2ζ_B + 2α_B + ω_B | Proved (constant 2; the 4α_B form is not adopted) | Operational form (uniform bound) |
-| §2.3 | Theorem B′ finite candidate pool: ≤ κ_B + 2ζ_{B,C} + 2α_{B,δ} + ω_B w.p. ≥ 1 − δ | Proved | **High-probability experimentally usable form** |
-| §2.4 | Diagnostic / population / feature-conditioned hierarchy | Definition | Distinguishes Levels 1 / 2 / 3 of pairwise scheduler |
-| §3 | Diagnostic Framework C — regime classification (U_B, R_B, I_B, P_B, C_B) | Definition + protocol | Regime taxonomy |
+| §2.2 | Theorem B estimated: ≤ 2ζ_B + 2α_B + ω_B | Proved (constant 2; the 4α_B form is not adopted) | Operational uniform form |
+| §2.3 | Theorem B′ finite candidate pool: ≤ κ_B + 2ζ_{B,C} + 2α_{B,δ} + ω_B w.p. ≥ 1 − δ; **fixed-pool / no-leakage caveat** | Proved | **High-probability experimentally usable form** |
+| §2.4 / §2.6 | Levels 1 / 2 / 3 hierarchy + level-specific metrics (P_B^seed, P_B^pop, P_B^feat, C_B^pop, C_B^feat) | Definitions | Match metric to level of claim; deployability requires Level 3 |
+| §2.7 | Theorem A as a special case of B′ | Corollary | Safe finite-pool A |
+| §3 | Diagnostic Framework C — regime classification (U_B^{MC,N} / U_B^{pool}; never reports unobservable U_B^*) | Definition + protocol | Regime taxonomy |
 | §4 | Theorem D — online controller 2Tδ ADP loss | Proof sketch | Optional / appendix; first to cut |
-| §5 | Lemma E — burn-in exclusion under clipped/Lipschitz F_C | Conditional sketch (F = −GPT-2 NLL is **not** Lipschitz without clipping) | Optional side lemma |
+| §5 | Lemma E — burn-in exclusion under clipped F_C only | Conditional sketch (F = −GPT-2 NLL is **not** Lipschitz without clipping) | Optional side lemma |
 
 > **Honesty.** Theorem B's inequality is a generic surrogate-regret statement —
 > a short standard argument. Its scientific value comes from the empirical
@@ -164,13 +166,15 @@ Before coding, create a table like this in the active plan.
 
 | Theory item | Assumption / prediction | Measured quantity | Experiment | Possible outcome |
 |---|---|---|---|---|
-| Theorem A (A2) | |G − A| ≤ η_B | η_B from Phase 0/2b residuals | Theorem A non-vacuous | Move to Theorem B |
-| Theorem A (A3) | |Δ − ψ| ≤ ε; rankers ≈ A top-B | ε, ε_R, ρ(A,G) Phase 0 | Marginal regime II | Negative-Result Corollary (scoped); → B |
-| Theorem A util. | 2Bε + 2η_B < ranker headroom | plug-in vs measured headroom | Theorem A operative | Bound is structural, not predictive |
-| Theorem B (B2) | ζ_B < η_B; P_B > R_B | Phase 1 sparse pairwise | Interaction regime III | Higher-order / chaotic (regime IV) |
-| Theorem B′ (B3′) | |Q − Q̂|≤ α_{B,δ} on candidate pool C_B | Phase 1/2 held-out seeds, paired CRN | Pairwise scheduler buildable on C_B | Surrogate undersampled |
-| Theorem B′ κ_B | candidate pool C_B near MC oracle | Phase 2 pool comparison | Within-pool regret meaningful for full oracle | Restrict claim to C_B |
-| Theorem B util. | G(Ŝ_Q̂) > G(rankers) on **held-out trajectories** (Level 3) | Phase 2 held-out feature-conditioned eval | **Theorem B central; Level-3 deployable** | Population scheduler only or non-deployable |
+| Theorem A (A2) | |G − A| ≤ η_{B,C} on candidate pool | Phase 0/2b finite-pool residual | Theorem A non-vacuous on C_B | → Theorem B |
+| Theorem A (A3) | |Δ − ψ| ≤ ε on C_B; rankers ≈ A top-B | Phase 0 (ε, R_B = ρ(A,G)) | Marginal regime II | Empirical Ranker-Class Limitation (scoped); → B |
+| Theorem A util. | 2Bε + 2η_{B,C} < ranker headroom | plug-in vs measured headroom on C_B | Theorem A operative on C_B | Structural bound only |
+| Diagnostic A′ (additivity scale) | η^typ_{B,D} small | Phase 0/2b residuals over D | A is informative on D | A is uninformative |
+| Diagnostic A″ (rankability) | R_B = ρ(A, G) high | Phase 0/2b ranking | A is rank-informative | Move to richer surrogate |
+| Theorem B (B2) | ζ_{B,C} < η_{B,C}; P_B^{level} > R_B at level | Phase 1 sparse pairwise (with §Uncertainty protocol) | Interaction regime III | → Regime IV |
+| Theorem B′ (B3′) | |Q − Q̂| ≤ α_{B,δ} on C_B (held-out, fixed pool) | Phase 1/2 leave-seed-out, no-leakage pool construction | Pairwise scheduler buildable on C_B | Surrogate undersampled / pool data-dependent |
+| Theorem B′ κ_B | C_B near MC pool oracle | Phase 2 pool comparison | Within-pool regret meaningful vs MC pool | Restrict claim to within-pool |
+| Theorem B util. | C_B^feat statistically positive on **held-out** seeds (Level 3) | Phase 2b feature-conditioned eval | **Theorem B central; Level-3 deployable** | Population-only or non-deployable |
 | Diagnostic Framework C | Diagnostics stable at K=30 | U_B, R_B, I_B, P_B, C_B with BCa CI | Diagnostic framework valid | Single-backbone case study |
 | Theorem D | Compact z_t admits small ‖V−V̂‖_∞ | Phase 4 (only if reached) | Online controller in main | Stays appendix |
 | Lemma E | clipped F_C is L_F-Lipschitz; small R_t ⇒ small Δ_t | Phase 0 audit of R_t, F sensitivity | Side lemma in main | Side remark only |
@@ -328,10 +332,31 @@ Produce:
 
 **Bad case:** xi has no stable structure.
 
+### Uncertainty protocol (Phase 1)
+
+Sparse pairwise diagnostics involve randomness over (a) seeds, (b) schedule
+samples, (c) pair samples within (t, t'), and (d) MC candidate-pool draws.
+Bootstrapping only over seeds while the other sources are sparse understates
+uncertainty. Required protocol:
+
+- **Fix the candidate pool C_B and the pair sample P ⊆ {(t, t') : t < t'}**
+  before evaluation, where possible.
+- Report **BCa CIs over seeds** for all per-seed averages.
+- For quantities that depend on schedule / pair sampling (P_B variants,
+  ζ_{B,C}, I_B), report a **nested bootstrap** over (seeds, sampled pairs/
+  schedules) **or** a **repeated pair-pool draw** estimate of sampling
+  variability. State explicitly which.
+- For each diagnostic, state whether reported CI includes pair / schedule
+  sampling variability.
+- **Do not classify Regime III vs IV** unless the CI for P_B − R_B (or for
+  ζ_{B,C} − η_{B,C}) is stable under both seed-bootstrap and pair-pool
+  resampling.
+
 ### Decision gate
 
 - If pairwise structure exists: proceed to Phase 2.
-- If no structure exists: emphasize regime diagnostics and consider online/controller only as a falsification study.
+- If no structure exists: emphasize regime diagnostics and consider
+  online / controller only as a falsification study.
 
 ---
 
@@ -453,10 +478,29 @@ Track optimization gap if possible by comparing optimizers.
 
 **Bad case:** pairwise surrogate fails; result becomes evidence that interactions are not stable/compressible.
 
-### Decision gate
+### Decision gate (Phase 2a → Phase 2b)
 
-- If successful: pairwise interaction-aware timing becomes the main contribution.
-- If failed: retain as negative result; proceed to regime map and online-control diagnostics.
+Run **Phase 2b feature-conditioned (Level 3)** if **either** of the following
+holds at Phase 1 / 2a:
+
+- **(G2a-pop)** Population pairwise structure: P_B^pop > R_B^pop with CI of
+  the difference excluding 0; **or**
+- **(G2a-feat)** Feature-predictable interaction structure: pairwise
+  residuals ξ_{i,t,t'} are predictable from observable features s_{i,t},
+  s_{i,t'} on held-out seeds with R² (or rank correlation) above a
+  pre-specified threshold (e.g. R² ≥ 0.10) whose 95 % CI excludes 0.
+
+Population success and feature-conditioned success are partly orthogonal:
+averaging across seeds can wash out per-instance structure that a
+feature-conditioned scheduler could still exploit. Do **not** require
+population-scheduler success as the only gate.
+
+If **neither** gate fires: retain as negative result; proceed to
+regime-map / online-control diagnostics.
+
+If Phase 2b succeeds (C_B^feat statistically positive on held-out seeds):
+pairwise feature-conditioned timing becomes the main deployable
+contribution.
 
 ---
 

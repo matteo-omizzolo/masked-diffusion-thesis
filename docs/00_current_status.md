@@ -28,7 +28,7 @@ Both PASS at every B ∈ {2, 3, 4, 8}. Recovery:
 - CD-G: 74–84 % of +0.45 MC-oracle headroom at B ∈ {2, 3, 4}.
 - BS-AG: 49–64 % of +0.45 headroom at B ∈ {2, 3, 4}.
 **Primary positive result.** PRISM, used as a separable per-step score, falls in
-the ranker class limited by the Negative-Result Corollary; a non-separable PRISM
+the ranker class limited by the Empirical Ranker-Class Limitation (`candidate_theorems.md` §1.5); a non-separable PRISM
 use is not pursued for this thesis but is not ruled out.
 
 ### Cross-backbone (LLaDA-SFT bounded probe, K = 8)
@@ -53,7 +53,7 @@ Best after-uncertainty close ratio = +0.015 (entropy, B=2); negative at B ≥ 3.
 | Greedy rankers fail by B = 8 (all 10 policies) | T1 | `policy_comparison_paired.json` |
 | CD-G recovers 74–84 % at B ∈ {2,3,4} | T1 | `oracle_gap_closure.json` |
 | BS-AG recovers 49–64 % at B ∈ {2,3,4} | T1 | `oracle_gap_closure.json` |
-| Theorem A, Refinements A′/A″, Negative-Result Corollary: formally proved | — | `research/candidate_theorems.md` |
+| Theorem A (uniform proxy regret) proved; A′/A″ are diagnostics; Empirical Ranker-Class Limitation has formal + empirical parts | — | `research/candidate_theorems.md` §1, §1.5 |
 | Uniform-not-beaten transfers to LLaDA-SFT at tested resolution | T3 | `cross_backbone/` |
 
 ---
@@ -66,7 +66,9 @@ Best after-uncertainty close ratio = +0.015 (entropy, B=2); negative at B ≥ 3.
 | Protocol C (adaptive controller on OWT) | Honest negative. Appendix F only. |
 | MC-oracle headroom on LLaDA-SFT | Does not transfer at tested resolution. |
 | PRISM pivot | Not pursued as thesis pillar. Separable PRISM signals fall in the ranker class; non-separable use not ruled out. |
-| Theorem A L∞ form | Empirically vacuous at every B ∈ {4, 8, 16}. A″ rank-based form is load-bearing. |
+| Theorem A L∞ form | Empirically vacuous at B ≥ 4 in uniform form. Safe selected-schedule statement is the finite-pool corollary (Theorem A as B′(Q := A)). |
+| Refinement A′ | **Demoted to additivity-scale diagnostic.** No longer presented as a regret refinement. |
+| Refinement A″ | **Demoted to rankability diagnostic.** ε_R is not a theorem constant. |
 | ReMDM-loop, MDLM Phase 1 | Archived. Backend issues and near-zero Δ_t. See abandoned-backend lessons table below. |
 | Full-scale HPC new runs | Gated — pending theory scaffold + Phase 0 audit. |
 
@@ -89,9 +91,10 @@ Raw legacy result files were removed in the May 2026 cleanup; git history preser
 - Whether results generalize beyond ProSeCo-OWT to other backbones (LLaDA-SFT probe was
   inconclusive; only one clean backbone tested).
 - Whether BS-AG's performance at B = 4, 8 would hold at K = 100 seeds (K = 30 tested).
-- Formal proof tightness of Refinement A′ (σ_ξ · √B/√2 mass-form: order-statistics
-  derivation exists but depends on mixing/cancellation hypothesis).
-- Non-vacuity of Theorem A L∞ form on any backbone tested.
+- Whether the finite-pool corollary (Theorem A as B′(Q := A), §2.7) is non-vacuous
+  on a candidate pool C_B with the planned no-leakage construction.
+- Whether ζ_{B,C} − η_{B,C} (improvement of pairwise over additive on C_B) is
+  statistically positive on ProSeCo-OWT under the Phase 1 uncertainty protocol.
 
 ---
 
@@ -115,7 +118,7 @@ works. The current aim is to reframe and extend this into a cleaner theory-first
 of marginal, interaction-aware, and online corrector timing.
 
 Sequential gates:
-1. Opus theory pass — formalize Theorem B, Proposition C, Theorem D.
+1. Opus theory pass ✅ — Theorem A baseline, Theorem B/B′ central, Diagnostic Framework C, A′/A″ as diagnostics, Empirical Ranker-Class Limitation; D/E optional.
 2. Phase 0 reproducibility audit — reproduce ProSeCo-OWT baseline locally.
 3. Interaction diagnostics — only after Phase 0 passes.
 4. Pairwise scheduler — only if diagnostics show structure.

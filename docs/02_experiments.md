@@ -43,20 +43,29 @@ Low-gain T_low region confirmed at early steps (R_t ≈ ∅). MC-oracle headroom
 MC oracle (best-of-100 random schedules) at B ∈ {2, 3, 4}.
 
 **Key findings (all T1):**
-- MC-oracle headroom = +0.45 paired G at B ∈ {2, 3, 4}; 95 % BCa CI excludes 0.
-- All 10 greedy rankers fail to match MC oracle. The cheating `mean_delta_oracle` ranker
-  saturates and enters the NULL band by B = 8.
+- MC-oracle headroom U_B^{MC,100} = +0.45 paired G at B ∈ {2, 3, 4}; 95 % BCa CI
+  excludes 0. Note: this is the best-of-100 random schedule pool oracle; the
+  exhaustive (T choose B) oracle is unobservable.
+- All 10 tested separable rankers fail to recover MC-oracle headroom. The
+  cheating `mean_delta_oracle` (time-only) ranker saturates and enters the
+  no-detectable-gain band by B = 8.
 - Top-10 MC ∩ oracle Jaccard ≈ 1.2–1.3× random baseline (schedules do not concentrate
   on a small corner of the space).
 - Top-10 MC internal Jaccard ≈ bottom-10 Jaccard (no coherent "best schedule" cluster).
 
-**Theorem A constants (measured on 9000 MC rows, 30 seeds):**
+**Theorem A diagnostics (measured on 9000 MC rows, 30 seeds; A′/A″ are
+diagnostics, *not* regret-bound constants — see `research/candidate_theorems.md`
+§1.3):**
 
-| B | σ_ξ | ρ(A,G) | σ_Δ | ε_R = (1−|ρ|)·σ_Δ |
+| B | σ_ξ (A′ scale) | R_B = ρ(A,G) (A″) | σ_Δ | (1−|ρ|)·σ_Δ |
 |---|---|---|---|---|
 | 2 | 0.174 | 0.601 [0.571, 0.628] | 0.176 | 0.070 |
 | 3 | 0.240 | 0.542 [0.516, 0.572] | 0.202 | 0.092 |
 | 4 | 0.309 | 0.462 [0.430, 0.492] | 0.220 | 0.118 |
+
+The (1−|ρ|)·σ_Δ column is a rank-correlation diagnostic, not a theorem
+constant; the rigorous selected-schedule statement is the finite-pool form
+of Theorem A (§2.7 of `candidate_theorems.md`).
 
 **Raw results:** `results/phase2b_proseco_owt/per_seed/`, `results/phase2b/`
 Key files: `policy_comparison_paired.json`, `mc_oracle.json`, `combinatorial_diagnostics.json`,
@@ -88,10 +97,12 @@ Key files: `policy_comparison_paired.json`, `mc_oracle.json`, `combinatorial_dia
 | 4 | **0.84** | 0.49 | [0.386, 0.520] |
 | 8 | PASS (still > uniform) | PASS | oracle in NULL band |
 
-**Verdict:** Combinatorial search is the right policy class.
-Greedy rankers are bounded by the ranker-class Negative-Result Corollary.
-PRISM rejection refined: not "no structure exists" but "structure does not factor
-through any separable per-step score."
+**Verdict:** Combinatorial search with G feedback is the right policy class on
+this triple. The tested separable rankers are limited by the
+**Empirical Ranker-Class Limitation** (`candidate_theorems.md` §1.5;
+formal part for time-only / seed-averaged separable ψ; empirical part on
+tested rankers). PRISM-as-separable-score is in this class; non-separable
+PRISM uses are not ruled out and not pursued in this thesis.
 
 **Raw results:** `results/phase3a_proseco_owt/per_seed/`, `oracle_gap_closure.json`
 

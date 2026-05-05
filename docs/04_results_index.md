@@ -48,7 +48,7 @@ results/phase2b/
   policy_comparison_paired.json      # paired diffs, BCa CIs for all policies × B
   mc_oracle.json                     # best-of-100 MC per seed × B; paired headroom
   combinatorial_diagnostics.json     # Jaccard diagnostics (top-10 ∩ oracle, etc.)
-  theorem_a_constants.json           # σ_ξ, ρ, σ_Δ, γ, ε_R at B∈{2,3,4,8,16}
+  theorem_a_constants.json           # σ_ξ, ρ, σ_Δ, γ, (1−|ρ|)·σ_Δ at B∈{2,3,4,8,16}; the latter columns are A′/A″ diagnostics, not theorem constants
 ```
 
 ---

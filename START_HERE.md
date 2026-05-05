@@ -45,8 +45,13 @@ headroom on ProSeCo-OWT.
 - **Protocol C (adaptive controller OWT, CPU).** Bucketed-state conditioning
   shrinks ε by < 1.7 %. Honest negative. Theorem A-ad lives in Appendix F.
   Raw: `results/protocol_c_owt/`.
-- **Theory.** Theorem A, Refinements A′/A″, Negative-Result Corollary all
-  formally proved under explicit assumptions. ch6 skeleton drafted.
+- **Theory.** Theorem A (uniform marginal proxy regret) proved under explicit
+  assumptions; A′ and A″ are empirical diagnostics (additivity scale and
+  rankability), not unconditional regret refinements. The safe selected-schedule
+  consequence of A is its finite-pool form (Theorem A as B′(Q := A)). The
+  former "Negative-Result Corollary" is reframed as the **Empirical
+  Ranker-Class Limitation** with a formal part for time-only / seed-averaged
+  separable rankers and an empirical part on tested rankers. ch6 skeleton drafted.
 
 ---
 

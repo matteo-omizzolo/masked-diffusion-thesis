@@ -187,60 +187,112 @@ Lemma A1 (oracle top-B under exact additivity), Lemma A2 (calibration regret
 under exact additivity, swap-by-swap exchange) are stated and proved in the
 Historical Provenance section below.
 
-### 1.3 Refinements A′, A″ (status: proved under modeling assumptions)
+### 1.3 Diagnostics A′, A″ (additivity scale, rankability — *not* unconditional regret refinements)
 
-**Refinement A′ (variance form).** Under a *mixing/cancellation hypothesis* on
-the family (ξ_{t,t'}) — namely that summed pairwise interactions across a
-random size-B schedule satisfy a √B central-limit-like behaviour — one obtains
+> **Status change (2026-05).** A′ and A″ were previously presented as
+> "proved under modeling assumptions" regret refinements of Theorem A. On
+> mathematical re-examination they do **not** in general control the
+> selected-schedule regret that Theorem A's combining step uses, and the
+> previously circulated formulas were not internally consistent. They are
+> **demoted to empirical diagnostics**. A safe finite-pool refinement of
+> Theorem A is recovered as a corollary of Theorem B′ applied with Q := A
+> (see §2.7 below).
 
-  𝔼|G(S) − A(S)| ≤ σ_ξ · √(B / 2).
+**Diagnostic A′ — additivity residual scale.**
+Define, for a fixed schedule distribution D_B (e.g. uniform over a sampled
+size-B schedule pool C_B):
 
-Status: **proved under the mixing/cancellation hypothesis**; the hypothesis is
-explicit and may not hold in all regimes.
+  η^typ_{B, D} := 𝔼_{S ∼ D_B} |G(S) − A(S)|,
+  σ^pool_{ξ, B} := sd_{S ∈ C_B}(G(S) − A(S)).
 
-**Refinement A″ (rank form).** Under a *Gaussian-A hypothesis* on the joint
-distribution of (A(S_A^*) − A(Ŝ_B)) over the schedule sample, the calibration
-penalty admits the rank-based form ε_R := (1 − |ρ_B|) σ_Δ where ρ_B is the
-Spearman correlation between A and G. Status: **proved under the Gaussian-A
-hypothesis**; empirically this is the operative form on ProSeCo-OWT.
+These quantify the *typical* additivity residual on the chosen schedule
+distribution. They are **not** a regret bound for selected schedules
+(S_B^*, top-B-by-ψ) unless converted into a uniform or
+high-probability bound over a candidate pool. The legacy
+"σ_ξ √(B/2)" mixing-form is treated as a heuristic scaling claim and is
+not used as an active theorem.
 
-Both refinements are *empirically anchored but assumption-dependent*. They
-are not universal.
+**Diagnostic A″ — rankability / calibration.**
+Define:
 
-### 1.4 Negative-Result Corollary (scoped)
+  R_B := ρ_Spearman(A(S), G(S))   over the schedule sample;
+  R_ψ := ρ_Spearman(ψ(S), A(S))   over the schedule sample.
 
-For any policy of the form Ŝ_B = top-B(ψ) with **separable per-step ψ**, the
-gain G(Ŝ_B) is upper-bounded by the `mean_delta_oracle` envelope, which on
-ProSeCo-OWT enters the no-detectable-gain band by B = 8.
+These summarise whether the additive surrogate or a signal-derived score is
+informative about G ranking. They do **not** by themselves bound the regret
+of the optimizer-selected top-B schedule: a proxy may have high global
+correlation and still misrank top schedules. Any "ε_R" notation is an
+empirical scale on rank-correlation, **not** a theorem constant. We avoid
+using "ε_R" in active theorem statements; if it appears in plots or
+historical files it is a diagnostic.
 
-> **Scope.** This corollary characterises the **separable per-step ranker
-> class only**. It does **not** imply: (i) all informed scheduling fails;
-> (ii) all PRISM-like ideas fail; (iii) search procedures (CD-G, BS-AG) are
-> bounded by this envelope; (iv) pairwise / online policies are bounded.
-> CD-G and BS-AG explicitly exceed the ranker envelope by operating on
-> schedules rather than per-step scores.
+### 1.4 Safe finite-pool ranking corollary
 
-### 1.5 Empirical observables and falsifiers
+The **only** rigorous selected-schedule consequence of A is its finite-pool
+version, obtained by applying Theorem B′ (§2.3) with Q := A and an estimated
+proxy Â, or by applying the original Theorem A with η_B and ε defined as
+finite-pool suprema:
+
+  η_{B, C} := sup_{S ∈ C_B} |G(S) − A(S)|,
+  ε_{B, C} := sup_{S ∈ C_B} |A(S) − Â(S)|.
+
+Then top-Â over C_B has additive regret at most 2 ε_{B, C} + 2 η_{B, C}
+within the pool. This is exactly Theorem B′ with Q = A.
+
+### 1.5 Empirical Ranker-Class Limitation (scoped; replaces "Negative-Result Corollary")
+
+> **Status change (2026-05).** The previous "Negative-Result Corollary"
+> claimed all separable per-step rankers are bounded by the
+> `mean_delta_oracle` envelope. This overclaims: a *seed-conditioned*
+> separable ranker ψ(s_{i,t}) can in principle out-rank a time-only
+> seed-averaged envelope. We replace it with a paired (formal + empirical)
+> statement.
+
+**Formal part (time/mean-profile separable rankers).** Consider the
+seed-averaged additive problem with mean profile Δ̄_t := 𝔼_i Δ_{i,t}.
+For any ranker that depends only on t or on a feature φ(t) — equivalently,
+any policy whose score is a function of t alone — the top-B set is a
+function of the order statistics of Δ̄_t. Hence among **time-only
+separable rankers**, none exceeds the `mean_delta_oracle` envelope
+(top-B by Δ̄_t) on the additive surrogate Ā.
+
+**Empirical part (ProSeCo-OWT).** All separable rankers tested in Phase 2b
+— including the cheating ψ = paired Δ̂_t — fail to recover the MC-oracle
+headroom; the `mean_delta_oracle` envelope itself enters the
+no-detectable-gain band by B = 8.
+
+**Scope warning.** The empirical part does **not** rule out:
+(i) feature-conditioned separable rankers ψ(s_{i,t}) outside the tested
+class; (ii) non-separable PRISM uses; (iii) pairwise schedulers (Theorem B);
+(iv) online controllers; (v) search with true-G feedback (CD-G/BS-AG). The
+formal part applies only to time-only / seed-averaged-feature scores and
+only on the additive mean-value surrogate Ā.
+
+### 1.6 Empirical observables and falsifiers (Theorem A)
 
 | Quantity | Definition | Tests |
 |---|---|---|
-| η_B | sup_{|S|≤B} |G(S) − A(S)| (or 95th percentile / RMS) | (A2) |
-| ε | sup_t |Δ_t − ψ(s_t)| | (A3) |
-| ρ(A, G) | Spearman over schedules | (A2) soft |
-| ε_R | (1 − |ρ_B|)·σ_Δ | (A3) soft |
+| η_B (uniform) | sup_{|S|≤B} |G(S) − A(S)|; in practice take 95th percentile or finite-pool sup | (A2) |
+| η_{B,C} | sup over candidate pool C_B | (A2) within pool |
+| η^typ_{B,D} | 𝔼_{S∼D} |G(S) − A(S)| | A′ diagnostic |
+| ε (uniform) | sup_t |Δ_t − ψ(s_t)| | (A3) |
+| R_B = ρ(A, G) | Spearman over schedule sample | A″ diagnostic |
 | ranker headroom | G(Ŝ_B) − G(uniform) | usefulness of A |
 
-Theorem A is *empirically useful in regime R* only if 2Bε + 2η_B < ranker
-headroom in R. The bound is **vacuous** if either η_B or ε swamps the gain.
-The **regime is wrong for marginal scheduling** if any of:
+Theorem A (uniform form) is *empirically useful in regime R* only if
+2Bε + 2η_B < ranker headroom in R. Otherwise it is **vacuous**. The
+**regime is wrong for marginal scheduling** if any of:
 
-  (F-A1) ρ(A, G) is small;
-  (F-A2) Negative-Result Corollary kicks in (separable rankers ≪ MC-oracle);
-  (F-A3) MC-oracle headroom large but no top-B ranker (including the
-         cheating ψ = paired Δ̂_t) closes more than a small fraction of it.
+  (F-A1) R_B is small;
+  (F-A2) Empirical Ranker-Class Limitation regime: tested separable rankers
+         do not recover the MC-oracle headroom;
+  (F-A3) MC-oracle headroom large but no top-B separable ranker
+         (including the cheating ψ = paired Δ̂_t) closes more than a small
+         fraction of it.
 
-Status: **proved** under (A1)–(A3); refinements proved under further explicit
-hypotheses; LaTeX prose in `thesis/chapters/ch6_contribution.tex` is TODO.
+Status: Theorem A **proved** under (A1)–(A3) (uniform form). Diagnostics
+A′ and A″ are not regret refinements; the safe selected-schedule statement
+is the finite-pool Theorem A (§1.4) or Theorem B′ with Q := A.
 
 ---
 
@@ -338,6 +390,15 @@ definition. ∎
 > regret unless C_B is argued to contain (or arbitrarily approximate) the
 > full oracle.
 
+> **Data-dependence caveat.** The candidate pool C_B must be **fixed
+> independently of held-out evaluation G**. Acceptable constructions: random
+> sampling (MC pool); beam candidates produced from training-seed Δ̂, ξ̂;
+> Q̂-greedy candidates from training-seed Q̂. **Not acceptable**: pools
+> selected using held-out G or by an optimizer with G-feedback on test
+> seeds. If the pool depends on training data, evaluate on held-out seeds;
+> if it depends on test G, the bound does not apply. (See no-leakage
+> protocol in `research/open_questions.md` OQ-T2.)
+
 ### 2.4 Diagnostic / population / feature-conditioned hierarchy
 
 Theorem B can be instantiated at three levels (cf. §0.5). They differ in
@@ -353,38 +414,67 @@ Phase 1 tests Levels 1–2. Phase 2 tests Level 3. The thesis claims
 "interaction-aware scheduling beats rankers" only at the level demonstrated;
 **deployability** requires Level 3.
 
-### 2.5 Empirical observables
+### 2.5 Empirical observables — bound constants
 
 | Quantity | Definition | Tests |
 |---|---|---|
-| ζ_B (or ζ_{B,C}) | sup over schedule pool of |G − Q| | (B2) / (B2′) |
-| α_B (or α_{B,δ}) | sup over schedule pool of |Q − Q̂|, paired held-out seeds | (B3) / (B3′) |
-| ω_B | optimizer gap Q̂(argmax) − Q̂(Ŝ_Q̂) | optimizer |
-| P_B | Spearman ρ(Q(S), G(S)) | (B2) soft |
-| ζ_B / η_B | improvement ratio of pairwise vs additive approximation | regime gate |
-| held-out gain | G(Ŝ_Q̂) − G(uniform) on test seeds | usefulness, Level 3 |
-| κ_B (against MC oracle) | G(S^MC-oracle) − G(S_C^*) | candidate-pool tightness |
+| ζ_B / ζ_{B,C} | sup over candidate pool C_B of |G(S) − Q(S)| | (B2) / (B2′) |
+| α_B / α_{B,δ} | sup over C_B of |Q(S) − Q̂(S)| (uniform / w.p. 1−δ), paired held-out seeds | (B3) / (B3′) |
+| ω_B | optimizer gap Q̂(argmax_{S ∈ C_B} Q̂) − Q̂(Ŝ_Q̂) | optimizer |
+| ζ_B / η_B | improvement ratio of pairwise vs additive approximation on C_B | regime gate |
+| κ_B vs MC pool | G(S_B^{MC oracle}) − G(S_C^*) | candidate-pool tightness against MC pool |
 
 Pairs ξ_{i,t,t'} must be estimated using paired CRN — they are differences of
 differences and are very noisy without pairing.
 
-### 2.6 Falsifiers
+### 2.6 Empirical observables — Level-specific metrics
 
-Theorem B is *useful* on regime R if ζ_B < η_B and P_B > R_B and
-G(Ŝ_Q̂) − G(uniform) > G(Ŝ_ranker) − G(uniform).
+For each level, predictability and closure are measured at that level:
+
+| Metric | Level | Definition | Supports |
+|---|---|---|---|
+| P_B^seed | Level 1 | within-seed ρ_Spearman(Q_i(S), G_i(S)) over a schedule sample, then averaged over seeds | seed-wise pairwise diagnostic |
+| P_B^pop  | Level 2 | ρ_Spearman(Q̄(S), Ḡ(S)) over the schedule sample | global / population schedule structure |
+| P_B^feat | Level 3 | held-out ρ_Spearman(Q̂_i(S), G_i(S)) over schedules within seed i, averaged over held-out seeds | feature-conditioned (deployable) scheduler |
+| C_B^pop  | Level 2 | (G(Ŝ^pop) − G(uniform)) / (G(S_C^{MC oracle}) − G(uniform)) on test seeds, with Ŝ^pop a single global schedule | population scheduler closure (vs MC pool) |
+| C_B^feat | Level 3 | (𝔼_i[G_i(Ŝ_{Q̂_i})] − G(uniform)) / (G(S_C^{MC oracle}) − G(uniform)) on held-out seeds | feature-conditioned scheduler closure |
+| held-out gain | Level 3 | G(Ŝ_{Q̂_i}) − G(uniform) per held-out seed | Level-3 usefulness |
+
+**Phase 1 settles Levels 1 and 2** (population and seed-wise structure of ξ).
+**Phase 2b settles Level 3** (deployable feature-conditioned scheduler).
+The thesis can claim a **deployable scheduler** only if C_B^feat or P_B^feat
+is statistically significant on held-out seeds.
+
+### 2.7 Theorem A as a special case of Theorem B′
+
+Setting Q := A in Theorem B′ recovers a finite-pool, high-probability,
+estimator-aware version of Theorem A:
+
+  G(S_B^*) − G(Ŝ) ≤ κ_B + 2 η_{B,C} + 2 ε_{B,C,δ} + ω_B
+
+where η_{B,C} := sup_{S ∈ C_B} |G(S) − A(S)| and ε_{B,C,δ} :=
+sup_{S ∈ C_B} |A(S) − Â(S)| (held-out, w.p. ≥ 1 − δ). This is the safe
+rigorous regret statement that A′ and A″ were trying to provide.
+
+### 2.8 Falsifiers (Theorem B)
+
+Theorem B is *useful* on regime R if ζ_{B,C} < η_{B,C} **and** P_B^{level} > R_B
+at the relevant level **and** the held-out scheduler at the matching level
+beats top-B separable rankers.
 
 Theorem B is *falsified as a useful theory* on R if any of:
-  (F-B1) ζ_B ≈ η_B (pairwise approximation no better than additive);
-  (F-B2) α_B is so large that 2 α_B swamps 2 (η_B − ζ_B);
-  (F-B3) Held-out (Level 3) Q̂-scheduler does not beat top-B rankers.
+  (F-B1) ζ_{B,C} ≈ η_{B,C} (pairwise approx no better than additive on C_B);
+  (F-B2) α_{B,δ} so large that 2 α_{B,δ} swamps 2 (η_{B,C} − ζ_{B,C});
+  (F-B3) Held-out Level-3 Q̂-scheduler does not beat separable rankers.
 
-(F-B1) → regime IV (higher-order / chaotic). (F-B2) → undersampled
-surrogate; consider shrinkage or larger training pool. (F-B3) → optimizer or
-feature-conditioning is the bottleneck; use CD-G as comparison.
+(F-B1) → regime IV (higher-order / chaotic). (F-B2) → undersampled surrogate;
+shrinkage or larger training pool. (F-B3) → optimizer or feature-conditioning
+is the bottleneck; CD-G remains as comparison.
 
-Status: §2.1, §2.2, §2.3 statements **proved** under stated assumptions; the
-non-trivial work is empirical estimation of ζ_B, α_B, P_B, κ_B with valid
-seed splits.
+Status: §2.1, §2.2, §2.3 statements **proved** under stated assumptions
+(uniform-bound or finite-pool / high-probability). The non-trivial empirical
+work is estimating ζ_{B,C}, α_{B,δ}, P_B^{level}, κ_B with valid seed splits
+and a fixed, no-leakage candidate-pool construction.
 
 ---
 
@@ -397,19 +487,31 @@ because it is a definition + protocol, not a proven proposition.
 
 ### 3.1 Diagnostics
 
-For a fixed (model, corrector, F, B) triple over a paired-seed sample:
+For a fixed (model, corrector, F, B) triple over a paired-seed sample, fix a
+pre-specified candidate pool C_B and sampling distribution (e.g. MC pool of
+N random size-B schedules). Define:
 
-  U_B := G(S_B^{MC-oracle}) − G(S_B^{uniform})    (timing usefulness; headroom)
-  R_B := ρ(A(S), G(S))                             (marginal rankability; Spearman)
-  I_B := σ(G(S) − A(S)) / (σ(A(S)) + δ)            (interaction strength; δ small)
-  P_B := ρ(Q(S), G(S))                             (pairwise predictability; Spearman)
-  C_B(method) := [G(method) − G(uniform)] / [G(MC-oracle) − G(uniform)]
-                                                   (closure ratio; defined when
-                                                    denominator is statistically positive)
+  U_B^{MC,N} := G(S_B^{MC,N}) − G(S_B^{uniform})    (MC-oracle headroom; N is part of the diagnostic)
+  U_B^{pool}  := G(S_C^*) − G(S_B^{uniform})        (pool-oracle headroom on C_B)
+  R_B := ρ_Spearman(A(S), G(S))                      (marginal rankability)
+  I_B := σ(G(S) − A(S)) / (σ(A(S)) + δ_0)            (interaction strength; δ_0 small)
+  P_B := ρ_Spearman(Q(S), G(S))                      (pairwise predictability; cf. §2.6 Level-specific variants)
+  C_B^{MC,N}(method) := [G(method) − G(uniform)] / [G(S_B^{MC,N}) − G(uniform)]
+                                                     (closure ratio against MC pool; defined when denominator
+                                                      CI excludes 0)
 
-S_B^{MC-oracle} is the best-of-N MC schedule (N = 100 in current data); not the
-exhaustive (T choose B) maximizer. All quantities are point estimates with
-BCa bootstrap 95 % CIs over seeds.
+> **Notation discipline.**
+> - **U_B^{MC,N}**: best-of-N MC oracle headroom (N and the schedule
+>   sampling distribution are part of the diagnostic).
+> - **U_B^{pool}**: best-on-pool oracle headroom on a fixed C_B.
+> - **U_B^***: reserved for the unobservable exhaustive (T choose B)
+>   oracle headroom; **never reported** from experiments.
+> - "MC oracle" / "pool oracle" / "exhaustive oracle" are distinct objects;
+>   active docs must use the precise term.
+
+All quantities are point estimates with BCa bootstrap 95 % CIs over seeds.
+For ξ-based or Q-based diagnostics where pair / schedule sampling is sparse,
+see Phase 1 uncertainty protocol in `docs/06_theory_first_research_plan.md`.
 
 ### 3.2 Operational "high"/"low"
 
@@ -439,8 +541,9 @@ taken at supervisor meetings against the measured CIs.
 
 Under the prior baseline (April 2026 results, to be confirmed by Phase 0):
 U_B > 0 at B ∈ {2,3,4} (MC-oracle headroom +0.45); R_B moderate;
-ε_R 0.07 → 0.39 across B; separable rankers do not recover U_B
-(Negative-Result Corollary); CD-G/BS-AG close 49–84 % of U_B.
+A″-style rank diagnostic R_B 0.60 → 0.46 across B ∈ {2,3,4}; tested separable
+rankers do not recover U_B^{MC,N} (Empirical Ranker-Class Limitation, §1.5);
+CD-G/BS-AG close 49–84 % of U_B^{MC,N}.
 
 This **provisionally** places ProSeCo-OWT into Regime III or IV at
 B ∈ {2,3,4}. Phase 1 (interaction diagnostics) is the experiment that
@@ -540,11 +643,17 @@ Status: **conditional sketch**; appendix or side lemma only.
 
 **Main body of thesis:**
 - §0 Formal setup, levels of analysis, notation.
-- §1 Theorem A (marginal baseline) + Refinements A′, A″ (assumption-dependent).
-- §2 Theorem B exact, Theorem B estimated, **Theorem B′ (finite candidate pool)**.
-- §3 Diagnostic Framework C.
-- Negative-Result Corollary scoped to separable rankers.
-- Experiments testing (A2)/(A3)/(B2)/(B2′)/(B3)/(B3′).
+- §1 Theorem A (marginal baseline, uniform form, proved). Diagnostics A′, A″
+  (additivity scale, rankability — *not* unconditional regret refinements).
+  Safe finite-pool ranking corollary (Theorem A as a special case of B′).
+  Empirical Ranker-Class Limitation (formal time-only part; empirical part
+  on tested separable rankers).
+- §2 Theorem B exact, Theorem B estimated, Theorem B′ (finite candidate pool /
+  high probability), §2.6 Level-specific metrics, §2.7 Theorem A as B′(Q := A).
+- §3 Diagnostic Framework C (regime classification, MC-oracle / pool-oracle
+  notation discipline).
+- Experiments testing (A2)/(A3)/(B2)/(B2′)/(B3)/(B3′) with no-leakage pool
+  construction and Phase 1 uncertainty protocol.
 
 **Appendix / optional:**
 - §4 Theorem D online controller; first to cut.
@@ -555,11 +664,11 @@ Status: **conditional sketch**; appendix or side lemma only.
 Backbone narrative:
 
 > Theorem A says when separable rankers should work. Diagnostics test (A2)/(A3).
-> If rankers fail (Negative-Result Corollary regime), Theorem B says when
-> pairwise scheduling should work; Theorem B′ is the high-probability,
-> finite-pool, experimentally usable form. Diagnostic Framework C classifies
-> which regime the (model, corrector, F, B) triple is in. Theorem D and
-> Lemma E are optional / appendix.
+> If tested separable rankers fail (Empirical Ranker-Class Limitation regime,
+> §1.5), Theorem B says when pairwise scheduling should work; Theorem B′ is
+> the finite-pool, high-probability, experimentally usable form. Diagnostic
+> Framework C classifies which regime the (model, corrector, F, B) triple is
+> in. Theorem D and Lemma E are optional / appendix.
 
 ---
 
@@ -567,16 +676,20 @@ Backbone narrative:
 
 | Theorem / object | Assumption / prediction | Empirical test (Phase) | If supported | If falsified |
 |---|---|---|---|---|
-| Theorem A (A2) | |G − A| ≤ η_B | η_B from Phase 0/2b residuals | Theorem A non-vacuous | → Theorem B |
-| Theorem A (A3) | |Δ − ψ| ≤ ε; rankers ≈ A top-B | ε, ε_R, ρ(A,G) Phase 0 | Marginal regime II | Negative-Result Corollary; → B |
-| Theorem A util | 2Bε + 2η_B < ranker headroom | plug-in vs measured | Theorem A operative | Bound structural, not predictive |
-| Theorem B (B2) | ζ_B < η_B; P_B > R_B | Phase 1 sparse pairwise | Interaction regime III | → Regime IV |
-| Theorem B (B3)/(B3′) | |Q − Q̂| ≤ α_B (or α_{B,δ}) on C_B | Phase 1/2 train/test split | Pairwise scheduler buildable | Surrogate undersampled |
-| Theorem B′ κ_B | candidate pool C_B near MC oracle | Phase 2 pool comparison | Full-pool regret meaningful | Restrict claim to within-pool |
-| Theorem B util | G(Ŝ_Q̂) > G(rankers), held-out (Level 3) | Phase 2 held-out evaluation | **Theorem B is central result** | CD-G / BS-AG remain comparison |
-| Diagnostic C | diagnostics stable at K=30 | Phase 0 + Phase 1 | Diagnostic framework valid | Single-backbone case study |
+| Theorem A (A2) | |G − A| ≤ η_B (uniform or finite-pool η_{B,C}) | η_{B,C} on candidate pool, Phase 0/2b | Theorem A non-vacuous on C_B | → Theorem B |
+| Theorem A (A3) | |Δ − ψ| ≤ ε on C_B | ε on candidate pool, Phase 0 | Marginal regime II | Empirical Ranker-Class Limitation; → B |
+| Theorem A util | 2Bε + 2η_{B,C} < ranker headroom | plug-in vs measured on C_B | Theorem A operative on C_B | Structural bound only |
+| Diagnostic A′ | typical η^typ_{B,D} small on schedule distribution D | Phase 0/2b residuals | A is informative on D | A is uninformative on D |
+| Diagnostic A″ | R_B = ρ(A, G) high | Phase 0 ranking | A is rank-informative | Move to richer surrogate |
+| Empirical Ranker-Class Limitation (formal) | time-only separable ψ ≤ mean-Δ̄ envelope on Ā | Phase 2b separable-ranker comparison | Tested rankers bounded; → B | n/a (formal part is exact) |
+| Empirical Ranker-Class Limitation (empirical) | tested separable rankers do not recover MC-oracle headroom on ProSeCo-OWT | Phase 2b paired CIs | Negative result on tested class | Tested ranker recovers headroom |
+| Theorem B (B2) | ζ_{B,C} < η_{B,C}; P_B^{level} > R_B at level | Phase 1 sparse pairwise | Interaction regime III | → Regime IV |
+| Theorem B (B3)/(B3′) | |Q − Q̂| ≤ α_{B,δ} on C_B (held-out) | Phase 1/2 leave-seed-out split, fixed pool | Pairwise scheduler buildable on C_B | Surrogate undersampled / pool data-dependent |
+| Theorem B′ κ_B | C_B near MC pool oracle | Phase 2 pool comparison | Within-pool regret meaningful for MC pool | Restrict claim to within-pool |
+| Theorem B util | C_B^feat statistically positive on held-out seeds | Phase 2b feature-conditioned eval | **Theorem B central; Level-3 deployable** | Population-only or non-deployable |
+| Diagnostic C | regime CIs stable at K=30 | Phase 0 + Phase 1 with seed+pair-pool resampling | Diagnostic framework valid | Single-backbone case study |
 | Theorem D | compact z_t admits small ‖V−V̂‖_∞ | Phase 4 (if reached) | Online controller in main | Appendix only |
-| Lemma E | clipped F_C is L_F-Lipschitz; R_t small ⇒ Δ_t small | Phase 0 audit of R_t, L_F | Side lemma in main | Side remark only |
+| Lemma E | clipped F_C is L_F-Lipschitz; R_t small ⇒ Δ_t^{F_C} small | Phase 0 audit of R_t, L_F on F_C | Side lemma in main | Side remark only |
 
 ## Historical Provenance
 

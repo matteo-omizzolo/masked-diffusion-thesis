@@ -57,32 +57,62 @@ class. Search procedures over schedules (CD-G, BS-AG) recover most oracle headro
 
 ## Contribution as currently understood
 
-**Theorem (analytical):** Theorem A (proxy-regret bound for top-B scheduling) + Refinements
-A′ (variance-form η_B) and A″ (rank-based ε_R) + Negative-Result Corollary (ranker class
-bounded by NULL band by B = 8 on OWT). All formally proved under explicit assumptions.
-Appendix F: Theorem A-ad (adaptive/state-conditional generalization, honest negative).
+The thesis is reframed as a **theory-first regime-diagnostic study of
+fixed-budget corrector timing**. Detailed theorem statements live in
+`research/candidate_theorems.md`; this is a one-paragraph summary.
 
-**Empirical (on ProSeCo-OWT):**
-- Greedy ranker negative: confirmed across all 10 policies, K = 30 seeds.
-- Search positive: CD-G and BS-AG recover 49–84 % of oracle headroom.
-- PRISM rejection: not because no structure exists, but because PRISM is in the ranker class.
+**Theorem stack (analytical).**
+- **Theorem A** (uniform marginal proxy regret 2Bε + 2η_B) — proved baseline.
+- **Diagnostics A′, A″** — additivity scale and rankability; **not**
+  unconditional regret refinements (demoted from prior status).
+- **Theorem A as B′(Q := A)** — safe finite-pool selected-schedule corollary.
+- **Theorem B / B′** — pairwise surrogate regret framework (central new
+  framework). B′ is the finite-candidate-pool, high-probability,
+  estimator-aware form usable in experiments with a no-leakage candidate
+  pool.
+- **Diagnostic Framework C** — regime classification protocol over five
+  regimes (no-op / marginal / interaction-driven / chaotic / online-decision)
+  using disciplined MC-pool / pool-oracle notation.
+- **Empirical Ranker-Class Limitation** (replaces "Negative-Result
+  Corollary") — formal part for time-only / seed-averaged separable ψ;
+  empirical part on tested separable rankers on ProSeCo-OWT.
+- Theorem D (online controller) and Lemma E (clipped-F_C burn-in) are
+  appendix-grade only.
+
+**Empirical (on ProSeCo-OWT, prior April 2026 baseline; pending Phase 0
+re-confirmation):**
+- Tested separable rankers do not recover MC-oracle headroom; the
+  mean-Δ̄_t envelope enters the no-detectable-gain band by B = 8.
+- CD-G recovers 74–84 % and BS-AG 49–64 % of MC-oracle headroom at
+  B ∈ {2, 3, 4} (with true-G feedback / true-G rollouts respectively).
+- PRISM-as-separable-score is in the ranker class limited by the
+  Empirical Ranker-Class Limitation; non-separable PRISM uses are
+  optional / future and not pursued in this thesis.
 
 **Negative (honest):**
-- Theorem A L∞ form is empirically vacuous at all tested B ≥ 4 on OWT.
+- Theorem A's uniform L∞ form is empirically vacuous at B ≥ 4; the
+  operative form is the finite-pool corollary (Theorem A as B′(Q := A)).
 - State-conditional ranking (Protocol C) does not recover headroom on OWT.
-- Results do not transfer to LLaDA-SFT at tested resolution.
+- Results do not transfer to LLaDA-SFT at tested resolution (Tier 3).
 
 ---
 
 ## Caveats
 
-1. Primary results are on a single backbone (ProSeCo-OWT). External validity is limited
-   by the inconclusive LLaDA-SFT probe.
-2. CD-G uses the true pipeline-evaluated G for every accept/reject — it is a structural
-   existence result, not a deployable inference-time scheduler.
-3. BS-AG is practical (O(B) G-calls per round) but still uses true G for rollouts.
-4. The proxy-regret bound uses L∞ calibration error ε, which is empirically vacuous;
-   the rank-based ε_R (Refinement A″) is the operative quantity.
+1. Primary results are on a single backbone (ProSeCo-OWT). External
+   validity is limited by the inconclusive LLaDA-SFT probe.
+2. CD-G uses the true pipeline-evaluated G for every accept/reject — it
+   is a structural existence result, not a deployable inference-time
+   scheduler.
+3. BS-AG is practical (O(B) G-calls per round) but still uses true G for
+   rollouts.
+4. Theorem A's uniform L∞ form is empirically vacuous; the safe
+   selected-schedule statement is the finite-pool corollary.
+5. The "MC oracle" used as a practical upper bound is **best-of-N random
+   schedules**, not the exhaustive (T choose B) maximizer.
+6. A deployable Theorem-B claim requires Level-3 (feature-conditioned)
+   evaluation on held-out seeds; population-only (Level 2) success is not
+   sufficient for a deployability claim.
 
 ---
 
