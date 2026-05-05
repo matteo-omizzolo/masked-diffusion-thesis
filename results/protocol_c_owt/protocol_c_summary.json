@@ -1,0 +1,361 @@
+{
+  "data": {
+    "delta_close_ratio_threshold_after_uncertainty_per_signal_per_B": {
+      "entropy": {
+        "2": 0.01518175228513118,
+        "3": -0.1943643420982091,
+        "4": -0.31577672042627275
+      },
+      "inverse_margin": {
+        "2": 0.006623812549843529,
+        "3": -0.21692523261738736,
+        "4": -0.3256179369550997
+      },
+      "quality_mass_proxy": {
+        "2": -0.007270237968019262,
+        "3": -0.21414498605742305,
+        "4": -0.28552505057412675
+      }
+    },
+    "delta_close_ratio_threshold_per_signal_per_B": {
+      "entropy": {
+        "2": 0.48360406743541734,
+        "3": 0.5659707087972988,
+        "4": 0.7442027258542528
+      },
+      "inverse_margin": {
+        "2": 0.47504612770012966,
+        "3": 0.5434098182781205,
+        "4": 0.7343615093254259
+      },
+      "quality_mass_proxy": {
+        "2": 0.46115207718226686,
+        "3": 0.5461900648380849,
+        "4": 0.7744543957063988
+      }
+    },
+    "delta_close_ratio_topB_after_uncertainty_per_signal_per_B": {
+      "entropy": {
+        "2": 0.01518175228513118,
+        "3": -0.1943643420982091,
+        "4": -0.31577672042627275
+      },
+      "inverse_margin": {
+        "2": 0.006623812549843529,
+        "3": -0.21692523261738736,
+        "4": -0.3256179369550997
+      },
+      "quality_mass_proxy": {
+        "2": -0.007270237968019262,
+        "3": -0.21414498605742305,
+        "4": -0.28552505057412675
+      }
+    },
+    "delta_close_ratio_topB_per_signal_per_B": {
+      "entropy": {
+        "2": 0.48360406743541734,
+        "3": 0.5659707087972988,
+        "4": 0.7442027258542528
+      },
+      "inverse_margin": {
+        "2": 0.47504612770012966,
+        "3": 0.5434098182781205,
+        "4": 0.7343615093254259
+      },
+      "quality_mass_proxy": {
+        "2": 0.46115207718226686,
+        "3": 0.5461900648380849,
+        "4": 0.7744543957063988
+      }
+    },
+    "delta_close_threshold_per_signal_per_B": {
+      "entropy": {
+        "2": 0.17924227237701415,
+        "3": 0.21868101596832276,
+        "4": 0.3068021631240845
+      },
+      "inverse_margin": {
+        "2": 0.1760703706741333,
+        "3": 0.20996388912200928,
+        "4": 0.30274506092071535
+      },
+      "quality_mass_proxy": {
+        "2": 0.1709207010269165,
+        "3": 0.21103812694549562,
+        "4": 0.3192736005783081
+      }
+    },
+    "delta_close_topB_per_signal_per_B": {
+      "entropy": {
+        "2": 0.17924227237701415,
+        "3": 0.21868101596832276,
+        "4": 0.3068021631240845
+      },
+      "inverse_margin": {
+        "2": 0.1760703706741333,
+        "3": 0.20996388912200928,
+        "4": 0.30274506092071535
+      },
+      "quality_mass_proxy": {
+        "2": 0.1709207010269165,
+        "3": 0.21103812694549562,
+        "4": 0.3192736005783081
+      }
+    },
+    "delta_open_per_B": {
+      "2": 0.3706384715239207,
+      "3": 0.3863822147846222,
+      "4": 0.4122561668554942
+    },
+    "eps": {
+      "entropy": 0.13350209686528525,
+      "inverse_margin": 0.13349819238248734,
+      "quality_mass_proxy": 0.1334667580360794
+    },
+    "eps_ratio": {
+      "entropy": 0.9832335680592253,
+      "inverse_margin": 0.9845707604405407,
+      "quality_mass_proxy": 0.98558473605715
+    },
+    "eps_tilde": {
+      "entropy": 0.13126374304424274,
+      "inverse_margin": 0.13143841679146315,
+      "quality_mass_proxy": 0.13154279949139283
+    },
+    "hamming_diagnostics_per_signal_per_B": {
+      "entropy": {
+        "2": {
+          "best_mc_g_mean": 0.5642553329467773,
+          "fraction_exact_match": 0.0,
+          "max_possible_hamming": 4,
+          "mean_hamming": 3.933333333333333,
+          "n_shared_seeds": 30
+        },
+        "3": {
+          "best_mc_g_mean": 0.6506156841913859,
+          "fraction_exact_match": 0.0,
+          "max_possible_hamming": 6,
+          "mean_hamming": 5.8,
+          "n_shared_seeds": 30
+        },
+        "4": {
+          "best_mc_g_mean": 0.7324271281560262,
+          "fraction_exact_match": 0.0,
+          "max_possible_hamming": 8,
+          "mean_hamming": 7.466666666666667,
+          "n_shared_seeds": 30
+        }
+      },
+      "inverse_margin": {
+        "2": {
+          "best_mc_g_mean": 0.5642553329467773,
+          "fraction_exact_match": 0.0,
+          "max_possible_hamming": 4,
+          "mean_hamming": 3.933333333333333,
+          "n_shared_seeds": 30
+        },
+        "3": {
+          "best_mc_g_mean": 0.6506156841913859,
+          "fraction_exact_match": 0.0,
+          "max_possible_hamming": 6,
+          "mean_hamming": 5.933333333333334,
+          "n_shared_seeds": 30
+        },
+        "4": {
+          "best_mc_g_mean": 0.7324271281560262,
+          "fraction_exact_match": 0.0,
+          "max_possible_hamming": 8,
+          "mean_hamming": 7.4,
+          "n_shared_seeds": 30
+        }
+      },
+      "quality_mass_proxy": {
+        "2": {
+          "best_mc_g_mean": 0.5642553329467773,
+          "fraction_exact_match": 0.0,
+          "max_possible_hamming": 4,
+          "mean_hamming": 3.933333333333333,
+          "n_shared_seeds": 30
+        },
+        "3": {
+          "best_mc_g_mean": 0.6506156841913859,
+          "fraction_exact_match": 0.0,
+          "max_possible_hamming": 6,
+          "mean_hamming": 5.866666666666666,
+          "n_shared_seeds": 30
+        },
+        "4": {
+          "best_mc_g_mean": 0.7324271281560262,
+          "fraction_exact_match": 0.0,
+          "max_possible_hamming": 8,
+          "mean_hamming": 7.533333333333333,
+          "n_shared_seeds": 30
+        }
+      }
+    },
+    "lambda_per_signal_per_B": {
+      "entropy": {
+        "2": 0.14264120948667436,
+        "3": 0.13594010506052723,
+        "4": 0.12769259192065385
+      },
+      "inverse_margin": {
+        "2": 0.13863987762387775,
+        "3": 0.1324551520478594,
+        "4": 0.1324551520478594
+      },
+      "quality_mass_proxy": {
+        "2": 0.14190149399058116,
+        "3": 0.14190149399058116,
+        "4": 0.13307770188035017
+      }
+    },
+    "psi_tilde_bucket": {
+      "entropy": {
+        "0_0": 0.031804283459981285,
+        "0_1": 0.13604886454007745,
+        "0_2": 0.08490082007025404,
+        "1_0": 0.10666253016545223,
+        "1_1": 0.1426521776963195,
+        "1_2": 0.08305948556855668,
+        "2_0": 0.0940578254587921,
+        "2_1": 0.12799648223743496,
+        "2_2": 0.06785735747088557,
+        "3_0": 0.04046571189050175,
+        "3_1": 0.0679769515991211,
+        "3_2": 0.060706820286495586
+      },
+      "inverse_margin": {
+        "0_0": 0.02848163672855922,
+        "0_1": 0.1326720995445774,
+        "0_2": 0.08118502220884881,
+        "1_0": 0.1212475597858429,
+        "1_1": 0.13901923954486847,
+        "1_2": 0.08275476665723891,
+        "2_0": 0.08321720868469733,
+        "2_1": 0.13631870753859315,
+        "2_2": 0.07944692351988383,
+        "3_0": 0.042876797554026846,
+        "3_1": 0.09321379661560059,
+        "3_2": 0.0604175228670419
+      },
+      "quality_mass_proxy": {
+        "0_0": 0.016608476638793945,
+        "0_1": 0.13092578952101028,
+        "0_2": 0.08160899147748428,
+        "1_0": 0.0845159088693014,
+        "1_1": 0.14210428201497882,
+        "1_2": 0.08449201513739193,
+        "2_0": 0.09010484088550914,
+        "2_1": 0.1335573155304481,
+        "2_2": 0.07223048991402664,
+        "3_0": 0.043223445945315894,
+        "3_1": 0.10146276156107585,
+        "3_2": 0.06335218854852624
+      }
+    },
+    "schedule_size_diagnostics_per_signal_per_B": {
+      "entropy": {
+        "2": {
+          "fraction_at_B": 1.0,
+          "mean_size": 2.0,
+          "size_max": 2,
+          "size_min": 2
+        },
+        "3": {
+          "fraction_at_B": 1.0,
+          "mean_size": 3.0,
+          "size_max": 3,
+          "size_min": 3
+        },
+        "4": {
+          "fraction_at_B": 1.0,
+          "mean_size": 4.0,
+          "size_max": 4,
+          "size_min": 4
+        }
+      },
+      "inverse_margin": {
+        "2": {
+          "fraction_at_B": 1.0,
+          "mean_size": 2.0,
+          "size_max": 2,
+          "size_min": 2
+        },
+        "3": {
+          "fraction_at_B": 1.0,
+          "mean_size": 3.0,
+          "size_max": 3,
+          "size_min": 3
+        },
+        "4": {
+          "fraction_at_B": 1.0,
+          "mean_size": 4.0,
+          "size_max": 4,
+          "size_min": 4
+        }
+      },
+      "quality_mass_proxy": {
+        "2": {
+          "fraction_at_B": 1.0,
+          "mean_size": 2.0,
+          "size_max": 2,
+          "size_min": 2
+        },
+        "3": {
+          "fraction_at_B": 1.0,
+          "mean_size": 3.0,
+          "size_max": 3,
+          "size_min": 3
+        },
+        "4": {
+          "fraction_at_B": 1.0,
+          "mean_size": 4.0,
+          "size_max": 4,
+          "size_min": 4
+        }
+      }
+    },
+    "sigma_xi_per_B": {
+      "2": 0.17361533091499834,
+      "3": 0.239870317325423,
+      "4": 0.30899368744275607
+    },
+    "uncertainty_band_per_B": {
+      "2": 0.17361533091499834,
+      "3": 0.2937799409433848,
+      "4": 0.4369830634692187
+    }
+  },
+  "meta": {
+    "B_values": [
+      2,
+      3,
+      4
+    ],
+    "T": 64,
+    "backbone": "ProSeCo-OWT",
+    "generated_at_utc": "2026-04-26T09:22:55.468437+00:00",
+    "generated_by": "scripts/run_protocol_c_owt.py@11af8bc",
+    "n_phase1_seeds": 50,
+    "n_phase2b_seeds_for_mc_overlap": 30,
+    "n_phase_bins": 3,
+    "n_signal_bins": 4,
+    "phase1_dir": "results/phase1_proseco_owt_full/protocol_a",
+    "phase2b_per_seed_dir": "results/phase2b_proseco_owt/per_seed",
+    "protocol": "C",
+    "signal_kinds": [
+      "entropy",
+      "inverse_margin",
+      "quality_mass_proxy"
+    ]
+  },
+  "verdict": {
+    "best_B": 2,
+    "best_signal": "entropy",
+    "decision_rule": "preliminary_positive: eps_ratio <= 0.7 AND delta_close_ratio_threshold_after_uncertainty >= 0.5; honest_negative: eps_ratio > 0.9 OR delta_close_ratio_threshold_after_uncertainty < 0.3; inconclusive otherwise.",
+    "delta_close_ratio_at_best_after_uncertainty": 0.01518175228513118,
+    "eps_ratio_at_best": 0.9832335680592253,
+    "outcome_class": "honest_negative"
+  }
+}

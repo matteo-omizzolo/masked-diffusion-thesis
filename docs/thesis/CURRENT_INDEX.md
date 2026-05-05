@@ -37,6 +37,10 @@ for the research-question framing, scope, and non-goals.
 | 12 | `docs/thesis/experiments/CROSS_BACKBONE_REPLICATION_RESULTS.md` | Bounded LLaDA-SFT replication results (external-validity probe; Tier-3) |
 | 13 | `docs/thesis/next_steps/POST_CROSS_BACKBONE_DECISION.md` | Terminal go/no-go decision for Phase 3a on LLaDA-SFT |
 | 14 | `docs/thesis/next_steps/ZANELLA_MEETING_WRITEUP.md` | Post-cross-backbone meeting brief (OWT mainline + bounded LLaDA-SFT probe) |
+| 15 | `docs/thesis/next_steps/ADAPTIVE_CONTROLLER_ACTIVATION_AUDIT.md` | Independent activation audit re-targeting Protocol C from LLaDA-SFT to OWT |
+| 16 | `docs/thesis/next_steps/ADAPTIVE_CONTROLLER_EXPERIMENT_PLAN.md` | Pre-registered Protocol C experiment plan on OWT (CPU, no GPU) |
+| 17 | `docs/thesis/next_steps/POST_ADAPTIVE_CONTROLLER_DECISION.md` | Terminal go/no-go on Theorem A-ad / Protocol C activation (Appendix F + honest negative) |
+| 18 | `docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md` | Theorem A-ad formal statement + abstract-policy-class proof + Protocol C result |
 
 ---
 
@@ -71,6 +75,7 @@ for the research-question framing, scope, and non-goals.
 | `scripts/analyze_phase3a.py` | Phase 3a paired comparison and oracle-gap closure analysis |
 | `scripts/stage_proseco_owt.py` | Reproducibility helper: stage the ProSeCo-OWT snapshot |
 | `scripts/debug_proseco_owt_load.py` | CPU preflight for the staged ProSeCo-OWT backend |
+| `scripts/run_protocol_c_owt.py` | Protocol C — bounded adaptive-controller pilot on OWT (CPU, no GPU) |
 
 Legacy Phase 1 scripts live in `archive/legacy_scripts/`.
 
@@ -97,6 +102,7 @@ and known environment issues.
 
 | File | Purpose |
 |---|---|
+| `src/mdm_playground/analysis/protocol_c.py` | Protocol C — bucketed-state ψ̃, threshold-λ tuning, Δ_close pipeline (CPU-only, used by `scripts/run_protocol_c_owt.py`) |
 | `src/mdm_playground/scheduling/backends/proseco_owt.py` | ProSeCo-OWT staged snapshot loader |
 | `src/mdm_playground/scheduling/backends/mdlm_conf.py` | Supporting backend for Phase 1 chronology |
 | `src/mdm_playground/scheduling/backends/proseco.py` | Legacy ProSeCo on `mdlm.ckpt` |
@@ -121,6 +127,7 @@ theory documents listed in §2.
 | `results/phase2b/` | Phase 2b paired BCa confidence intervals and MC-oracle summary |
 | `results/phase1_proseco_owt_full/` | Prerequisite chronology artifact for Phase 2b |
 | `results/cross_backbone/proseco_llada_sft_bounded/` | Bounded LLaDA-SFT external-validity probe (Protocol A + Phase 2b raw + aggregates) |
+| `results/protocol_c_owt/` | Protocol C bounded adaptive-controller pilot on OWT (verdict: honest negative; appendix-F evidence) |
 
 Legacy Phase 1, Phase 2a, and old smoke/eval outputs are archived.
 

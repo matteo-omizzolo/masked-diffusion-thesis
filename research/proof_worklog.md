@@ -578,3 +578,89 @@ These questions are answered by the pilot run (N=20, T=64) via
 
 **Provenance tag for Entry 7.** `[Novel — empirical direction update]`. Motivated by MDLM
 heuristic negative result (diagnostic run 478600). ProSeCo selection based on arXiv:2602.11590.
+
+---
+
+## Entry 8 — Phase 3b Theory Finalisation (April 2026)
+
+**Status:** ACTIVE → COMPLETE 2026-04-26.
+**Scope:** Formal proofs of Refinements A′ and A″ + formal Negative-Result
+Corollary, completing the Phase 3b theory contract specified in
+`docs/thesis/CANONICAL_RESEARCH_DIRECTION.md` "Immediate next milestone".
+
+### What was promoted from candidate to formal
+
+1. **Refinement A′ (variance-form additivity slack).** Promoted under four
+   explicit assumptions: (1) pairwise expansion of G; (2) zero-mean
+   pairwise interactions over schedule sampling; (3) pairwise mixing
+   hypothesis with constant C_mix; (4) bounded second moment σ_ξ_pair².
+   Theorem statement and proof in `research/candidate_theorems.md`
+   §"Refinement A′ — Variance-Form Additivity Slack (formal, 2026-04-26)".
+
+2. **Refinement A″ (rank-based calibration regret).** Promoted under two
+   explicit assumptions: (1) joint Gaussianity of (A(S), ψ(S)) across the
+   schedule space; (2) linear minimum-MSE calibration of ψ to A. The bound
+   uses the half-normal expectation ε_R = σ_Δ · √(2(1 − ρ²) / π) — a
+   strictly tighter form than the earlier heuristic ε_R = (1 − |ρ|) σ_Δ.
+   The earlier heuristic is now superseded; downstream documents (ch6
+   LaTeX) cite the formal version. See `candidate_theorems.md`
+   §"Refinement A″ — Rank-Based Calibration ε_R (formal, 2026-04-26)".
+
+3. **Negative-Result Corollary.** Promoted under the union of A′ and A″
+   assumptions. Statement: any separable per-step ranker (signal-only or
+   bucketed-state) is bounded by 𝔼[G(Ŝ_B)] ≤ 𝔼[G(S_A_mean)] + 2 ε_R(B) +
+   2 σ_ξ(B). The bound enters the NULL band on OWT Phase 2b by B = 8.
+   Phase 3a's CD-G + BS-AG search procedures explicitly violate this
+   bound by operating on schedules with true-G feedback. See
+   `candidate_theorems.md` §"Negative-Result Corollary".
+
+### What changed in the proof structure
+
+- The earlier Refinement A′ statement used "𝔼|G − A| ≤ σ_ξ · √B / √2"
+  with σ_ξ ambiguously per-pair vs per-B. The formal version disambiguates
+  σ_ξ_pair (per pairwise interaction) from σ_ξ(B) (per-budget residual std)
+  and proves the explicit relationship under (1)–(4).
+- The earlier Refinement A″ used "B · ε_R" with ε_R = (1 − |ρ|) σ_Δ.
+  The formal version uses "2 · ε_R" with ε_R = σ_Δ · √(2(1 − ρ²) / π) —
+  i.e., the swap argument is exposed (factor 2 from the swap, not B), and
+  ε_R uses the half-normal moment of the Gaussian residual variance
+  σ_Δ²(1 − ρ²).
+- The combined Refined Theorem A in expectation form is now
+  𝔼[G(S_B*) − G(Ŝ_B)] ≤ 2 σ_Δ · √(2(1 − ρ²) / π) + 2 σ_ξ(B).
+
+### Empirical anchoring summary (OWT Phase 2b)
+
+| Constant | B = 2 | B = 3 | B = 4 |
+|---|---|---|---|
+| σ_ξ(B) (pooled) | 0.174 | 0.240 | 0.309 |
+| ρ pooled | 0.601 | 0.542 | 0.462 |
+| (1 − ρ²) | 0.639 | 0.706 | 0.787 |
+| √(2(1 − ρ²) / π) | 0.638 | 0.671 | 0.708 |
+
+Implied per-pair σ_ξ_pair ≈ σ_ξ(2) / √1 = 0.174 (consistent with growth rate
+σ_ξ(B+1) / σ_ξ(B) ≈ √(B/(B−1))).
+
+### Provenance tag for Entry 8
+
+`[Novel — Phase 3b theory finalisation 2026-04-26]`. The variance-form
+techniques in A′ adapt classical concentration of pairwise statistics
+(Hoeffding 1948 for U-statistics; Maurer-Pontil 2009 for Lipschitz
+concentration). The half-normal half of A″ is standard (𝔼|N(0,σ²)| =
+σ√(2/π)). The contribution is the application to corrector-scheduling
+proxy regret with explicit linkage to measurable empirical constants
+σ_ξ(B) and ρ(B).
+
+### Implications for ch6 LaTeX
+
+Ch6 should present:
+- Theorem A as the main statement with L∞-form bound.
+- Refinement A′ (Theorem A′) as the variance-form sharpening, used as the
+  load-bearing additivity bound.
+- Refinement A″ (Theorem A″) as the rank-form sharpening, used as the
+  load-bearing calibration bound.
+- Combined Refined Theorem A as 2 · (calibration) + 2 · (additivity).
+- Negative-Result Corollary as the empirical predicate that fires on OWT
+  by B = 8 — the load-bearing thesis claim about the ranker class.
+- Phase 3a's CD-G / BS-AG search-class result as the load-bearing
+  positive that demonstrates the corollary is class-scoped, not
+  framework-scoped.

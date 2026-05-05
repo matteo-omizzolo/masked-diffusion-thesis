@@ -325,6 +325,18 @@ Full report: `docs/thesis/experiments/PHASE3A_COMBINATORIAL_RESULTS.md`.
 - A deployable inference-time scheduler. CD-G uses true-G feedback (≈ 65 ×
   generation cost per cell, structural result only); BS-AG would need
   either a tractable G surrogate or a draft-and-rescore wrapper.
+- Adaptive state-conditional rankers as main-body content. Theorem A-ad
+  (`docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md`) is **proved as
+  a conditional theorem** (2026-04-25) and lives in **Appendix F**.
+  Protocol C (`docs/thesis/next_steps/POST_ADAPTIVE_CONTROLLER_DECISION.md`,
+  closed 2026-04-26 *honest_negative*) shows ε̃ / ε ∈ [0.983, 0.986] on
+  OWT bucketed state z = (s_t, phase(t)) — i.e., bucketed-state
+  conditioning does not shrink calibration error meaningfully on this
+  dataset, and the bucketed-state ranker class is empirically bounded
+  by the same σ_ξ envelope as the signal-only ranker class. The
+  Negative-Result Corollary now extends, on OWT, to bucketed-state
+  rankers; search class (Phase 3a) remains the only known route to
+  non-trivial closure. No mainline content is displaced.
 
 ---
 

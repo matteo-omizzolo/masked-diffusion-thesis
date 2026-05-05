@@ -138,14 +138,14 @@ as the rank-based calibration error. Under a Gaussian heuristic, the proxy-regre
 | Proxy calibration (3) | `empirical` — measured as ε via Protocol A; **ε_rms ≈ 0.134 on Phase 1 is small only because ψ is nearly flat, not because ψ is informative; rank-form ε_R proposed below** |
 | Some Δ_t > 0 (non-vacuity precondition) | `empirical, established on ProSeCo-OWT`: 61/64 steps with Δ̄_t > 0, peak Δ̄ ≈ 0.157 (Phase 1 N=50) |
 | Expectation-version remark | `heuristic` — stated, not formally written up |
-| Refinement A′ (variance-form η_B) | `empirically anchored, formal proof pending Phase 3b` — σ_ξ measured directly from Phase 2b MC residuals (9000 G−A pairs across B ∈ {2,3,4}); √B scaling consistent with η_95 trace η_95(B=4)=0.41 → η_95(B=8)=0.68 → η_95(B=16)=1.36; remaining work is order-statistics derivation under the mixing/cancellation hypothesis on ξ_{t,t'} |
-| Refinement A″ (rank-based ε_R) | `empirically anchored, formal proof pending Phase 3b` — pooled Spearman ρ(A,G) decays monotonically across B ∈ {2..16}: 0.66 → 0.62 → 0.50 → 0.44 → 0.45 (Phase 2b §12.3 of `docs/archive/chronicles/RESULTS_STATUS.md`); replaces L∞ ε of Theorem A as the operational calibration measure; **Phase 3a does not contradict** — A″ bounds the ranker policy class, search procedures are out of scope |
-| Negative-Result Corollary (ranker-class scope) | `empirically established on Phase 2b + Phase 3a, formal statement pending Phase 3b` — **scope rescoped 2026-04-20 after Phase 3a**: any policy of the form `Ŝ_B = top-B(ψ)` for separable per-step `ψ` is upper-bounded by `mean_delta_oracle`, which on ProSeCo-OWT enters the NULL band by B=8; smoking guns from Phase 2b: mean_delta_oracle saturates by B=8, top-10 MC ∩ oracle Jaccard ≈ 1.5× random, top-10 MC internal Jaccard ≈ bottom-10; old broad framing ("no greedy ranking beats uniform by > 2σ_F") is correct **for the ranker class only**, *not* for "informed scheduling in general" — Phase 3a's CD-G + BS-AG search procedures explicitly exceed this envelope at every B tested |
+| Refinement A′ (variance-form η_B) | `formally proved 2026-04-26 under (1) pairwise expansion + (2) zero-mean schedule sampling + (3) pairwise mixing + (4) bounded second moment` — σ_ξ measured directly from Phase 2b MC residuals (9000 G−A pairs across B ∈ {2,3,4}); 𝔼\|G − A\| ≤ σ_ξ(B) := σ_ξ_pair · √(B(B−1)/2 · (1 + 2 C_mix · (B − 2))) under (3); under uncorrelatedness asymptotically σ_ξ_pair · B / √2. Empirical scaling σ_ξ(B+1)/σ_ξ(B) ≈ √(B/(B−1)) consistent with C_mix ≪ 1. Proof in `research/candidate_theorems.md` §Refinement A′ formal |
+| Refinement A″ (rank-based ε_R) | `formally proved 2026-04-26 under (1) joint Gaussianity of (A(S), ψ(S)) + (2) linear minimum-MSE calibration` — half-normal moment derivation gives 𝔼[A(S_A*) − A(Ŝ_B)] ≤ 2 σ_Δ · √(2(1 − ρ²) / π); pooled ρ(A,G) at B ∈ {2,3,4} = 0.601 / 0.542 / 0.462 from `theorem_a_constants.json`; replaces the earlier heuristic ε_R = (1 − \|ρ\|) σ_Δ with the formal half-normal version. Proof in `research/candidate_theorems.md` §Refinement A″ formal |
+| Negative-Result Corollary (ranker-class scope) | `formally proved 2026-04-26 under union of A′ + A″ assumptions` — for any separable per-step ranker Ŝ_B = top-B(ψ) (signal-only or bucketed-state), 𝔼[G(Ŝ_B)] ≤ 𝔼[G(S_A_mean)] + 2 ε_R(B) + 2 σ_ξ(B). On OWT Phase 2b: mean_delta_oracle paired diff over uniform decays from +0.130 (B=2) to +0.084 (B=8) to +0.032 (B=16); the per-B σ_ξ + ε_R band exceeds the margin by B = 8 → corollary's bound non-vacuous and places ranker-class headroom in the NULL band by B = 8. **Phase 3a violates the bound by operating on schedules with true-G feedback (CD-G recovers 74–84%, BS-AG 49–64%)** — corollary scoped to ranker class, search class explicitly exceeds. **Bucketed-state extension (Protocol C 2026-04-26):** under z = (s_t, phase(t)) with 12 buckets, ε̃ / ε ∈ [0.983, 0.986] on OWT — bucketed-state ranker class is bounded by the same envelope. Proof in `research/candidate_theorems.md` §Negative-Result Corollary |
 | Phase 3a search-class positive | `empirically established on ProSeCo-OWT 2026-04-20` (job 479941, K=30 paired) — CD-G PASS at all B with Δ ∈ [+0.32, +0.38] (closure 74–84 % of MC oracle at B ∈ {2,3,4}); BS-AG PASS at all B with Δ ∈ [+0.15, +0.29] (closure 49–64 %); both still PASS at B=8 where ranker envelope is NULL; closure ratios are empirical descriptors with no theoretical guarantee; CD-G is structural/existence (true-G feedback ≈ 65 × generation cost per cell, not deployable); BS-AG closer to practical (cheap-A ranking + O(B) true-G rollouts) but still requires a true-G evaluator |
 | PRISM pivot | `rejected 2026-04-20, refined reason post-Phase-3a` — PRISM is a learned per-token quality signal, i.e. a member of the ranker class bounded by the rescoped Negative-Result Corollary; even a perfect Δ-predictor cannot exceed `mean_delta_oracle`'s envelope, which is NULL by B=8; rejection is **not** "no recoverable structure exists" (Phase 3a refutes that), but "the recoverable structure does not factor through separable per-step scores"; full rationale in `PHASE3_DIRECTION_AUDIT.md` |
 | Phase 2c MAUVE F-swap | `closed without execution 2026-04-20` — Cohen's d up to ±2 in FAIL cells leaves cell ordering robust to F-metric choice; reopen only if Phase 3a forces defence of small-B win |
 | Bounded LLaDA-SFT external-validity probe | `empirically recorded 2026-04-23` on LLaDA-SFT 8B via ProSeCo backend, K=8, T=64, B ∈ {2, 4}, GPT-2 reference (Tier-3 by construction, n=8 < 30) — **partial transfer verdict scoped to the tested bounded setup:** (i) uniform-not-beaten observation from OWT Phase 2b corroborated (code-named `uniform_is_optimal` gate = PASS); (ii) positive MC-oracle headroom over uniform did **not** transfer at the tested budgets (paired CI at B=4 is [0, 0]; at B=2 is [−4.07, −1.07]); (iii) per-trajectory signal > mean-profile schedule transfers with cohens_d ≈ 7.8 at B=4; three non-discriminable hypotheses (H1 corrector dominance, H2 protocol sparseness, H3 reference mismatch) explain the non-transfer at K=8 and are not adjudicable within thesis scope; **Phase 3a on LLaDA-SFT NOT authorized** (terminal decision: `docs/thesis/next_steps/POST_CROSS_BACKBONE_DECISION.md`); the probe is external-validity evidence only and does not displace the OWT K=30 mainline |
-| Adaptive-budgeted controllers (Theorem A-ad) | `conjecture / non-canonical extension (2026-04-22)` — see `docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md`; reduces to Theorem A when z_t carries no state-conditional information beyond s_t; main-thesis-canonical status pending Protocol C (no new GPU trajectories); the bounded LLaDA-SFT probe does **not** validate, test, or motivate this extension — its Tier-3 scope is orthogonal to the adaptive-extension question |
+| Adaptive-budgeted controllers (Theorem A-ad) | `proved as conditional theorem 2026-04-25; bound empirically inert on OWT (Protocol C 2026-04-26)` — see `docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md` §2.1 (formal abstract-policy-class statement) and `docs/thesis/next_steps/POST_ADAPTIVE_CONTROLLER_DECISION.md`. Theorem A-ad is now stated and proved as a conditional bound under explicit assumptions (1)–(4); the abstract-policy-class formulation makes the strict-generalisation reduction to Theorem A rigorous (top-B and threshold-λ are two members of the class). On OWT bucketed state z = (s_t, phase(t)), Protocol C measured ε̃ / ε ∈ [0.983, 0.986] (state conditioning shrinks ε by < 1.7 %); 2 B ε̃ + 2 η̃_B is inert by ≈ 4.9 × at B = 2. **Status:** Appendix-F formal theorem with documented inert-bound diagnostic; **not** main-thesis canonical |
 | Combining-step (2η vs 3η) | `proved either way`; choice is a write-up convention pinned to η's definition |
 | Stretch C2 contraction | `conjecture` — applicability of Gibbs contraction not established |
 | Stretch C3 margin-as-proxy | `empirical` — calibration question, not a theorem |
@@ -162,21 +162,50 @@ as the rank-based calibration error. Under a Gaussian heuristic, the proxy-regre
 
 **Post-bounded-LLaDA-SFT addendum (2026-04-23).** A bounded external-validity probe on LLaDA-SFT 8B (K=8, T=64, B ∈ {2, 4}, GPT-2 reference, ProSeCo-style corrector) was completed and is recorded at T3 tier in the Honesty Ledger row above and in `docs/thesis/experiments/CROSS_BACKBONE_REPLICATION_RESULTS.md` §10–§12. **This probe does not revise the NV verdict on the OWT triple** — it measures Theorem A's driving quantities on a *second* (backbone, corrector, F) triple and therefore addresses NV's hypothesis directly, but at K=8 and on the ranker class only. Under the tested bounded setup, positive MC-oracle headroom over uniform was not observed, so the NV hypothesis cannot be discharged on this triple at this bounded setup; whether NV holds at other (T, B, reference) points on LLaDA-SFT is open and outside thesis scope. The OWT K=30 NV discussion above is unchanged, and the overall thesis contribution (rank-based ε_R + variance-form η_B + ranker-class Negative-Result Corollary) lands on OWT K=30 and is not displaced by the bounded LLaDA-SFT probe. Further cross-backbone validation of NV on (MDLM, …) or on LLaDA-SFT at different (T, B, reference) points remains **parked** as Tier-2 / future-work — the gating question is whether the search-vs-ranker dichotomy is universal, which is out of thesis scope.
 
-## Extension Theory (non-canonical; Future-Work candidate)
+## Extension Theory (Appendix-F formal; not main-body canonical)
 
-**Adaptive budgeted controllers (2026-04-22).** A strict-generalisation
-extension of Theorem A to state-conditional, budget-aware policies
-a_t = π(z_t) ∈ {0,1} with z_t = (s_t, b_t, phase(t)) is formalised in
-`docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md`. The proposed
-Theorem A-ad bounds 𝔼[G(S_π*_B)] − 𝔼[G(S_π̂_λ)] ≤ 2Bε̃ + 2η̃_B +
-𝒪(√(B/N_cal)) under state-conditional calibration ε̃ and adaptive
-additivity η̃_B; it **reduces to Theorem A** when z_t carries no
-state-conditional information beyond s_t. The extension is **not
-main-thesis canonical** pending Protocol C (re-use of Phase-2b artefacts
-only, no new GPU trajectories). See
-`docs/thesis/next_steps/ADAPTIVE_CONTROLLER_DIRECTION_AUDIT.md` (Phase-1
-skeptical audit),
-`docs/thesis/next_steps/POST_ADAPTIVE_CONTROLLER_RECOMMENDATION.md` (final
-recommendation), and `research/adaptive_controller_research_notes.md`
-(derivations). Tagged `[Conjecture]`, `[Needs verification]` in
-`research/proof_ledger.md`.
+**Adaptive budgeted controllers (Theorem A-ad, activated 2026-04-25;
+pilot closed 2026-04-26).** A strict-generalisation extension of
+Theorem A to state-conditional, budget-aware score policies
+σ_ψ̃ ∈ {σ_topB, σ_λ} on bucketed state z = (s_t, phase(t)) is
+formalised in `docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md`
+§2.1. The **abstract-policy-class form** of Theorem A-ad bounds
+
+    𝔼[G(σ_{π*_B})] − 𝔼[G(σ_{π̂_ψ̃})] ≤ 2 B ε̃ + 2 η̃_B + 𝒪(√(B/N_cal))
+
+under (1) binary placement, (2̃) adaptive approximate additivity with
+slack η̃_B, (3̃) adaptive proxy calibration with slack ε̃, and (4)
+Lagrangian estimation of λ from N_cal pilot trajectories. The
+abstract-policy-class formulation contains the open-loop top-B policy
+as one member, the threshold-λ policy as another, and recovers
+Theorem A as the no-state-conditioning specialisation. The proof is by
+adapted swap-on-Δ + CMDP duality (Altman 1999; Paternain et al. 2019).
+
+**Status (post-pilot 2026-04-26).** Theorem A-ad is **proved as a
+conditional theorem** under (1)–(4). Protocol C
+(`docs/thesis/next_steps/ADAPTIVE_CONTROLLER_EXPERIMENT_PLAN.md`,
+implemented in `src/mdm_playground/analysis/protocol_c.py`) ran
+CPU-only on 50 OWT Phase 1 trajectories + 30 Phase 2b mc_rows seeds.
+Result: ε̃ / ε ∈ [0.983, 0.986] across all three signals (state
+conditioning shrinks ε by < 1.7 %); after-σ_ξ-uncertainty close ratio
+≤ 0.015 at every (signal, B) tested; the bound 2 B ε̃ + 2 η̃_B is
+**inert by ≈ 4.9 ×** at B = 2 — the same shape as Theorem A's
+inertness. **Outcome:** `honest_negative` per the pre-registered
+decision rule. The state-conditional ranker class on (s_t, phase(t))
+is empirically bounded by the same σ_ξ envelope as the signal-only
+ranker class.
+
+**Positioning.** Theorem A-ad lives in **Appendix F of the thesis** as
+a formal-theorem-with-pilot-null. Main-body theorem is unchanged
+(Theorem A + Refinements A′ / A″ + Negative-Result Corollary, ranker
+class). See terminal decision node:
+`docs/thesis/next_steps/POST_ADAPTIVE_CONTROLLER_DECISION.md`.
+
+Provenance, prior decisions, and re-opening precondition tracked in
+`docs/thesis/next_steps/ADAPTIVE_CONTROLLER_ACTIVATION_AUDIT.md` (Phase 1
+of activation), `ADAPTIVE_CONTROLLER_DIRECTION_AUDIT.md` (Phase 1 of
+the original adaptive-controller research study),
+`POST_ADAPTIVE_CONTROLLER_RECOMMENDATION.md` (Phase 6 of original
+study; re-targeted by activation audit), and
+`research/adaptive_controller_research_notes.md` (Phase 3-4 working
+derivations).

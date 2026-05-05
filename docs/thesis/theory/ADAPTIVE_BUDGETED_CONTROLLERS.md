@@ -1,10 +1,16 @@
-> **STATUS:** EXTENSION-THEORY (Future-Work appendix candidate, not main-thesis canonical)
-> **LAST VERIFIED:** 2026-04-22
+> **STATUS:** EXTENSION-THEORY (Appendix-F candidate; theory-active per
+> `ADAPTIVE_CONTROLLER_ACTIVATION_AUDIT.md`, 2026-04-25). Main-thesis status
+> remains Theorem A; A-ad is Appendix-F formal theorem.
+> **LAST VERIFIED:** 2026-04-25 (Theorem A-ad statement and proof tightened;
+> abstract-policy-class reduction made explicit; Appendix-F status flagged
+> per activation audit verdict)
 > **SCOPE:** Mathematical positioning of adaptive, state-conditional, budgeted corrector
-> scheduling as a strict extension of the open-loop Theorem A framework. Companion to
-> `docs/thesis/theory/THEORY_STATUS.md` (open-loop canonical theory) and to the
+> scheduling as an extension of the open-loop Theorem A framework. Companion to
+> `docs/thesis/theory/THEORY_STATUS.md` (open-loop canonical theory), the
 > Phase-1 skeptical audit at
-> `docs/thesis/next_steps/ADAPTIVE_CONTROLLER_DIRECTION_AUDIT.md`.
+> `docs/thesis/next_steps/ADAPTIVE_CONTROLLER_DIRECTION_AUDIT.md`, and the
+> 2026-04-25 activation audit at
+> `docs/thesis/next_steps/ADAPTIVE_CONTROLLER_ACTIVATION_AUDIT.md`.
 
 ---
 
@@ -136,6 +142,119 @@ The 𝒪(√(B/N_cal)) term is a standard Lagrangian-root estimation error for
 the multiplier λ; under the thesis's K=8 sampling budget this term is
 small relative to 2 B ε̃ at any ε̃ ≳ 0.05.
 
+#### Theorem A-ad (formal, abstract-policy-class form). *Activated 2026-04-25.*
+
+The earlier sketch in this subsection compares the *threshold-λ* policy
+π̂_λ to the *adaptive oracle* π*_B. The threshold-λ and the open-loop top-B
+policies are two different members of a single broader policy class; both
+are recovered by stating the regret in terms of an abstract *signed-score*
+policy. This subsection states the theorem on that broader class so that
+Theorem A-ad rigorously contains Theorem A as the open-loop specialisation.
+
+**Setup (formal).** Fix a finite horizon T, budget B ∈ {1, …, T}, and a
+binary action set A = {0, 1}. The information state z_t ∈ Z is the
+masked-diffusion state at step t before deciding whether to correct (so
+z_t carries (s_t, b_t, phase(t), …) as components, with b_t = B − Σ_{τ<t}
+a_τ the remaining budget). A *score policy* is a measurable
+ψ̃ : Z → ℝ together with a selection rule σ_ψ̃ : Trajectories → 2^{1..T}
+satisfying |σ_ψ̃(z_{1:T})| ≤ B almost surely. Two canonical members of
+this class:
+
+- **Top-B selection.** σ_topB(z_{1:T}) := argmax_{|S|=B} Σ_{t∈S} ψ̃(z_t).
+  This is the open-loop policy that ranks all T steps and picks B by
+  largest score. (It needs the full trajectory before deciding; equivalent
+  to running the trajectory once without correctors, then picking.)
+- **Threshold-λ selection.** σ_λ(z_{1:T}) :=
+  {t : ψ̃(z_t) > λ ∧ b_t > 0}, with λ tuned so 𝔼_{Z}[|σ_λ|] = B. This is
+  the causal policy of F1; it spends Bin-distributed budget across seeds
+  but matches B in expectation.
+
+Let π̂_ψ̃ denote either selection rule applied with score ψ̃, and define
+the realised gain G(σ_ψ̃(z_{1:T})) := F(y^{σ_ψ̃}) − F(y_base).
+
+**Assumptions.**
+
+- **(1) Binary placement.** k_t ∈ {0, 1} for every t.
+- **(2̃) Adaptive approximate additivity.** There exists η̃_B ≥ 0 such
+  that for every score policy π̂ in the class above with |σ_π̂| ≤ B
+  almost surely,
+  | 𝔼[G(σ_π̂)] − 𝔼[Σ_{t ∈ σ_π̂} Δ(z_t)] | ≤ η̃_B
+  where Δ(z) := 𝔼[Δ_t | z_t = z] is the conditional one-loop marginal
+  gain.
+- **(3̃) Adaptive proxy calibration.** The score ψ̃ : Z → ℝ satisfies
+  |Δ(z) − ψ̃(z)| ≤ ε̃ for all z ∈ Z reached on any policy.
+- **(4) Lagrangian estimation.** λ is tuned from N_cal i.i.d. pilot
+  trajectories so that |𝔼_Z[|σ_λ|] − B| ≤ Δ_λ where Δ_λ → 0 at a
+  standard rate Δ_λ = 𝒪(√(1 / N_cal)).
+
+**Theorem A-ad (proxy-regret, abstract policy class).** Let π*_B be any
+optimiser of 𝔼[G(S_π)] subject to |S_π| ≤ B almost surely. Let π̂_ψ̃ be
+any score-policy member with score ψ̃ satisfying assumption (3̃). Then
+
+    𝔼[G(σ_{π*_B})] − 𝔼[G(σ_{π̂_ψ̃})] ≤ 2 B ε̃ + 2 η̃_B + 𝒪(√(B / N_cal)).
+
+Specialisations:
+
+- **Top-B specialisation.** When π̂_ψ̃ = σ_topB, the 𝒪(√(B / N_cal)) term
+  vanishes (no Lagrangian to estimate), and the bound reduces to
+  2 B ε̃ + 2 η̃_B. When ψ̃(z) further depends on z only through s_t and
+  ε̃ → ε and η̃_B → η_B, this is Theorem A.
+- **Threshold-λ specialisation.** When π̂_ψ̃ = σ_λ with N_cal = ∞ (oracle
+  λ tuning), the 𝒪(√(B / N_cal)) term vanishes; with finite N_cal the
+  term is the standard Lagrangian-root error from CMDP duality (Altman
+  1999; Paternain et al. 2019).
+
+**Proof sketch.** The argument has three steps. Each step is a direct
+adaptation of the open-loop counterpart in Theorem A's proof
+(`research/proof_worklog.md` Entry 6).
+
+*Step 1 — additivity reduction.* By (2̃) applied to both π*_B and π̂_ψ̃,
+
+    𝔼[G(σ_{π*_B})] − 𝔼[G(σ_{π̂_ψ̃})]
+        ≤ 𝔼[Σ_{t ∈ σ_{π*_B}} Δ(z_t)]
+          − 𝔼[Σ_{t ∈ σ_{π̂_ψ̃}} Δ(z_t)] + 2 η̃_B.
+
+*Step 2 — calibrated swap argument.* Define A(σ; ψ̃) := Σ_{t ∈ σ} ψ̃(z_t).
+By (3̃), for any state z, Δ(z) = ψ̃(z) ± ε̃. Conditional on the realised
+trajectory z_{1:T}, the optimal σ given the abstract scoring rule selects
+the at-most-B states with largest ψ̃ such that |σ| ≤ B; call this σ_ψ̃*.
+The exchange argument of Lemma A2 (open-loop counterpart) bounds
+
+    Σ_{t ∈ σ_{π*_B}} Δ(z_t) − Σ_{t ∈ σ_ψ̃*} Δ(z_t) ≤ 2 B ε̃,
+
+since each of the at most B swaps between σ_{π*_B} and σ_ψ̃* costs at
+most 2 ε̃ in Δ-units.
+
+*Step 3 — Lagrangian root error.* For the threshold-λ specialisation,
+the at-most-B-element σ_ψ̃* is implemented by the threshold rule
+σ_λ when λ is tuned exactly so 𝔼[|σ_λ|] = B. Under (4), the empirical
+multiplier λ̂ from N_cal pilot trajectories yields a budget violation of
+order Δ_λ = 𝒪(√(1 / N_cal)). The first-order Taylor expansion of the
+CMDP value around λ* (Paternain et al. 2019, Lemma 3) gives
+
+    | 𝔼[G(σ_{λ̂})] − 𝔼[G(σ_{λ*})] | = 𝒪(B · Δ_λ) = 𝒪(√(B / N_cal)).
+
+For the top-B specialisation, σ_topB requires no λ; this term is zero.
+
+Combining the three steps yields the theorem. ∎
+
+**Provenance.** `[Adapted from GPT Pro assessment v2 + Lagrangian CMDP
+duality (Altman 1999; Paternain et al. 2019); abstract-policy-class
+reduction Novel 2026-04-25 to make the strict-generalisation claim
+rigorous]`.
+
+**Status.** `Proved as a conditional theorem under (1)–(4); ε̃, η̃_B, λ
+are empirical objects measured by Protocol C (see §4.2 below).` The
+bound is non-vacuous iff 2 B ε̃ + 2 η̃_B + 𝒪(√(B / N_cal)) <
+𝔼[G(σ_{π̂_ψ̃})] at the budget of interest, which is the same shape as
+Theorem A's non-vacuity hypothesis.
+
+**What this theorem *does not* claim.** It does not claim ε̃ < ε; it
+does not claim η̃_B < η_B; it does not claim that the threshold-λ
+policy beats top-B in expectation. All three are empirical questions
+addressed by Protocol C. The theorem fixes the *shape* of the bound;
+the *constants* are measurements.
+
 ### 2.2 F2 — Control-as-inference / Feynman-Kac
 
 Define a reference path measure ℙ_0 under the uniform-baseline-corrector
@@ -232,25 +351,134 @@ One normative + one algorithmic + one foil.
 - Optionally, **C/√N** — SMC approximation constant, from particle counts N
   ∈ {4, 8, 16} on the same 8 seeds.
 
-### 4.2 Protocol C (pilot, bounded, no new GPU work)
+### 4.2 Protocol C (pilot, bounded, no new GPU work) — retargeted to OWT
 
-The minimal empirically honest evidence add-on is:
+**Activation-audit retarget (2026-04-25).** The earlier scoping of
+Protocol C to **LLaDA-SFT** artefacts has a defect: the bounded
+LLaDA-SFT probe established Δ_open ≈ 0 at the tested budgets (paired CI
+[0, 0] at B=4; CI [−4.07, −1.07] at B=2; see
+`POST_CROSS_BACKBONE_DECISION.md`). Protocol C's reported quantity
+`Δ_close(π̂_λ,1) / Δ_open` is mathematically uninterpretable when the
+denominator is ≈ 0. The activation audit
+(`docs/thesis/next_steps/ADAPTIVE_CONTROLLER_ACTIVATION_AUDIT.md`)
+retargets Protocol C to **OWT**, where Δ_open is empirically anchored at
++0.45 paired (B ∈ {2, 3, 4}; `results/phase2b/mc_oracle.json`) and Phase 1
+Protocol A trajectory data delivers 50 seeds × 64 steps with full
+per-step Δ_t and per-step signals.
 
-1. Re-use Phase 2b's `per_seed/policy_rows_seed{seed}.json` and
-   `per_seed/mc_rows_seed{seed}.json` (LLaDA-SFT, 8 seeds).
-2. Bucket by z = (s_t, b_t, phase(t)). Estimate ψ̃_bucket(z) as the
-   bucket-mean of Δ_t over the 8 seeds.
-3. Residuals Δ_t(z) − ψ̃_bucket(z) give ε̃ (per signal, per B).
-4. Replay the λ-threshold policy over the 8 seeds; measure G(S_π̂) −
-   Σ_t a_t Δ̂_t to estimate η̃_B.
-5. Report a single scalar per (signal, B): Δ_close(π̂_λ,N=1) / Δ_open.
+**Inputs (CPU-only, all on disk):**
 
-**Stop-rule.** If Δ_close / Δ_open > 0.5 on pilot: present as preliminary
-Future-Work evidence. If < 0.5: present the negative result and position
-the theorem as existence-only.
+- `results/phase1_proseco_owt_full/protocol_a/trajectory_*.json` — 50
+  seeds × T=64 steps with per-step Δ_t, entropy H_t, inverse_margin
+  M_t^{−1}, quality_mass_proxy Q_t, unmasked_fraction u_t, n_revisable,
+  n_masked.
+- `results/phase2b_proseco_owt/per_seed/{policy,mc}_rows_seed*.json` — 30
+  seeds (Phase 2b platform), G/A/residual for paired policy rows and 100
+  MC rows per seed × B ∈ {2, 3, 4}.
+- `results/phase2b/{mc_oracle,theorem_a_constants,combinatorial_diagnostics,policy_comparison_paired}.json`
+  — paired Δ_open estimates, σ_ξ, ρ pooled, and policy comparison anchors.
 
-Protocol C uses **no new GPU trajectories** (hence the "bounded" label)
-and fits inside the Phase 2b artefact budget.
+**Procedure:**
+
+1. **Bucket the state.** For each Phase 1 trajectory and each step
+   t ∈ {0, …, T−1}, define z_t = (signal_quartile(s_t), phase(t)) where
+   signal_quartile is computed over the pooled (seed, t) distribution per
+   signal (4 buckets), and phase(t) ∈ {early=t<T/3, mid=T/3≤t<2T/3,
+   late=t≥2T/3} (3 buckets). Total |Z| = 12 buckets per signal. b_t is
+   *not* part of z_t for the calibration step, since b_t is a
+   policy-history-dependent random variable; b_t enters only at the
+   threshold-policy replay step.
+2. **Estimate ψ̃_bucket(z).** For each signal s ∈ {H, M^{−1}, Q} and each
+   bucket z, ψ̃_bucket(z) := mean(Δ_t | z_t = z) across all 50 × 64 =
+   3 200 trajectory steps.
+3. **Compute ε̃ vs ε.** For each signal:
+   - ε(s) := RMS_{(seed, t)} (Δ_t − ψ_linear(s_t)) where ψ_linear is the
+     least-squares linear fit Δ_t ≈ a · s_t + b on the same 3 200 points.
+   - ε̃(s) := RMS_{(seed, t)} (Δ_t − ψ̃_bucket(z_t)) on the same data.
+   - Report ratio ε̃ / ε per signal.
+4. **Threshold-λ policy replay (additive surrogate).** For each B ∈
+   {2, 3, 4} and each signal, compute λ such that
+   𝔼_seed[|{t : ψ̃(z_t) > λ}|] = B over the 50 OWT seeds. For each seed
+   i, compute schedule S_π̂(i) = {t : ψ̃(z_t(i)) > λ}, capping at B by
+   keeping only the B largest ψ̃-values when |S_π̂(i)| > B. Estimate
+   G(S_π̂(i)) via the additive surrogate
+   A_π̂(i) := Σ_{t ∈ S_π̂(i)} Δ_t(i)
+   (using the per-seed realised Δ_t from Phase 1 Protocol A), and bound
+   the surrogate-vs-truth gap by σ_ξ · √B / √2 (Refinement A′; σ_ξ from
+   Phase 2b at the same B).
+5. **Δ_close / Δ_open ratio with σ_ξ uncertainty.** For each (signal, B):
+   - Compute paired uniform baseline A_uniform(i, B) over the same 50
+     seeds via Phase 1 Δ_t at uniformly-spaced t.
+   - Δ_close_A := mean_i [A_π̂(i) − A_uniform(i, B)].
+   - Δ_open := +0.45 from `mc_oracle.json` (paired across 30 seeds at the
+     Phase 2b platform; OWT and Phase 1 use the same MDLM/ProSeCo-OWT
+     backend, so Δ_open is comparable up to seed sampling variance).
+   - Report Δ_close_A / Δ_open with explicit uncertainty band
+     ±σ_ξ · √B / √2 / Δ_open.
+6. **Schedule overlap diagnostic.** For each seed, compute Hamming
+   distance between S_π̂(i) and the best MC schedule for that seed (from
+   Phase 2b mc_rows). Report mean Hamming distance and the fraction of
+   seeds with exact match.
+
+**Stop-rule (pre-registered).**
+
+| Outcome | Action |
+|---|---|
+| ε̃ / ε ≤ 0.7 AND Δ_close_A / Δ_open ≥ 0.5 (after subtracting σ_ξ · √B / √2 / Δ_open) | Preliminary positive — Theorem A-ad in Appendix F with Protocol C as preliminary evidence |
+| ε̃ / ε > 0.9 OR Δ_close_A / Δ_open < 0.3 (after subtracting uncertainty) | Honest negative — A-ad as existence-only theorem; Protocol C as a refinement of the ranker-class corollary to the state-conditional ranker class on (s_t, phase(t)) |
+| Otherwise | Inconclusive — A-ad as formal theorem; Protocol C as bounded null result with explicit Tier-3 caveat (50 OWT seeds, additive-surrogate G estimator) |
+
+**Honesty.** The additive surrogate A(S) ≈ G(S) is the same trap that
+Phase 2b's failed rankers fell into. Protocol C is honest about this in
+two ways: (a) the σ_ξ · √B / √2 uncertainty band is reported explicitly
+on every Δ_close ratio, (b) the Hamming-distance overlap between the
+threshold schedule and the best MC schedule is a direct test of whether
+Protocol C's policy lives in the same region of schedule space as the
+schedules that actually achieved high G. Even with a positive verdict,
+Protocol C is **not** a Phase 3 substitute and does not measure G under a
+non-additive corrector kernel.
+
+Protocol C uses **no new GPU trajectories** (hence the "bounded" label),
+runs in seconds on a laptop, and fits inside the existing Phase 1 + Phase
+2b OWT artefact budget.
+
+#### Pilot result (closed 2026-04-26 — *honest_negative*).
+
+Module: `src/mdm_playground/analysis/protocol_c.py`. Entry script:
+`scripts/run_protocol_c_owt.py`. Tests: `tests/test_protocol_c.py` (24
+unit tests, all PASS). Output:
+`results/protocol_c_owt/protocol_c_summary.json`. Wall time: ~ 60 s
+on a single CPU.
+
+Headline numbers on OWT (50 Phase 1 seeds × T = 64 = 3 200 paired
+points; 30 Phase 2b mc_rows seeds for σ_ξ):
+
+- **ε̃ / ε ∈ [0.983, 0.986]** across entropy / inverse_margin /
+  quality_mass_proxy. State conditioning on (signal_quartile, phase)
+  shrinks calibration RMS by **< 1.7 %**.
+- **Δ_close_A / Δ_open after σ_ξ uncertainty subtraction** is in
+  [−0.32, +0.015] across all (signal, B) — best at +0.015 (entropy,
+  B = 2). σ_ξ · √B / √2 dominates Δ_close_A at every B ≥ 3.
+- **Hamming distance (threshold schedule vs best MC schedule)** is
+  3.93 / 5.87 / 7.47 at B = 2 / 3 / 4; max possible is 2 B = 4 / 6 / 8.
+  Fraction of seeds with exact match: 0.000 across all signals × all
+  B. The threshold schedule lives in a disjoint region of schedule
+  space from the high-G MC schedules.
+- **Bound non-vacuity:** 2 B ε̃ + 2 η̃_B is inert by ≈ 4.9 × at B = 2,
+  the same shape of inertness as Theorem A on the same dataset.
+- **Verdict:** outcome_class = `"honest_negative"` per the pre-
+  registered decision rule (eps_ratio > 0.9 leg fires
+  independently of close-ratio leg).
+
+**Decision (terminal node):**
+`docs/thesis/next_steps/POST_ADAPTIVE_CONTROLLER_DECISION.md`.
+Theorem A-ad lands in Appendix F as a **formal conditional theorem
+with documented inert-bound diagnostic**; the bucketed-state ranker
+class is empirically bounded by the same σ_ξ envelope as the
+signal-only ranker class. The Negative-Result Corollary is updated
+with a one-line addendum noting the bucketed-state extension. No
+re-run, no GPU work, no main-body change is authorised by this
+decision.
 
 ## 5. Honesty ledger
 
@@ -259,12 +487,13 @@ four tags:
 
 | Tag | Claim |
 |---|---|
-| [Conjecture] | Δ_open > 0 at thesis-relevant B. (Phase 2b's MC-oracle +0.45 is a surrogate, not a bound on Δ_open.) |
-| [Proved, conditional] | A-ad F1 under the stated assumptions |Δ(z) − ψ̃(z)| ≤ ε̃ and η̃_B-slack. Derivation mirrors open-loop Theorem A; see `research/adaptive_controller_research_notes.md` §2.2. |
+| [Empirically anchored] | Δ_open ≥ +0.37 at B ∈ {2, 3, 4} on OWT (Protocol C 2026-04-26; mc_oracle.json paired figure +0.45). |
+| [Empirically refuted on OWT bucketed state] | ε̃ < ε on z = (s_t, phase(t)), 4 × 3 = 12 buckets — observed ε̃ / ε ∈ [0.983, 0.986]; shrinkage < 1.7 %. |
+| [Proved, conditional] | Theorem A-ad (abstract policy class form) under (1) binary placement, (2̃) adaptive approximate additivity, (3̃) adaptive proxy calibration, (4) Lagrangian estimation. Proof in §2.1 (3-step swap-on-Δ + CMDP duality). |
 | [Proved, conditional] | A-ad F3 under SMC ergodicity of Del Moral 2004 Ch. 7 and finite-β KL-vs-max gap. |
-| [Cited] | PG-DLM Propositions 1–2 and Theorem 1; E-SMC empirical feasibility; Golovin-Krause 2011 adaptive-submodularity ratio; Altman 1999 strong duality. |
-| [Heuristic] | z_t = (s_t, b_t, phase(t)) is a sufficient state; smaller abstractions (e.g. s_t alone) may work for entropy but not for margin or quality; justified by within-seed variance 62 % at B = 4 but not proved. |
-| [Incorrect as stated] | None yet on this file. Any claim later shown false is appended here, not silently removed. |
+| [Cited] | PG-DLM Propositions 1–2 and Theorem 1; E-SMC empirical feasibility; Golovin-Krause 2011 adaptive-submodularity ratio; Altman 1999 strong duality; Paternain et al. 2019 zero-duality-gap CMDPs. |
+| [Refuted on OWT — heuristic was z = (s_t, b_t, phase(t)) sufficient] | The bucketed (s_t, phase(t)) abstraction does not deliver ε̃ < 0.7 ε on OWT; richer state would need a function approximator and is out-of-scope. |
+| [Incorrect as stated in earlier draft] | The "strict generalisation" reduction in the original §2.1 sketch was ambiguous (top-B is not the threshold-λ specialisation under the same ψ̃). Tightened in §2.1 formal restatement: the reduction is to the abstract policy class, which contains both top-B and threshold-λ as members. |
 
 Cross-reference into the central `research/proof_ledger.md` once the theorem
 is promoted from Future Work to a formal thesis statement.
