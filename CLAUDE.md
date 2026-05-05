@@ -151,15 +151,16 @@ Downloading openwebtext (38GB) for MAUVE reference exceeds HPC user quota.
 See `START_HERE.md` and `docs/00_current_status.md` for full current status.
 Key points:
 
-- **Experiments complete.** Phase 1 (signal calibration), Phase 2b (policy comparison +
-  MC oracle), Phase 3a (combinatorial search baselines), cross-backbone LLaDA-SFT probe,
-  and Protocol C (adaptive controller CPU pilot) are all done. No new HPC runs authorized.
+- **Baseline experiments complete.** Phase 1 (signal calibration), Phase 2b (policy
+  comparison + MC oracle), Phase 3a (combinatorial search baselines), cross-backbone
+  LLaDA-SFT probe, and Protocol C (adaptive controller CPU pilot) are all done.
 - **Primary result.** CD-G recovers 74–84 % and BS-AG 49–64 % of +0.45 MC-oracle headroom
   over uniform at B ∈ {2,3,4} on ProSeCo-OWT. Both pass at B = 8.
-- **Theory complete (Phase 3b).** Theorem A + Refinements A′/A″ + Negative-Result Corollary
+- **Theory (Phase 3b).** Theorem A + Refinements A′/A″ + Negative-Result Corollary
   formally proved. Theorem A-ad in Appendix F (honest negative Protocol C).
-- **Critical path:** LaTeX writing — ch3, ch4, ch5, ch7, Abstract, Introduction, Conclusion.
-  ch6 skeleton done; theorem statements publication-ready.
+- **Current phase:** Theory-first reassessment. Formalize Theorem B/C/D → Phase 0
+  reproducibility audit → interaction diagnostics → writing.
+- **No full-scale HPC** until theory scaffold and Phase 0 are complete.
 - **Backbone:** ProSeCo-OWT only (LLaDA-SFT probe inconclusive).
 - **Reading:** ProSeCo, PRISM, MDLM, ReMDM, L&Z Error Bounds done.
 

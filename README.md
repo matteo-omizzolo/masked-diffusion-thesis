@@ -53,5 +53,5 @@ Then use `hpc/push.sh` to sync and `hpc/phase2b_proseco_owt.sbatch` or
 `hpc/phase3a_combinatorial.sbatch` to submit. See `scripts/README.md` for
 the full script index and `CLAUDE.md` for HPC environment details.
 
-> **Note:** No new HPC runs are currently authorized. Experiments are complete.
-> The thesis critical path is LaTeX writing.
+> **Note:** No full-scale new HPC experiments until the theory scaffold (Theorem B/C/D)
+> and Phase 0 reproducibility audit are complete. See `docs/05_next_steps.md`.

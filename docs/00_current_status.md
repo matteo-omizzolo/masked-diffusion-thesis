@@ -66,7 +66,7 @@ Best after-uncertainty close ratio = +0.015 (entropy, B=2); negative at B ≥ 3.
 | PRISM pivot | Rejected. PRISM is in the ranker class. |
 | Theorem A L∞ form | Empirically vacuous at every B ∈ {4, 8, 16}. A″ rank-based form is load-bearing. |
 | ReMDM-loop, MDLM Phase 1 | Archived. Backend issues and near-zero Δ_t. |
-| HPC new runs | No-go. No new experiments authorized. |
+| Full-scale HPC new runs | Gated — pending theory scaffold + Phase 0 audit. |
 
 ---
 
