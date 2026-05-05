@@ -33,5 +33,9 @@ ssh 3316152@slogin.hpc.unibocconi.it "cd ~/mdm/masked-diffusion-thesis && sbatch
 
 ## Reproducibility note
 
-The active backend expects a staged ProSeCo-OWT snapshot. See
-`REPRODUCIBILITY.md` for the exact setup and run commands.
+The active backend expects a staged ProSeCo-OWT snapshot at
+`~/mdm/checkpoints/proseco_owt/`. Run `python scripts/stage_proseco_owt.py`
+once to stage it. See `scripts/README.md` for the full reproducibility workflow.
+
+> **No new HPC runs currently authorized.** Experiments are complete.
+> This directory is kept for reproducibility only.

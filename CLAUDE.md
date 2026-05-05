@@ -181,7 +181,7 @@ Key points:
 Corrector math in this project = Markov chain theory (spectral gaps, mixing times, Gibbs
 sampling, Metropolis-Hastings) applied to discrete/masked token spaces. Key framework: L&Z
 E_fact/E_learn decomposition. See `research/proof_worklog.md` for active derivations and
-`docs/md/correctors_deep_dive.md` (deprecated but historically useful) for background.
+`research/candidate_theorems.md` for the formal theorem stack.
 
 ### Not relevant
 - **`ui-ux-pro-max`** — already installed, not relevant to this project

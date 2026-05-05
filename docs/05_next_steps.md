@@ -1,8 +1,6 @@
 # Next Steps — Action Plan
 
 > **Current source of truth.** Updated 2026-05-05.
-> Synthesized from `docs/thesis/next_steps/POST_REASSESSMENT_DECISION.md`
-> (terminal decision as of 2026-04-26).
 
 ---
 
@@ -83,9 +81,20 @@ A Zanella meeting should be scheduled to present:
 
 ---
 
-## Repo cleanup follow-ups (this branch)
+## Second phase: contribution reassessment
 
-After the current cleanup:
-- Merge `repo-cleanup-compact-current-state` → main.
-- Delete stale tracking files and intermediate docs (already archived).
-- Verify `CLAUDE.md` entry points are current.
+After the LaTeX writing is underway, decide among these directions with Zanella.
+No new experiments needed for A or B. C/D/E may require new work.
+
+| Option | Gain | Cost | New experiments? | Thesis risk |
+|---|---|---|---|---|
+| **A. Continue current story** — "rankers fail, search works" as a ProSeCo-OWT case study | Clean, focused | Scope limited to one backbone | No | Single-backbone caveat |
+| **B. Narrow scope** — focus on negative result for separable rankers + empirical search evidence | Honest, compact | Positive result (CD-G/BS-AG) may feel undersold | No | May feel insufficient |
+| **C. Strengthen practical algorithm** — turn BS-AG into a deployable scheduler via surrogate for G | Practical value | Requires function-approximator work | Yes (new GPU) | Significant scope expansion |
+| **D. Second backbone validation** — ask Zanella for one additional backbone experiment | Stronger external validity | Requires HPC + Zanella approval | Yes (HPC) | Adds delay |
+| **E. Pivot theory** — reframe as interaction-driven budgeted trajectory control, de-emphasize signals | Novel framing | Theory rewrite needed | Possibly | Requires new analysis |
+
+**Recommended default:** Option A. The current story is coherent and the single-backbone
+caveat is manageable as a clearly stated limitation in ch7.
+
+Reassessment should happen at the next Zanella meeting (see §Supervisor check-in above).

@@ -1,8 +1,6 @@
 # Experiments — Summary
 
 > **Current source of truth.** Updated 2026-05-05.
-> Synthesized from Phase 3a results, cross-backbone results, Protocol C results,
-> ANALYSIS_SPEC, and CANONICAL_EXPERIMENT_OVERVIEW (all archived after cleanup).
 
 ---
 

@@ -1,8 +1,6 @@
 # Research Direction
 
 > **Current source of truth.** Updated 2026-05-05.
-> Synthesized from `docs/thesis/CANONICAL_RESEARCH_DIRECTION.md` and
-> `docs/thesis_direction.md` (both archived after this cleanup).
 
 ---
 

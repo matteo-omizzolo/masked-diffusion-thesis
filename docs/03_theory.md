@@ -1,11 +1,8 @@
 # Theory — Summary
 
 > **Current source of truth.** Updated 2026-05-05.
-> Synthesized from `docs/thesis/theory/THEORY_STATUS.md`,
-> `docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md`,
-> `docs/thesis/theory/NEXT_THEORY_STEPS.md` (all archived after cleanup).
-> Full formal statements in `research/candidate_theorems.md`.
-> Derivation entries in `research/proof_worklog.md`.
+> Full formal statements: `research/candidate_theorems.md`.
+> Derivation entries: `research/proof_worklog.md`.
 
 ---
 
