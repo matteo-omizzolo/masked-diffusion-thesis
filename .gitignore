@@ -40,7 +40,14 @@ results/**/*.ckpt
 data/
 checkpoints/*
 !checkpoints/.gitkeep
+!checkpoints/README.md
 external/proseco/
+
+# Model weight files (never commit)
+*.ckpt
+*.pt
+*.pth
+*.safetensors
 
 # TeX / LaTeX build artifacts
 *.aux
