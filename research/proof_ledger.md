@@ -270,9 +270,9 @@
 | z_t = (s_t, b_t, phase(t)) sufficient-state heuristic | `[Heuristic]` `[Empirically motivated by 62% within-seed variance]` `[Needs verification]` |
 | Protocol C (pilot, bounded, no new GPU) | `[Definition]` `[Novel — this study]` |
 
-Details: `docs/thesis/theory/ADAPTIVE_BUDGETED_CONTROLLERS.md` and
+Details: docs/archive/ (archived) and
 `research/adaptive_controller_research_notes.md` (scratch derivations).
-Phase-1 skeptical audit: `docs/thesis/next_steps/ADAPTIVE_CONTROLLER_DIRECTION_AUDIT.md`.
+Phase-1 skeptical audit: docs/archive/ (archived).
 
 ---
 

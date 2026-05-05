@@ -591,7 +591,7 @@ heuristic negative result (diagnostic run 478600). ProSeCo selection based on ar
 **Status:** ACTIVE → COMPLETE 2026-04-26.
 **Scope:** Formal proofs of Refinements A′ and A″ + formal Negative-Result
 Corollary, completing the Phase 3b theory contract specified in
-`docs/thesis/CANONICAL_RESEARCH_DIRECTION.md` "Immediate next milestone".
+docs/archive/ (archived) "Immediate next milestone".
 
 ### What was promoted from candidate to formal
 

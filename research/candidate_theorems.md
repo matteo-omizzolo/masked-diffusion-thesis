@@ -74,8 +74,8 @@ Both terms are directly measurable in Protocol A of the entropy-proxy experiment
 - **Currently realized on ProSeCo-OWT (Phase 1, N=50, T=64, F=−GPT-2 NLL on 512
   tokens):** 2Bε + 2η_B = 3.50 at B=8 vs any plausible G(S_B*) ≤ 1.2 — bound is
   vacuous at every B ∈ {4, 8, 16}. See
-  `docs/thesis/theory/THEORY_STRESS_TEST.md` §§3–4 and
-  `docs/thesis/experiments/EXPERIMENT_CRITICAL_AUDIT.md`. Does not falsify the
+  `docs/archive/audits/THEORY_STRESS_TEST.md` (archived) §§3–4 and
+  `docs/archive/audits/EXPERIMENT_CRITICAL_AUDIT.md` (archived). Does not falsify the
   inequality; demonstrates that the (backbone, corrector, F) triple chosen for
   Phase 1 does not satisfy the non-vacuity hypothesis. Phase 2 will record
   whether any other triple does.
@@ -84,7 +84,7 @@ Both terms are directly measurable in Protocol A of the entropy-proxy experiment
 tested system (ProSeCo-OWT Phase 1)`. The bound follows from Lemmas A1 and A2
 below. The substantive remaining content is (i) empirical verification of (2)
 and (3) on a *new* triple, and (ii) the variance-form refinement Refinement A′
-in `docs/thesis/theory/THEORY_STATUS.md` "Candidate Refinements".
+in docs/archive/ (archived) "Candidate Refinements".
 
 **Provenance.** `[Adapted from GPT Pro assessment v2]` — proxy-regret framing,
 explicit ε/η_B decomposition, and oracle top-B comparison. The binary-placement
@@ -217,13 +217,13 @@ each pair (t, t') in a sampled subset, compare G({t, t'}) with Δ_t + Δ_{t'}.
 is empirically loose by ≈11× at B=8 on Phase 1 ProSeCo-OWT** (predicts η_B ≤ 7.4,
 measured η_95 = 0.68). The pairwise interactions partially cancel rather than
 triangle-add; a √B-scaling variance-form refinement (Refinement A′) is recorded
-in `docs/thesis/theory/THEORY_STATUS.md`. Higher-order interactions could
+in docs/archive/ (archived). Higher-order interactions could
 dominate; a triple-interaction diagnostic is a further check.
 
 **Provenance.** `[Adapted from GPT Pro assessment v2]`. Pairwise interaction
 framing is classical in combinatorial optimization; the application to
 corrector scheduling is novel. **Audit-driven status update April 2026** —
-see `docs/thesis/theory/THEORY_STRESS_TEST.md` §6.
+see `docs/archive/audits/THEORY_STRESS_TEST.md` (archived) §6.
 
 ---
 
