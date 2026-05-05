@@ -3,6 +3,11 @@
 > theory scaffold → Phase 0 reproducibility → interaction/online timing experiments.
 > Feasibility of the full programme is under assessment.
 > Current thesis baseline: ProSeCo-OWT shows ranker failure and search success (see `START_HERE.md`).
+>
+> **Status (2026-05):** Theorem stack formalized. Formal definitions, theorems, proofs,
+> and theory-to-experiment map live in `research/candidate_theorems.md` §0–§7.
+> §3 and §4 of this document are now compact pointers to that file; §6 is the
+> experiment plan; §7–§9 cover PRISM, what-not-to-do, and timeline.
 
 # Theory-First Research Plan: When to Apply Informed Correction in Masked Diffusion LMs
 
@@ -114,370 +119,34 @@ A failed scheduler can still be a thesis contribution if it falsifies a clean th
 
 ## 3. Mathematical framework
 
-This section is the first task. Do not begin new HPC experiments until this framework is written in `research/theory_corrector_timing.md` or an equivalent active theory file.
+The full formal setup — trajectory and schedules, marginal gain Δ_t, additive
+surrogate A(S), pairwise interaction ξ_{t,t'}, pairwise surrogate Q(S), separable
+rankers, online state z_t, randomness conventions — is in
+`research/candidate_theorems.md` §0.
 
-### 3.1 Objects
-
-Let the predictor generate a trajectory of states:
-
-```text
-Z_0, Z_1, ..., Z_T
-```
-
-At each step t, a corrector can be applied or skipped. A schedule is:
-
-```text
-S subset {1, ..., T}, with |S| <= B
-```
-
-where B is the fixed corrector budget.
-
-Let F be a trajectory-level quality functional, e.g. negative GPT-2 NLL:
-
-```text
-F(y) = quality of final sample y
-```
-
-Let:
-
-```text
-G(S) = F(y^S) - F(y^base)
-```
-
-be the joint gain from applying correctors at schedule S.
-
-Let:
-
-```text
-Delta_t = G({t})
-```
-
-be the one-step marginal gain.
-
-Let:
-
-```text
-A(S) = sum_{t in S} Delta_t
-```
-
-be the additive/marginal surrogate.
-
-Let trajectory signals be:
-
-```text
-s_t = (H_t, M_t^{-1}, Q_t, u_t, phase_t, etc.)
-```
-
-where H_t is aggregate entropy, M_t^{-1} inverse margin, Q_t quality mass proxy, u_t unmasked fraction, and phase_t = t/T.
+This section in the plan is intentionally a pointer; duplicating the formalism
+in two places creates drift.
 
 ---
 
-## 4. Theory package to develop
-
-The contribution should not be one theorem only. It should be a small theorem stack connecting policy classes to experiments.
-
-## 4.1 Theorem A — marginal proxy scheduling baseline
-
-This theorem already exists. Keep it as the baseline.
-
-**Statement.** If:
-
-1. schedules are binary, |S| = B;
-2. gains are approximately additive:
-
-```text
-|G(S) - A(S)| <= eta_B
-```
-
-3. the proxy is calibrated:
-
-```text
-|Delta_t - psi(s_t)| <= epsilon
-```
-
-then the top-B proxy schedule satisfies:
-
-```text
-G(S_B*) - G(S_hat_B) <= 2 B epsilon + 2 eta_B.
-```
-
-**Role in the thesis.** Theorem A answers: when should marginal/signal ranking work?
-
-**Experiments that test it.**
-
-- Estimate proxy error epsilon or rank-based epsilon_R.
-- Estimate additivity slack eta_B.
-- Measure whether top-B signal schedules beat uniform.
-
-**Expected interpretation.** If epsilon and eta_B are large, the theorem predicts that marginal rankers need not work. This matches current ProSeCo-OWT evidence.
-
----
-
-## 4.2 Theorem B — pairwise surrogate regret
-
-This should become the main new mathematical object if interactions are central.
-
-### Definition
-
-Define a pairwise surrogate:
-
-```text
-Q(S) = sum_{t in S} Delta_t + sum_{t < t', t,t' in S} xi_{t,t'}.
-```
-
-The pairwise interaction is:
-
-```text
-xi_{t,t'} = G({t,t'}) - Delta_t - Delta_{t'}.
-```
-
-Assume:
-
-```text
-|G(S) - Q(S)| <= zeta_B
-```
-
-for all schedules |S| = B.
-
-Let S_Q be the exact maximizer of Q over |S| = B.
-
-Let S_hat be a schedule returned by an optimizer with optimization gap omega_B:
-
-```text
-Q(S_Q) - Q(S_hat) <= omega_B.
-```
-
-### Theorem B1 — exact pairwise surrogate
-
-Under the above assumptions:
-
-```text
-G(S_B*) - G(S_hat) <= 2 zeta_B + omega_B.
-```
-
-### Theorem B2 — estimated pairwise surrogate
-
-If we only have an estimated surrogate Q_hat satisfying:
-
-```text
-|Q_hat(S) - Q(S)| <= alpha_B
-```
-
-for all |S| = B, and S_hat maximizes Q_hat up to optimization gap omega_B, then:
-
-```text
-G(S_B*) - G(S_hat) <= 2 zeta_B + 2 alpha_B + omega_B.
-```
-
-### Proof sketch
-
-Use the standard comparison chain:
-
-```text
-G(S*) <= Q(S*) + zeta_B
-       <= Q(S_Q) + zeta_B
-       <= Q(S_hat) + omega_B + zeta_B
-       <= G(S_hat) + omega_B + 2 zeta_B.
-```
-
-For Q_hat, add two surrogate-estimation errors.
-
-### Role in the thesis
-
-This theorem answers: when is interaction-aware scheduling justified?
-
-### Experiments that test it
-
-- Estimate xi_{t,t'}.
-- Estimate zeta_B = |G(S) - Q(S)| on held-out schedules.
-- Estimate alpha_B for fitted Q_hat.
-- Evaluate pairwise-scheduler regret relative to MC oracle / search baselines.
-
-### Falsification
-
-The pairwise model is not sufficient if:
-
-- zeta_B is large;
-- Q_hat has poor held-out correlation with G;
-- pairwise schedules do not beat marginal rankers or uniform.
-
----
-
-## 4.3 Proposition C — interaction-driven failure of separable rankers
-
-This should be a clean construction showing why per-step ranking can fail even if the problem has exploitable structure.
-
-### Proposition C1 — separable ranker impossibility under pure complementarity
-
-Construct a schedule-gain function G over T steps such that:
-
-```text
-Delta_t = G({t}) = c
-```
-
-for all t, so every separable ranker based only on Delta_t is indifferent, but there exists a pair or subset S* with large positive interaction:
-
-```text
-G(S*) >> G(S)
-```
-
-for most other schedules of the same size.
-
-Then no separable per-step score psi_t can identify S* unless the interaction information is encoded into psi_t externally.
-
-### Role
-
-This proposition gives a rigorous explanation for why marginal scheduling is the wrong policy class when interactions dominate.
-
-### Experimental test
-
-Measure whether real ProSeCo-OWT resembles this construction:
-
-- weak marginal signal-to-gain correlation;
-- low concentration of top schedules around marginal-oracle picks;
-- high interaction residuals;
-- search succeeds while rankers fail.
-
----
-
-## 4.4 Theorem D — budgeted online controller abstraction
-
-This is the Direction 6 component. It should be theory-first but limited.
-
-### Setup
-
-At each time t, define an observable state:
-
-```text
-z_t = phi(Z_t, t, b_t)
-```
-
-where b_t is remaining corrector budget.
-
-Examples:
-
-```text
-z_t = (phase_t, H_t, M_t^{-1}, Q_t, u_t, b_t)
-```
-
-An online policy pi chooses:
-
-```text
-a_t in {0,1}
-```
-
-with total budget constraint:
-
-```text
-sum_t a_t <= B.
-```
-
-Let V_t^*(z,b) be the optimal value-to-go under the compressed state abstraction, and let pi_hat be the policy induced by estimated value function V_hat.
-
-### Theorem D1 — value approximation regret
-
-Assume the compressed-state Bellman approximation error is bounded:
-
-```text
-|V_t^*(z,b) - V_hat_t(z,b)| <= beta
-```
-
-for all reachable states and budgets. Then the greedy policy induced by V_hat has regret bounded by:
-
-```text
-G(S_online^*) - G(S_pi_hat) <= C_T beta
-```
-
-where C_T is a horizon-dependent constant. If the policy only makes B correction decisions, derive a sharper bound proportional to B if possible.
-
-### Theorem D2 — abstraction error decomposition
-
-Decompose beta into:
-
-```text
-beta <= estimation error + state-aliasing error + finite-sample error.
-```
-
-The key empirical quantity is **state aliasing**:
-
-> Do trajectories with the same compressed state z_t have similar future correction value?
-
-### Role
-
-This theorem answers: when can "when to correct" be solved online using current trajectory diagnostics?
-
-### Experimental test
-
-- Estimate value/advantage by phase-signal-budget buckets.
-- Measure within-bucket variance of correction advantage.
-- If within-bucket variance is large, simple online control cannot work.
-- If within-bucket variance is small, learn an online controller and test it.
-
-### Important warning
-
-Protocol C already showed that simple bucketed-state conditioning barely improved proxy calibration on OWT. Therefore Theorem D should be used as a falsifiable framework, not assumed to produce a positive result.
-
----
-
-## 4.5 Regime definitions
-
-Define diagnostic quantities for each model/corrector pair and budget B.
-
-### Usefulness
-
-```text
-U_B = G(S_oracle_B) - G(S_uniform_B)
-```
-
-or MC-oracle approximation if true oracle is unavailable.
-
-### Rankability
-
-```text
-R_B = rho(A(S), G(S))
-```
-
-where rho can be Spearman correlation over sampled schedules.
-
-### Interaction strength
-
-```text
-I_B = sigma(G(S) - A(S)) / sigma(A(S))
-```
-
-or a robust version using median absolute deviation.
-
-### Pairwise sufficiency
-
-```text
-P_B = rho(Q_hat(S), G(S))
-```
-
-on held-out schedules.
-
-### Search closure
-
-```text
-C_B = (G(S_method) - G(S_uniform)) / (G(S_MC_oracle) - G(S_uniform)).
-```
-
-### Online sufficiency
-
-```text
-O_B = (G(S_online) - G(S_uniform)) / (G(S_MC_oracle) - G(S_uniform)).
-```
-
-### Regime classification
-
-| Regime | U_B | R_B | I_B | P_B/O_B | Interpretation |
-|---|---:|---:|---:|---:|---|
-| No-op | low | irrelevant | low | low | Corrector timing does not matter |
-| Rankable | high | high | low | not needed | Marginal scheduling works |
-| Interaction-driven | high | low/moderate | high | high P_B | Pairwise/search scheduling works |
-| Online-decision | high | moderate | moderate/high | high O_B | State/budget controller works |
-| Chaotic | high | low | high | low | Headroom exists but is hard to predict |
-
-The experiments should classify ProSeCo-OWT and any additional model/corrector pair into this table.
+## 4. Theory package (theorem stack)
+
+Formal statements, assumptions, proofs, and falsifiers live in
+`research/candidate_theorems.md`. Summary of the stack:
+
+| § | Object | Status | Role |
+|---|---|---|---|
+| §1 | Theorem A — marginal proxy regret: G(S_B^*) − G(Ŝ_B) ≤ 2Bε + 2η_B | Proved | Baseline; tested by (A2)/(A3) diagnostics |
+| §1 | Refinements A′ (variance form), A″ (rank form) | Proved | Empirically anchored variants of Theorem A |
+| §1 | Negative-Result Corollary (separable-ψ envelope) | Proved | Documents ranker class failure on ProSeCo-OWT |
+| §2 | Theorem B — exact pairwise regret: G(S_B^*) − G(Ŝ) ≤ 2ζ_B + ω_B | Proved | **Central new theorem** |
+| §2 | Theorem B — estimated pairwise regret: G(S_B^*) − G(Ŝ_Q̂) ≤ 2ζ_B + 2α_B + ω_B | Proved (constant 2 derived; not 4) | Operational form for held-out evaluation |
+| §3 | Proposition C — regime diagnostics (U_B, R_B, I_B, P_B, C_B) | Definition + classification protocol | Regime taxonomy / framework |
+| §4 | Theorem D — online controller: V_1 − 𝔼[F | π̂] ≤ 2Tδ | Proof sketch (standard ADP) | Optional / appendix unless Phase 4 promotes |
+| §5 | Proposition E — burn-in exclusion via L_F-Lipschitz F | Proof sketch | Optional / side lemma |
+
+The thesis backbone is **A → B → C**. D and E are appendix unless empirical
+results promote them.
 
 ---
 
@@ -487,11 +156,17 @@ Before coding, create a table like this in the active plan.
 
 | Theory item | Assumption / prediction | Measured quantity | Experiment | Possible outcome |
 |---|---|---|---|---|
-| Theorem A | Additivity + proxy calibration makes rankers good | epsilon, eta_B, rho(A,G) | Phase 0/1 replication | Supported or falsified |
-| Proposition C | Interactions can defeat separable rankers | xi, Jaccard, ranker failure | Phase 1 interaction map | ProSeCo resembles or does not resemble construction |
-| Theorem B | Pairwise Q explains G | zeta_B, rho(Q,G), alpha_B | Phase 1/2 pairwise surrogate | Pairwise model works or fails |
-| Theorem D | Online state captures future correction value | bucket variance, online regret | Phase 4 controller | Online controller works or fails |
-| Regime map | Different correctors induce different regimes | U_B, R_B, I_B, P_B, O_B | Phase 3 model comparison | Generality or limitation |
+| Theorem A (A2) | |G − A| ≤ η_B | η_B from Phase 0/2b residuals | Theorem A non-vacuous | Move to Theorem B |
+| Theorem A (A3) | |Δ − ψ| ≤ ε; rankers ≈ A top-B | ε, ε_R, ρ(A,G) Phase 0 | Marginal regime II | Negative-Result Corollary; → B |
+| Theorem A util. | 2Bε + 2η_B < ranker headroom | plug-in vs measured headroom | Theorem A operative | Bound is structural, not predictive |
+| Theorem B (B2) | ζ_B < η_B; P_B > R_B | Phase 1 sparse pairwise (ζ_B, ρ(Q,G)) | Interaction regime III | Higher-order / chaotic (regime IV) |
+| Theorem B (B3) | |Q − Q̂| ≤ α_B; held-out Q̂ ≈ Q | Phase 1/2 train/test split | Pairwise scheduler buildable | Surrogate undersampled / optimizer bound |
+| Theorem B util. | G(Ŝ_Q̂) > G(rankers) | Phase 2 held-out evaluation | **Theorem B is central result** | CD-G/BS-AG remain comparison only |
+| Proposition C | Diagnostics stable at K=30 | U_B, R_B, I_B, P_B, C_B with BCa CI | Diagnostic framework valid | Single-backbone case study |
+| Theorem D | Compact z_t admits small ‖V−V̂‖_∞ | Phase 4 (only if reached) | Online controller in main | Stays appendix (Protocol C generalizes) |
+| Proposition E | L_F·|R_t|/D bounds Δ_t at burn-in | Phase 0 audit of R_t and L_F | Exclusion lemma in main | Side remark only |
+
+Detailed table (with exact theorem references): `research/candidate_theorems.md` §7.
 
 ---
 
@@ -970,26 +645,28 @@ Do not:
 
 # 9. Timeline to September
 
-Assume the thesis is due in September. Use this as a rough plan.
+Assume the thesis is due in September. The plan is sequential and gated; if any
+gate fails, do **not** burn time on later gates — cut online controller (Theorem D)
+and regime-map (Phase 3) before cutting interaction diagnostics (Phase 1).
 
-## May
+## May (current)
 
-- Finalize theory-first framework.
-- Write Theorem B and Theorem D statements/proofs.
-- Perform Phase 0 reproducibility audit.
-- Run sparse interaction diagnostics.
+- Theorem stack formalized in `research/candidate_theorems.md` (DONE 2026-05).
+- Phase 0 reproducibility smoke (K=3 on ProSeCo-OWT). **Gate.**
+- If smoke passes, begin sparse pairwise diagnostics design (no full HPC yet).
 
 ## June
 
-- Complete dense/sparse interaction maps.
-- Build and evaluate pairwise surrogate schedulers.
-- Decide whether pairwise scheduling becomes the main contribution.
-- Start one secondary-model regime probe.
+- Phase 1 sparse pairwise ξ_{t,t'} diagnostics on ProSeCo-OWT.
+- Compute ζ_B, ρ(Q,G), I_B; classify regime.
+- If P_B > R_B and ζ_B < η_B: build pairwise surrogate scheduler (start of Phase 2).
+- Otherwise: classify ProSeCo-OWT as regime IV (chaotic) and document.
 
 ## July
 
-- Complete secondary-model regime map.
-- Run limited online controller if still justified.
+- Phase 2 held-out evaluation of pairwise scheduler.
+- Optional: one secondary-model regime probe (Phase 3) — only if Phase 1/2 leaves
+  budget. Default is to **skip** this and consolidate.
 - Freeze all experiments by end of July.
 
 ## August
@@ -1004,6 +681,18 @@ Assume the thesis is due in September. Use this as a rough plan.
 - Final revisions.
 - Polish LaTeX.
 - Submit.
+
+### Stop conditions
+
+- If Phase 0 smoke does not reproduce baseline qualitatively → **stop**, debug,
+  do not start Phase 1.
+- If Phase 1 shows ζ_B ≥ η_B (no pairwise improvement) → **stop** Phase 2,
+  document as regime IV, write thesis as case study.
+- If Phase 2 held-out scheduler does not beat rankers → **stop**, document
+  honest negative, focus thesis on Theorem A + Negative-Result Corollary
+  + diagnostic framework.
+- Theorem D (online controller, Phase 4) is the **first** thing to cut if time
+  is tight. It is appendix-only by default.
 
 ---
 
@@ -1037,82 +726,34 @@ Any of A-C is thesis-viable if written honestly. A is the target.
 
 ---
 
-# 11. Immediate tasks for Claude Code
+# 11. Status and next concrete tasks
 
-Do these in order.
+**Status — 2026-05.** The theorem stack is formalized.
 
-## Task 1 — Create theory document
+Done:
+- Formal problem setup (`research/candidate_theorems.md` §0).
+- Theorem A statement and proof (§1).
+- Theorem B exact-Q form, statement and proof (§2.1).
+- Theorem B estimated-Q̂ form, statement and proof with corrected constant 2α_B (§2.2).
+- Proposition C regime taxonomy and diagnostics (§3).
+- Theorem D statement and proof sketch with honest 2Tδ constant (§4).
+- Proposition E burn-in exclusion sketch (§5).
+- Theory-to-experiment map (§7).
 
-Create or update:
+### Next concrete tasks (sequential, gated)
 
-```text
-research/theory_corrector_timing.md
-```
+1. **Phase 0 smoke** (K=3, ProSeCo-OWT). Confirm baseline reproducibility.
+   This is the gate before any Phase 1 design work.
 
-Include:
+2. **Pre-flight tests for the existing scripts**: deterministic base generation;
+   empty schedule equals base; single-correction equals Protocol A; budget
+   accounting; F scoring consistency; CRN.
 
-- formal problem setup;
-- Theorem A recap;
-- Theorem B pairwise surrogate regret;
-- Proposition C separable ranker failure construction;
-- Theorem D online controller abstraction;
-- regime diagnostics;
-- theorem-to-experiment mapping table.
+3. **Phase 1 sparse pairwise ξ_{t,t'} estimator** — design only. Do not run
+   on HPC until Phase 0 smoke passes.
 
-Keep it mathematically precise. Mark assumptions clearly.
-
-## Task 2 — Update active docs minimally
-
-Update only if necessary:
-
-- `START_HERE.md`
-- `docs/01_research_direction.md`
-- `docs/03_theory.md`
-- `docs/05_next_steps.md`
-
-Do not create a new maze of docs. Mention that the new research phase is theory-first and exploratory, replacing the previous "no new HPC" planning assumption.
-
-## Task 3 — Write pre-registration for Phase 0 and Phase 1
-
-Create a compact experiment specification, preferably one file:
-
-```text
-docs/06_theory_first_experiment_plan.md
-```
-
-or update `docs/05_next_steps.md` if adding a file is against repo policy.
-
-Include:
-
-- Phase 0 reproducibility audit;
-- Phase 1 interaction diagnostics;
-- exact metrics;
-- decision gates;
-- expected outcomes;
-- kill criteria.
-
-## Task 4 — Implement tests before runs
-
-Add or verify tests/assertions for:
-
-- deterministic base generation;
-- empty schedule equals base;
-- single-correction schedule equals Protocol A branch;
-- budget accounting;
-- F scoring consistency;
-- common random numbers.
-
-## Task 5 — Run Phase 0 smoke
-
-Run K=3 smoke on ProSeCo-OWT.
-
-Only after it passes, prepare K=30 replication.
-
-## Task 6 — Prepare Phase 1 interaction map code
-
-Implement sparse stratified pair sampling and analysis.
-
-Do not run dense all-pair maps until sparse diagnostics justify it.
+4. **Hold the cut decisions**: if any gate fails, cut Theorem D / Phase 4 first,
+   then Phase 3 secondary backbone, then PRISM, *before* cutting Phase 1.
 
 ---
 

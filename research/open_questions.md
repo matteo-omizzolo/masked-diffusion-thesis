@@ -1,125 +1,106 @@
 > TECHNICAL WORKLOG.
 > Current thesis status starts at `START_HERE.md`.
 > Current theory-first plan: `docs/06_theory_first_research_plan.md`.
+> Theorem stack: `research/candidate_theorems.md` §0–§7.
 
 # Open Questions — Current
 
-**Updated:** May 2026 (post-Phase-3b, post-Protocol-C).
-Most pre-Phase-2b questions are resolved. Only genuinely unresolved technical
-points remain below.
+**Updated:** 2026-05 (post theory-first formalization).
+The theorem stack has been formalized; remaining questions concern *empirical
+estimation* of the bound constants and *regime classification*. Older writing-phase
+LaTeX-prose questions are tracked in §6 below as a thin status table.
 
 ---
 
-## Active open questions (theory-first phase)
+## Active open questions — theory-first programme
 
-### OQ-TF1 — Theorem B: pairwise surrogate regret
+### OQ-T1 — Theorem B with estimated Q̂
 
-Formalize the bound on regret of pairwise surrogate scheduling ψ₂(t,t') vs. the joint
-oracle G({t,t'}). What are the key assumptions? Does it reduce to Theorem A when interactions
-are negligible?
+The estimated-Q̂ form has constant 2α_B (derived in `candidate_theorems.md` §2.2).
+Open: under **leave-one-seed-out** estimation of (Δ̂, ξ̂), is the empirical α_B small
+enough that 2α_B does not swamp the (η_B − ζ_B) improvement?
 
-**Status:** Not yet formalized. Planned in `docs/06_theory_first_research_plan.md` §2.
-
----
-
-### OQ-TF2 — Proposition C: separable ranker failure construction
-
-Find an explicit construction (noise level, interaction pattern) where any separable
-per-step ranker achieves constant additive regret independent of B. Relate to the
-measured σ_ξ and Phase 2b failure.
-
-**Status:** Not yet written. Empirical evidence in `results/phase2b_proseco_owt/`.
+Tests: cross-validated estimate of α_B on Phase 1 sparse pair data; compare to
+measured ζ_B and η_B.
 
 ---
 
-### OQ-TF3 — Theorem D: online budgeted controller abstraction
+### OQ-T2 — Estimating ζ_B, α_B, ω_B without leakage
 
-Define the budgeted online decision problem. Characterize the value function. Bound the
-gap to the offline oracle as a function of state space richness and budget B.
+The three constants have orthogonal sources of error:
+- ζ_B: pairwise approximation error (model bias).
+- α_B: surrogate estimation error (finite training pool).
+- ω_B: optimization gap of the scheduler.
 
-**Status:** Not yet formalized. Protocol C is an honest empirical negative; Theorem D
-is the formal companion. Planned in `docs/06_theory_first_research_plan.md` §4.
-
----
-
-### OQ-TF4 — Regime diagnostics
-
-Define measurable quantities that classify a trajectory as:
-- "additivity-regime": interactions negligible, ranker failure is calibration-only;
-- "interaction-regime": pairwise ξ_{t,t'} structured, pairwise scheduler justified;
-- "online-regime": information arrives too late for open-loop scheduling.
-
-**Status:** Not yet defined. Phase 0 audit precedes this.
+We need an estimation protocol that reports each separately with paired-bootstrap CIs
+and that avoids using test G to fit Q̂. Phase 2 train/test split is the obvious vehicle;
+ω_B is reported by the optimizer.
 
 ---
 
-### OQ-TF5 — Phase 0 reproducibility gate
+### OQ-T3 — Statistical stability of regime diagnostics at K=30
 
-Can we reproduce the Phase 2b and Phase 3a results locally (K=3 smoke, then K=30)
-before launching new HPC experiments?
-
-**Status:** Phase 0 checklist in `docs/05_next_steps.md`. Not yet run.
-
----
-
-## Active open questions (writing phase)
-
-### OQ-1 — Theorem A proof prose (LaTeX write-up)
-
-The combining-step argument (Lemma A1 + Lemma A2 + two applications of
-approximate additivity) is sketched in `research/proof_worklog.md` Entry 6
-but not yet a clean LaTeX narrative in `thesis/chapters/ch6_contribution.tex`.
-
-Two steps need careful notational treatment:
-1. Route the exchange argument through the additive surrogate A(S) := ∑ Δ_t,
-   not G directly.
-2. Apply two instances of assumption (2) to connect A(S_B*) and A(Ŝ_B) back to
-   G(S_B*) and G(Ŝ_B).
-
-**Status:** Skeleton exists; section bodies marked TODO.
+For Proposition C the diagnostics U_B, R_B, I_B, P_B, C_B all have BCa CIs over seeds.
+Open: at K=30 paired seeds, do the CIs separate adjacent regimes (e.g. III vs IV)
+on ProSeCo-OWT? If not, K=60 may be needed for Phase 1.
 
 ---
 
-### OQ-2 — Refinement A′ formal derivation
+### OQ-T4 — Sufficiency of compact online state z_t
 
-The variance-form η_B ≤ σ_ξ · √B/√2 is empirically motivated (measured on 9000 MC
-rows) and stated as a theorem in `research/candidate_theorems.md`, but the formal
-proof under the mixing/cancellation hypothesis on (ξ_{t,t'}) needs a clean
-order-statistics write-up in ch6.
-
-**Status:** Formal statement locked; proof derivation exists; LaTeX prose TODO.
+For Theorem D to be useful, the compact state z_t must carry enough value-function
+information that ‖V − V̂‖_∞ is small. Protocol C found this fails for the bucketed
+(signal_quartile, phase) state. Open: does adding (b_t, u_t, continuous H_t/M_t^{-1})
+recover predictive value? This is appendix-grade unless Phase 4 demonstrates it.
 
 ---
 
-### OQ-3 — Refinement A″ formal derivation
+### OQ-T5 — Secondary backbone choice for Proposition C external validity
 
-The rank-based ε_R := (1 − |ρ_B|) · σ_Δ is empirically anchored but the
-formal derivation under the Gaussian-A hypothesis (that A(Ŝ_B) − A(S_A*) has
-a known order-statistics distribution) needs a clean proof in ch6.
-
-**Status:** Formal statement locked; proof derivation exists; LaTeX prose TODO.
-
----
-
-### OQ-4 — Negative-Result Corollary formal statement
-
-The corollary (any separable per-step ranker is bounded by the mean_delta_oracle
-envelope, which enters the NULL band at B = 8 on OWT) needs a formal corollary
-environment in ch6 with a proof citing the Phase 2b paired CIs.
-
-**Status:** Empirically anchored; formal statement in `research/candidate_theorems.md`;
-LaTeX corollary environment TODO.
+Which (model, corrector) pair is feasible *and* expected to lie in a different regime
+than ProSeCo-OWT? Candidates: ReMDM-conf, MDLM-conf with partial resample, LLaDA-SFT
+(only after the Tier 3 protocol issue is fixed). Required: enough headroom (U_B > 0)
+to make the diagnostic comparison meaningful.
 
 ---
 
-### OQ-5 — External validity (single-backbone caveat)
+### OQ-T6 — PRISM feasibility
 
-All primary results are on ProSeCo-OWT. The LLaDA-SFT bounded probe was
-inconclusive (T3, K=8). Whether CD-G/BS-AG recovery rates transfer to a second
-backbone is unknown.
+Without pretrained weights, can a usable quality head be trained in 1–2 weeks?
+Decision rule: if no, cite as related work and use Q_t (existing PRISM-style mass)
+as a signal candidate; do not pivot the thesis around PRISM.
 
-**Status:** Not addressed in main thesis; mentioned as a limitation.
-Not authorized for new experiments without supervisor approval.
+---
+
+### OQ-T7 — Minimum experiment set for August writing freeze
+
+What is the smallest experiment set that defends the central thesis claim?
+Working candidate: Phase 0 + Phase 1 sparse pairwise + Phase 2 held-out pairwise
+scheduler on ProSeCo-OWT only. If Phase 2 succeeds, the thesis claim is "interaction-aware
+scheduling on a single backbone, with regime-diagnostic protocol for transfer."
+If Phase 2 fails (regime IV), the thesis claim is "rankers fail; pairwise also fails;
+diagnostic framework explains why; CD-G provides existence proof."
+
+---
+
+## Carry-over technical questions
+
+### OQ-W1 — ch6 LaTeX prose for Theorem A combining step
+
+The combining-step argument is in `research/proof_worklog.md` Entry 6 and
+`candidate_theorems.md` §1.2. LaTeX prose in `thesis/chapters/ch6_contribution.tex`
+remains TODO.
+
+### OQ-W2 — ch6 LaTeX prose for Refinements A′, A″ and Negative-Result Corollary
+
+Formal statements locked. LaTeX prose TODO. Defer until Phase 0/1 results are in
+so the empirical anchors can be cited.
+
+### OQ-W3 — External validity caveat scoping
+
+Phrase the single-backbone caveat in ch7 *after* Phase 1 outcome is known; the
+language differs between regime III (interaction-driven, generality unknown) and
+regime IV (chaotic, generality presumably negative).
 
 ---
 
@@ -127,17 +108,18 @@ Not authorized for new experiments without supervisor approval.
 
 | Question | Resolution |
 |---|---|
-| Approximate additivity realistic? | σ_ξ measured (0.174/0.240/0.309 at B=2/3/4); η_B via Refinement A′ |
-| Entropy as proxy? | Spearman ρ ≈ 0.10–0.15; all three signals similar; ε_R measured |
-| True G(S_B*)? | MC oracle (best-of-100) used as practical upper bound at B∈{2,3,4} |
-| Corrector definition? | ProSeCo annealed refinement; 2 NFEs per loop |
-| ProSeCo novelty? | Confirmed: ProSeCo does not provide proxy-regret or Δ_t measurements |
-| ε_R as calibration? | Adopted as Refinement A″ |
+| Approximate additivity realistic? | η_B measured (σ_ξ at 0.174/0.240/0.309 for B=2/3/4); A′ refinement |
+| Entropy as proxy? | Spearman ρ(ψ,Δ) ≈ 0.10–0.15; ε_R = 0.07→0.39 across B; rankers fail |
+| True G(S_B*)? | MC oracle (best-of-100) used as practical upper bound at B ∈ {2,3,4} |
+| ProSeCo novelty? | ProSeCo provides no Δ_t / proxy-regret / scheduling theory — confirmed |
+| L∞ ε vs ε_R? | ε_R adopted as Refinement A″ (operative form) |
 | √B vs B² bound? | A′ (√B form) is tighter; adopted |
-| TCR ≠ Δ_t? | Both measured in Phase 1; Δ_t used exclusively |
-| Choice of F? | F = −GPT-2 NLL on 512-token window |
-| Budget sensitivity? | Phase 2b covers B∈{2,3,4,8,16}; saturation at B=8 |
-| Δ_open, ε shrinkage (adaptive)? | Protocol C: Δ_open > 0 confirmed; ε̃/ε ≈ 0.983–0.986 (no meaningful shrinkage) |
+| Choice of F? | F = − GPT-2 NLL on 512-token window |
+| Budget sensitivity? | B ∈ {2,3,4,8,16}; ranker saturation at B=8 |
+| Adaptive (Protocol C) shrinkage? | ε̃/ε ∈ [0.983, 0.986] — no shrinkage; honest negative |
+| Theorem B exact-Q form? | Proved (`candidate_theorems.md` §2.1) |
+| Theorem B estimated-Q̂ constant? | 2α_B (not 4α_B); proof in §2.2 |
+| Theorem D constant? | 2Tδ; honest about not having cBδ in general |
 
-Full resolution details: `research/proof_worklog.md` Entries 5–8.
-Old 416-line version archived at `docs/archive/repo_cleanup_20260505/old_research_worklogs/open_questions_pre_cleanup.md`.
+Full provenance: `research/proof_worklog.md` Entries 5–8;
+`research/proof_ledger.md`.

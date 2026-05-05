@@ -8,21 +8,19 @@
 
 ## Sequential research gates (do in order)
 
-### Gate 1 — Opus theory pass
+### Gate 1 — Opus theory pass ✅ (2026-05)
 
-Formalize the theorem stack for the theory-first programme:
+Theorem stack formalized in `research/candidate_theorems.md` §0–§7:
 
-1. **Theorem B — pairwise surrogate regret**: characterize when corrector timing is
-   interaction-driven (the pairwise surrogate ψ₂ approach).
-2. **Proposition C — separable ranker failure construction**: show explicitly that any
-   separable per-step ranker fails when interactions exceed a threshold.
-3. **Theorem D — online budgeted controller abstraction**: define the budgeted online
-   decision problem and bound the gap to the offline oracle.
+- **Theorem A** (marginal proxy regret) — proved, baseline.
+- **Theorem B** (pairwise surrogate regret, exact and estimated forms) — proved;
+  the estimated form has constant 2α_B (verified, not 4α_B).
+- **Proposition C** (regime diagnostics: U_B, R_B, I_B, P_B, C_B) — definition +
+  classification protocol.
+- **Theorem D** (online controller, 2Tδ ADP loss) — proof sketch; appendix-grade.
+- **Proposition E** (burn-in exclusion via Lipschitz F) — proof sketch; optional.
 
-See `docs/06_theory_first_research_plan.md` §2–5 for the full formal programme.
-
-For each theorem, add a theorem-to-experiment mapping: what result would support it,
-what would falsify it, what experiment measures it.
+Theory-to-experiment map: `research/candidate_theorems.md` §7. Backbone is **A → B → C**.
 
 ---
 

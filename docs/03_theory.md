@@ -1,8 +1,30 @@
 # Theory — Summary
 
-> **Current source of truth.** Updated 2026-05-05.
-> Full formal statements: `research/candidate_theorems.md`.
+> **Current source of truth.** Updated 2026-05.
+> Full formal statements: `research/candidate_theorems.md` §0–§7.
 > Derivation entries: `research/proof_worklog.md`.
+
+---
+
+## Active theorem stack (theory-first programme — 2026-05)
+
+The stack has been reframed for the theory-first phase. Detailed statements,
+proofs, and theory-to-experiment map are in `research/candidate_theorems.md`;
+this file is a one-page summary.
+
+| § | Object | Status | Role |
+|---|---|---|---|
+| §1 | **Theorem A** — marginal proxy regret 2Bε + 2η_B | Proved | Baseline; tested by (A2)/(A3) |
+| §1 | Refinements A′ (variance form), A″ (rank form) | Proved | Empirically anchored variants |
+| §1 | Negative-Result Corollary (separable-ψ envelope) | Proved | Ranker-class bound on ProSeCo-OWT |
+| §2 | **Theorem B** — pairwise regret 2ζ_B + 2α_B + ω_B | Proved | **Central new theorem** |
+| §3 | **Proposition C** — regime diagnostics (U_B, R_B, I_B, P_B, C_B) | Definition + classification | Regime taxonomy framework |
+| §4 | Theorem D — online controller 2Tδ ADP loss | Proof sketch | Optional / appendix |
+| §5 | Proposition E — burn-in exclusion via Lipschitz F | Proof sketch | Optional / side lemma |
+
+**Backbone:** Theorem A → Theorem B → Proposition C. D and E are appendix.
+
+Plan: `docs/06_theory_first_research_plan.md`.
 
 ---
 
