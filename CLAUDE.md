@@ -1,5 +1,12 @@
 # CLAUDE.md — Project Context for Claude Code
 
+## Current-status rule (IMPORTANT)
+
+> Use `START_HERE.md` and `docs/README.md` as the entry points for any new session.
+> Do NOT use files under `docs/archive/`, `archive/`, or `docs/thesis/` to infer
+> current thesis status — those are historical and may contradict current docs.
+> Archived files exist for provenance only; they are explicitly superseded.
+
 ## Project
 MSc thesis on **signal-adaptive corrector scheduling for masked diffusion language models**,
 supervised by Prof. Giacomo Zanella (Bocconi University).
@@ -9,25 +16,44 @@ in masked diffusion language models, can aggregate trajectory signals — entrop
 margin, or quality mass — predict the marginal value of a corrective refinement loop well
 enough to outperform uniform corrector placement?
 
+**Thesis story (April 2026):** Fixed-budget corrector allocation is a combinatorial
+schedule-search problem. Greedy signal rankers fail by B = 8. Search procedures (CD-G,
+BS-AG) recover 49–84 % of oracle headroom on ProSeCo-OWT. Theorem A + Refinements A′/A″
++ Negative-Result Corollary all formally proved. Critical path: LaTeX writing.
+
 **Key distinction:** This thesis targets corrector *scheduling* (when to spend corrective
 effort across the trajectory), not token-selection policies (which tokens to correct),
 predictor schedules (when to unmask), or corrector kernel design (how to correct).
 
-See `docs/thesis_direction.md` for the full research direction, scope, and non-goals.
+## Active doc entry points
+
+| File | Purpose |
+|---|---|
+| `START_HERE.md` | 2-minute orientation — start here |
+| `docs/README.md` | Doc structure guide + archive rule |
+| `docs/00_current_status.md` | Established results, failures, risks |
+| `docs/01_research_direction.md` | Thesis Q, scope, non-goals, contribution |
+| `docs/02_experiments.md` | Phases, protocols, results |
+| `docs/03_theory.md` | Theorem stack, proof status, open gaps |
+| `docs/04_results_index.md` | Raw results index |
+| `docs/05_next_steps.md` | Action plan (write thesis) |
+| `research/candidate_theorems.md` | Full theorem + proof record (keep active) |
+| `research/proof_worklog.md` | Derivation entries (keep active) |
 
 ## Repo layout
-- `thesis/` — LaTeX thesis chapters (ch2 first draft done)
+- `START_HERE.md` — 2-minute orientation
+- `thesis/` — LaTeX thesis chapters (ch6 skeleton done; ch3/4/5/7 TODO)
 - `research/` — mathematical worklog, candidate theorems, proof ledger
-- `docs/` — core documentation (thesis_direction, literature_map, reading_plan, etc.)
-- `docs/md/` — older study documents (some deprecated; see deprecation banners)
-- `docs/instructions/` — Claude Code prompts and thesis brief
+- `docs/` — compact active docs (see docs/README.md)
+- `docs/archive/` — archived historical docs (do not use for current status)
 - `src/mdm_playground/` — main package (`pip install -e .`)
 - `external/` — rsync'd copies of upstream repos (remdm, mdlm, PRISM, sedd, remedi)
 - `study/` — papers organized by topic, notes, thesis guidelines
-- `scripts/` — analysis and plotting scripts
+- `scripts/` — analysis scripts; `scripts/legacy/` for superseded scripts
+- `results/` — raw experiment outputs (preserved, never delete)
 - `configs/` — YAML experiment configs
 - `hpc/` — Bocconi HPC workflow scripts
-- `archive/` — deprecated material (old directions, notes)
+- `archive/` — legacy material (pre-April 2026)
 - `figures/` — generated plots
 
 ## HPC — Bocconi cluster
@@ -114,38 +140,28 @@ Downloading openwebtext (38GB) for MAUVE reference exceeds HPC user quota.
 
 ---
 
-## Current status (April 2026)
+## Current status (May 2026)
 
-Research direction refocused to **signal-adaptive corrector scheduling** after literature
-scan and brief preparation (April 2026). The thesis targets trajectory-level fixed-budget
-corrector allocation — a gap that remains open despite strong adjacent work on corrector
-design, token-selection, predictor scheduling, and remasking.
+See `START_HERE.md` and `docs/00_current_status.md` for full current status.
+Key points:
 
-Previous step-sweep experiments (MDLM/ReMDM-conf/ReMDM-loop at T∈{128,256,512,1000})
-are archived from the earlier phase.
-
-### Scope decisions
-- **RemeDi-RL**: PERMANENTLY SKIPPED — missing `FSDPLLaDAUPMModelLM` + 8B vs 100M mismatch.
-- **PRISM** (arXiv:2510.01384): **READ** — Zanella-recommended; quality signal for experiments.
-- **ProSeCo** (arXiv:2602.11590): **TO READ** — closest existing corrector-scheduling paper;
-  primary Tier A experimental platform.
-- **Gap D** (token selection): DEPRIORITIZED — empirically crowded (KLASS, UPO, DEMASK, ProSeCo).
-- **Primary direction**: Gap B/C (signal-adaptive corrector scheduling) + Gap E (E_fact
-  extension to corrector steps).
-
-### Reading status
-- **Read:** MDLM, ReMDM, Zhao et al., PRISM, L&Z Error Bounds
-- **To read next:** ProSeCo, EAGS, Ascolani et al. 2024, Denoising Entropy
-- Full plan: `docs/reading_plan.md`
+- **Experiments complete.** Phase 1 (signal calibration), Phase 2b (policy comparison +
+  MC oracle), Phase 3a (combinatorial search baselines), cross-backbone LLaDA-SFT probe,
+  and Protocol C (adaptive controller CPU pilot) are all done. No new HPC runs authorized.
+- **Primary result.** CD-G recovers 74–84 % and BS-AG 49–64 % of +0.45 MC-oracle headroom
+  over uniform at B ∈ {2,3,4} on ProSeCo-OWT. Both pass at B = 8.
+- **Theory complete (Phase 3b).** Theorem A + Refinements A′/A″ + Negative-Result Corollary
+  formally proved. Theorem A-ad in Appendix F (honest negative Protocol C).
+- **Critical path:** LaTeX writing — ch3, ch4, ch5, ch7, Abstract, Introduction, Conclusion.
+  ch6 skeleton done; theorem statements publication-ready.
+- **Backbone:** ProSeCo-OWT only (LLaDA-SFT probe inconclusive).
+- **Reading:** ProSeCo, PRISM, MDLM, ReMDM, L&Z Error Bounds done.
 
 ### Writing status
-- ch2 (Background: Continuous Diffusion): **FIRST DRAFT DONE**
-- ch3–ch8: TODO. See `docs/md/research_plan.md` for chapter dependencies.
-
-### Experimental infrastructure
-- **Tier A:** MDLM (ready), ReMDM (ready, patched), ProSeCo (to clone)
-- **Tier B:** PRISM (submodule, not tested), dLLM (not cloned)
-- Full details: `docs/experimental_infrastructure.md`
+- ch2 (Continuous Diffusion): FIRST DRAFT DONE
+- ch6 (Contribution): SKELETON DONE (theorem statements locked, prose TODO)
+- ch3 / ch4 / ch5 / ch7: TODO
+- Abstract / Introduction / Conclusion: TODO
 
 ## Claude Code tools & plugins
 
@@ -172,14 +188,14 @@ E_fact/E_learn decomposition. See `research/proof_worklog.md` for active derivat
 
 ---
 
-## Next steps (current — April 2026)
+## Next steps (current — May 2026)
 
-1. **Now:** Read ProSeCo — understand correction schedule knobs and baselines
-2. **Now:** Read EAGS — assess overlap with Gap B/C
-3. **Next:** Read Ascolani et al. 2024 (entropy contraction) for Gap E proof template
-4. **Next:** Clone ProSeCo repo and download `proseco-owt` checkpoint
-5. **Then:** Zanella meeting — present Gap B/C + E with preliminary theorem statement
-6. **Writing:** Start ch3 (Discrete Diffusion)
+1. Write ch3 (Discrete Diffusion background)
+2. Write ch4 (Correctors background)
+3. Write ch5 (Experiments)
+4. Write ch7 (Discussion / Limitations)
+5. Write Abstract + Introduction + Conclusion
+6. Clean Theorem A proof narrative in ch6
 
-Full plan: `docs/implementation_plan.md`
+Full action plan: `docs/05_next_steps.md`
 Thesis LaTeX: `thesis/main.tex`
