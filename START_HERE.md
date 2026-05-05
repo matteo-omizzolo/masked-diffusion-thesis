@@ -1,6 +1,6 @@
 # START HERE — Thesis Orientation (2-minute read)
 
-> **Current source of truth.** Updated 2026-05-05 as part of repo cleanup.
+> **Current source of truth.** Updated 2026-05-05.
 > All detailed docs are reachable via `docs/README.md`.
 > Files under `docs/archive/` are historical and must not be used to infer
 > current status unless explicitly requested.
@@ -60,7 +60,6 @@ headroom on ProSeCo-OWT.
 
 ## What is deprecated / closed
 
-- **HPC runs:** No new runs authorized. Phase 2b / 3a / Protocol C complete.
 - **LLaDA-SFT Phase 3a:** Pre-registered no-go.
 - **Adaptive controller (Protocol C):** Closed with honest negative. Appendix F only.
 - **Greedy ranker as primary method:** Negative result. Search procedures are
@@ -70,16 +69,23 @@ headroom on ProSeCo-OWT.
 
 ---
 
-## Immediate next steps
+## Current phase
 
-1. Write ch3 (Discrete Diffusion background) — ~15–20 pages.
-2. Write ch4 (Correctors background) — ~10 pages.
-3. Write ch5 (Experiments: protocol, results) — ~15–20 pages.
-4. Write ch7 (Discussion / Limitations) — ~5–8 pages.
-5. Write Abstract + Introduction + Conclusion.
-6. Clean Theorem A LaTeX proof narrative in ch6.
+We are no longer in "writing only" mode. The current phase is **theory-first reassessment**:
 
-See `docs/05_next_steps.md` for detailed action plan.
+1. **Opus theory pass** — formalize Theorem B (pairwise surrogate regret), Proposition C
+   (separable ranker failure construction), and Theorem D (online budgeted controller abstraction).
+2. **Phase 0 reproducibility audit** — reproduce the ProSeCo-OWT baseline locally before
+   any new HPC experiments.
+3. **Interaction diagnostics** — only if Phase 0 passes; run sparse pairwise Δ_t maps to
+   test whether corrector placements interact.
+4. **Pairwise scheduler** — only if interaction diagnostics show structure.
+5. **Regime map** — only after the primary pipeline is trustworthy.
+6. **LaTeX writing** — ch3, ch4, ch5, ch7, Abstract, Introduction, Conclusion.
+
+> No full-scale new HPC experiments until the theory scaffold and Phase 0 audit are complete.
+> ProSeCo-OWT remains the baseline. See `docs/05_next_steps.md` for the sequential plan.
+> Full theory-first plan: `docs/06_theory_first_research_plan.md`.
 
 ---
 

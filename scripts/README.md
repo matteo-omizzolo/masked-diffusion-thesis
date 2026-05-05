@@ -1,6 +1,8 @@
 # Scripts
 
-> **No new experiments authorized.** Scripts are preserved for reproducibility only.
+> Current phase: theory-first reassessment and Phase 0 reproducibility planning.
+> No full-scale new HPC experiments until theory scaffold + Phase 0 audit complete.
+> See `docs/05_next_steps.md` for the Phase 0 checklist.
 > See `docs/04_results_index.md` for results map. See `CLAUDE.md` for HPC environment.
 
 ## Reproducibility workflow

@@ -1,5 +1,6 @@
-> Mathematical worklog — proof provenance and source attribution.
-> Current thesis status lives in `START_HERE.md`. Summary in `docs/03_theory.md`.
+> TECHNICAL WORKLOG.
+> Current thesis status starts at `START_HERE.md`. Summary in `docs/03_theory.md`.
+> Current theory-first plan: `docs/06_theory_first_research_plan.md`.
 
 # Proof Ledger: Provenance Tracking
 

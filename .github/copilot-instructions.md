@@ -20,6 +20,7 @@ status — those are historical and may contradict current docs.
 - `docs/03_theory.md`
 - `docs/04_results_index.md`
 - `docs/05_next_steps.md`
+- `docs/06_theory_first_research_plan.md` (active planning doc — theory-first programme)
 - `research/candidate_theorems.md` (theorem worklog)
 - `research/proof_worklog.md` (derivation entries)
 - `scripts/run_phase2b_proseco_owt.py`
@@ -29,11 +30,15 @@ status — those are historical and may contradict current docs.
 
 ## Current scientific direction
 
-- Phase 2b: greedy/separable per-step rankers fail by B = 8.
-- Phase 3a: CD-G and BS-AG schedule-search procedures recover 49–84 % of MC-oracle headroom.
-- Current interpretation: fixed-budget corrector allocation is a combinatorial
-  schedule-search problem; greedy rankers are the wrong solution class.
-- **No new HPC runs authorized.** Critical path is LaTeX writing (ch3/4/5/7).
+- **Baseline (April 2026):** Phase 2b — greedy/separable rankers fail by B = 8.
+  Phase 3a — CD-G and BS-AG recover 49–84 % of MC-oracle headroom. Fixed-budget
+  corrector allocation is a combinatorial schedule-search problem.
+- **Current phase (May 2026):** Theory-first reassessment. Goal: characterize when
+  corrector timing is marginal vs. interaction-driven vs. online-controllable.
+  Sequential gates: Opus theory pass → Phase 0 reproducibility audit → interaction
+  diagnostics → pairwise scheduler → LaTeX writing.
+- **No full-scale HPC experiments** until the theory scaffold (Theorem B/C/D) and
+  Phase 0 reproducibility audit are complete.
 
 Keep interpretation precise:
 - Do not overclaim universal impossibility.

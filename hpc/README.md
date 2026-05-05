@@ -37,5 +37,7 @@ The active backend expects a staged ProSeCo-OWT snapshot at
 `~/mdm/checkpoints/proseco_owt/`. Run `python scripts/stage_proseco_owt.py`
 once to stage it. See `scripts/README.md` for the full reproducibility workflow.
 
-> **No new HPC runs currently authorized.** Experiments are complete.
-> This directory is kept for reproducibility only.
+> Current phase: theory-first reassessment. No full-scale HPC runs until the theory
+> scaffold (Theorem B/C/D) and Phase 0 reproducibility audit are complete.
+> Phase 0 checklist is in `docs/05_next_steps.md`.
+> Existing scripts are preserved for reproducibility of ProSeCo-OWT results.

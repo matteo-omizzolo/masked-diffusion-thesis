@@ -16,10 +16,15 @@ in masked diffusion language models, can aggregate trajectory signals — entrop
 margin, or quality mass — predict the marginal value of a corrective refinement loop well
 enough to outperform uniform corrector placement?
 
-**Thesis story (April 2026):** Fixed-budget corrector allocation is a combinatorial
+**Thesis story (April 2026 baseline):** Fixed-budget corrector allocation is a combinatorial
 schedule-search problem. Greedy signal rankers fail by B = 8. Search procedures (CD-G,
 BS-AG) recover 49–84 % of oracle headroom on ProSeCo-OWT. Theorem A + Refinements A′/A″
-+ Negative-Result Corollary all formally proved. Critical path: LaTeX writing.
++ Negative-Result Corollary all formally proved.
+
+**Current phase (May 2026):** Theory-first reassessment and Phase 0 reproducibility
+planning. Goal: reframe the baseline into a cleaner theory-first study of marginal,
+interaction-aware, and online corrector timing. No full-scale HPC runs until the theory
+scaffold (Theorem B/C/D) and Phase 0 reproducibility audit are complete.
 
 **Key distinction:** This thesis targets corrector *scheduling* (when to spend corrective
 effort across the trajectory), not token-selection policies (which tokens to correct),
@@ -36,7 +41,8 @@ predictor schedules (when to unmask), or corrector kernel design (how to correct
 | `docs/02_experiments.md` | Phases, protocols, results |
 | `docs/03_theory.md` | Theorem stack, proof status, open gaps |
 | `docs/04_results_index.md` | Raw results index |
-| `docs/05_next_steps.md` | Action plan (write thesis) |
+| `docs/05_next_steps.md` | Sequential action plan — theory gates → Phase 0 → writing |
+| `docs/06_theory_first_research_plan.md` | Active planning doc — theory-first programme (not final status) |
 | `research/candidate_theorems.md` | Full theorem + proof record (keep active) |
 | `research/proof_worklog.md` | Derivation entries (keep active) |
 
@@ -188,14 +194,24 @@ E_fact/E_learn decomposition. See `research/proof_worklog.md` for active derivat
 
 ---
 
+## Simplicity and source-of-truth rule
+
+Do not create new active docs unless strictly necessary.
+Prefer editing existing active docs.
+Current entry points: `START_HERE.md` and `docs/README.md`.
+Archived files are historical only (`docs/archive/`, `archive/`).
+Current research phase: theory-first reassessment and Phase 0 reproducibility planning.
+No full-scale HPC runs until the theory scaffold and Phase 0 reproducibility audit are complete.
+
 ## Next steps (current — May 2026)
 
-1. Write ch3 (Discrete Diffusion background)
-2. Write ch4 (Correctors background)
-3. Write ch5 (Experiments)
-4. Write ch7 (Discussion / Limitations)
-5. Write Abstract + Introduction + Conclusion
-6. Clean Theorem A proof narrative in ch6
+1. Opus theory pass — formalize Theorem B, Proposition C, Theorem D.
+2. Phase 0 reproducibility audit — reproduce ProSeCo-OWT baseline locally (K=3 smoke first).
+3. Interaction diagnostics — only after Phase 0 passes.
+4. Pairwise scheduler — only if interaction diagnostics show structure.
+5. LaTeX writing — ch3, ch4, ch5, ch7, Abstract, Introduction, Conclusion.
+6. Clean Theorem A proof narrative in ch6.
 
 Full action plan: `docs/05_next_steps.md`
+Theory-first programme: `docs/06_theory_first_research_plan.md`
 Thesis LaTeX: `thesis/main.tex`

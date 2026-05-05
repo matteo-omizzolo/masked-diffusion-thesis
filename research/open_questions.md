@@ -1,5 +1,6 @@
-> Technical worklog only. Current thesis status lives in `START_HERE.md`.
-> Detailed provenance in `research/proof_worklog.md` and `research/candidate_theorems.md`.
+> TECHNICAL WORKLOG.
+> Current thesis status starts at `START_HERE.md`.
+> Current theory-first plan: `docs/06_theory_first_research_plan.md`.
 
 # Open Questions — Current
 
@@ -9,7 +10,59 @@ points remain below.
 
 ---
 
-## Active open questions
+## Active open questions (theory-first phase)
+
+### OQ-TF1 — Theorem B: pairwise surrogate regret
+
+Formalize the bound on regret of pairwise surrogate scheduling ψ₂(t,t') vs. the joint
+oracle G({t,t'}). What are the key assumptions? Does it reduce to Theorem A when interactions
+are negligible?
+
+**Status:** Not yet formalized. Planned in `docs/06_theory_first_research_plan.md` §2.
+
+---
+
+### OQ-TF2 — Proposition C: separable ranker failure construction
+
+Find an explicit construction (noise level, interaction pattern) where any separable
+per-step ranker achieves constant additive regret independent of B. Relate to the
+measured σ_ξ and Phase 2b failure.
+
+**Status:** Not yet written. Empirical evidence in `results/phase2b_proseco_owt/`.
+
+---
+
+### OQ-TF3 — Theorem D: online budgeted controller abstraction
+
+Define the budgeted online decision problem. Characterize the value function. Bound the
+gap to the offline oracle as a function of state space richness and budget B.
+
+**Status:** Not yet formalized. Protocol C is an honest empirical negative; Theorem D
+is the formal companion. Planned in `docs/06_theory_first_research_plan.md` §4.
+
+---
+
+### OQ-TF4 — Regime diagnostics
+
+Define measurable quantities that classify a trajectory as:
+- "additivity-regime": interactions negligible, ranker failure is calibration-only;
+- "interaction-regime": pairwise ξ_{t,t'} structured, pairwise scheduler justified;
+- "online-regime": information arrives too late for open-loop scheduling.
+
+**Status:** Not yet defined. Phase 0 audit precedes this.
+
+---
+
+### OQ-TF5 — Phase 0 reproducibility gate
+
+Can we reproduce the Phase 2b and Phase 3a results locally (K=3 smoke, then K=30)
+before launching new HPC experiments?
+
+**Status:** Phase 0 checklist in `docs/05_next_steps.md`. Not yet run.
+
+---
+
+## Active open questions (writing phase)
 
 ### OQ-1 — Theorem A proof prose (LaTeX write-up)
 

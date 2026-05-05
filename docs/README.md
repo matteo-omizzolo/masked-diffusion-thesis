@@ -12,7 +12,8 @@
 | `02_experiments.md` | Phases, protocols, results, reliability classification |
 | `03_theory.md` | Theorem stack, proof status, open gaps |
 | `04_results_index.md` | Raw results index — folder → phase → status |
-| `05_next_steps.md` | Action plan — writing tasks, theory tasks, no new HPC |
+| `05_next_steps.md` | Sequential action plan — theory gates → Phase 0 → writing |
+| `06_theory_first_research_plan.md` | **Active planning doc** — theory-first programme under feasibility assessment; not final thesis status |
 
 Supporting (authoritative detailed records — do not summarize, leave as-is):
 - `../research/candidate_theorems.md` — full theorem and proof record

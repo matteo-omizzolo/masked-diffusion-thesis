@@ -92,8 +92,22 @@ the narrative must pivot to Refinements A′/A″ as the empirically-anchored va
 
 ---
 
-## Next decision point
+## Current phase
 
-**No new experiments or HPC runs.** The critical path is exclusively LaTeX writing
-(ch3, ch4, ch5, ch7, Abstract, Introduction, Conclusion) + Theorem A proof narrative
-in ch6. See `docs/05_next_steps.md`.
+**Theory-first reassessment and Phase 0 reproducibility planning.**
+
+The previous ProSeCo-OWT result remains the baseline: rankers fail, schedule search
+works. The current aim is to reframe and extend this into a cleaner theory-first study
+of marginal, interaction-aware, and online corrector timing.
+
+Sequential gates:
+1. Opus theory pass — formalize Theorem B, Proposition C, Theorem D.
+2. Phase 0 reproducibility audit — reproduce ProSeCo-OWT baseline locally.
+3. Interaction diagnostics — only after Phase 0 passes.
+4. Pairwise scheduler — only if diagnostics show structure.
+5. LaTeX writing — running in parallel once the theory scaffold is stable.
+
+No full-scale new HPC experiments should be launched until the theory scaffold and
+Phase 0 reproducibility audit are complete. See `docs/05_next_steps.md` for the
+sequential action plan and `docs/06_theory_first_research_plan.md` for the full
+theory-first programme.
