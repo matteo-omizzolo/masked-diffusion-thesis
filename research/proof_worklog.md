@@ -1,8 +1,12 @@
+> Mathematical worklog — proof derivations, entry by entry.
+> Current thesis status lives in `START_HERE.md`. Summary in `docs/03_theory.md`.
+
 # Proof Worklog: Signal-Adaptive Corrector Scheduling
 
 **Started:** April 2026
 **Author:** Matteo Omizzolo
-**Status:** Exploratory — no locked theorem yet
+**Status (May 2026):** Phase 3b complete — Theorem A, Refinements A′/A″, and
+Negative-Result Corollary formally proved. LaTeX prose in ch6 is TODO.
 
 > This is a chronological research log. It records derivation attempts, insights,
 > failed directions, and corrections. Each entry is tagged with provenance and

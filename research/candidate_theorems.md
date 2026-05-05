@@ -1,7 +1,10 @@
+> Mathematical worklog — theorem statements, lemmas, and proof status.
+> Current thesis status lives in `START_HERE.md`. Summary in `docs/03_theory.md`.
+
 # Candidate Theorems
 
-**Updated:** April 2026 (restructured after GPT Pro v2 assessment)
-**Status:** Exploratory — no locked theorem yet. Provenance tags below.
+**Updated:** April 2026 (restructured after GPT Pro v2 assessment; Phase 3b proofs added 2026-04-26)
+**Status:** Theorem A + Refinements A′/A″ + Negative-Result Corollary formally proved under explicit assumptions.
 
 > Restructure note: The April 2026 GPT Pro assessment reshaped the theorem stack
 > around a **proxy-regret** theorem rather than a contraction theorem. The

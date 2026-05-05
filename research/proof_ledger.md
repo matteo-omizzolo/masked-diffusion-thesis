@@ -1,3 +1,6 @@
+> Mathematical worklog — proof provenance and source attribution.
+> Current thesis status lives in `START_HERE.md`. Summary in `docs/03_theory.md`.
+
 # Proof Ledger: Provenance Tracking
 
 **Updated:** April 2026 (expanded after GPT Pro v2 assessment)
