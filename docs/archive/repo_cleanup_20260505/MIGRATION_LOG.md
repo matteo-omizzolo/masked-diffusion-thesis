@@ -110,6 +110,32 @@
 
 ---
 
+---
+
+## Second-pass actions (2026-05-05)
+
+| Action | File | Detail |
+|---|---|---|
+| REWRITE | `README.md` | Removed 6 dead links; now points to START_HERE.md only |
+| ARCHIVE | `REPRODUCIBILITY.md` | → `old_operational/REPRODUCIBILITY.md`; commands moved to `scripts/README.md` |
+| CREATE | `archive/README.md` | Added historical warning to root archive/ |
+| FIX | `CLAUDE.md` | Removed `docs/md/correctors_deep_dive.md` stale ref |
+| FIX | `hpc/README.md` | Replaced REPRODUCIBILITY.md ref with scripts/README.md |
+| FIX | `docs/01_research_direction.md` | Removed provenance header citing archived paths |
+| FIX | `docs/02_experiments.md` | Removed provenance header citing archived paths |
+| FIX | `docs/03_theory.md` | Removed provenance header; kept research/ pointers |
+| FIX | `docs/05_next_steps.md` | Removed provenance header; added reassessment scaffold |
+| REPLACE | `research/open_questions.md` | Old 416-line file → `old_research_worklogs/open_questions_pre_cleanup.md`; new 100-line current version |
+| ADD BANNER | `research/candidate_theorems.md` | Added "Mathematical worklog only" banner |
+| ADD BANNER | `research/proof_worklog.md` | Added banner + updated status |
+| ADD BANNER | `research/proof_ledger.md` | Added "Mathematical worklog only" banner |
+| IMPROVE | `scripts/README.md` | Added full reproducibility workflow commands |
+| CREATE | `docs/archive/repo_cleanup_20260505/SECOND_PASS_AUDIT.md` | Second-pass audit |
+| CREATE | `docs/archive/repo_cleanup_20260505/STALE_REFERENCE_AUDIT.md` | Stale reference audit |
+| CREATE | `docs/archive/repo_cleanup_20260505/CONSISTENCY_CHECK.md` | Active docs consistency check |
+
+---
+
 ## Files NOT moved (preserved as-is)
 
 | File / Folder | Class | Reason |
