@@ -91,10 +91,21 @@ results/protocol_c_owt/
 
 ---
 
+## Figures
+
+Canonical thesis-candidate figures are in `figures/`. See `figures/README.md` for the
+index. All are generated from the canonical result folders above.
+
+Primary result figure: `figures/phase3a/oracle_gap_closure.{png,pdf}`.
+
 ## Legacy / archived results
 
 There are no legacy result folders in `results/`. All result folders are canonical and
 correspond to completed experiment phases. Raw data is preserved; no deletions.
+
+Abandoned backend results (Phase 1 on MDLM/ReMDM, near-zero Δ_t) were in
+`archive/legacy_framework/results/` and removed in the May 2026 cleanup.
+Git history preserves them.
 
 ---
 

@@ -37,3 +37,15 @@ Contents:
 - `operational/` — HPC sync docs, next-prompt docs (March–April 2026)
 - `phase1_era/` — Phase 1 era experiment and ProSeCo import docs
 - `status/` — Phase 2 status report PDF/TeX
+
+---
+
+## root_legacy_archive/ — pre-April 2026 material
+
+One document preserved from the root `archive/` during the May 2026 final cleanup:
+
+- `correctors_deep_dive.md` — March 2026 theoretical deep-dive on correctors in MDLMs.
+  The intellectual historical foundation. Superseded by current theory-first programme.
+
+The bulk of `archive/` (legacy_framework/, logs/, 600+ files) was removed; git history
+preserves the complete record. See `archive/README.md`.
