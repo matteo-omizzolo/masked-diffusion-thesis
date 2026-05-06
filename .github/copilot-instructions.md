@@ -30,9 +30,10 @@ status — those are historical and may contradict current docs.
 
 ## Current scientific direction
 
-- **Baseline (April 2026):** Phase 2b — greedy/separable rankers fail by B = 8.
-  Phase 3a — CD-G and BS-AG recover 49–84 % of MC-oracle headroom. Fixed-budget
-  corrector allocation is a combinatorial schedule-search problem.
+- **Baseline (April 2026):** Phase 2b — tested separable rankers do not recover
+  MC-oracle headroom; the mean-Δ̄ envelope enters the no-detectable-gain band
+  by B = 8. Phase 3a — CD-G and BS-AG recover 49–84 % of MC-oracle headroom.
+  Fixed-budget corrector allocation is a combinatorial schedule-search problem.
 - **Current phase (May 2026):** Theory-first reassessment. Goal: characterize when
   corrector timing is marginal vs. interaction-driven vs. online-controllable.
   Sequential gates: Opus theory pass → Phase 0 reproducibility audit → interaction
@@ -51,7 +52,7 @@ Keep interpretation precise:
 - Always label claims as: **supported by repo evidence**, **plausible but unproven**, or **speculative**.
 - Prefer narrow, defensible claims over broad exciting ones.
 - Keep the thesis object fixed unless explicitly asked to audit or pivot it.
-  - Fixed thesis object: fixed predictor, fixed corrector kernel, fixed NFE budget, question = when to apply corrector steps.
+  - Fixed thesis object: fixed predictor, fixed corrector kernel, fixed corrector-placement budget B, question = when to apply corrector steps.
 - Distinguish open-loop schedule optimization vs adaptive scheduling vs remasking.
 
 ## Software principles

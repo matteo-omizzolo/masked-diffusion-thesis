@@ -14,7 +14,7 @@ Theorem stack formalized in `research/candidate_theorems.md` §0–§7:
 
 - **Theorem A** (uniform marginal proxy regret 2Bε + 2η_B) — proved; baseline.
 - **Diagnostics A′ (additivity scale), A″ (rankability)** — demoted from
-  "proved refinements" to **empirical diagnostics**; do not control
+  prior proof status to **empirical diagnostics**; do not control
   selected-schedule regret without finite-pool conversion.
 - **Theorem A as B′(Q := A)** (§2.7) — safe finite-pool regret form.
 - **Empirical Ranker-Class Limitation** — replaces "Negative-Result Corollary";
@@ -72,15 +72,27 @@ matches qualitatively.
 
 ---
 
-### Gate 3 — Sparse interaction diagnostics (only after Gate 2 passes)
+### Gate 3 — Interaction diagnostics + schedule-level validation (only after Gate 2 passes)
 
-Run sparse stratified pair sampling to test whether corrector placements interact:
+Two-step gate (pair-level alone is **not** sufficient to validate Theorem B):
 
-- Sample a small set of step pairs (t, t') ≠ same step.
-- Measure ξ_{t,t'} = G({t,t'}) − G({t}) − G({t'}).
-- Assess: is the interaction term negligible (σ_ξ small) or structured?
-- Decision gate: if interactions are structured → proceed to pairwise scheduler;
-  if interactions are negligible → ranker failure is additivity-breaking only.
+**Gate 3a — Sparse pair diagnostics.** Sample a small stratified set of step
+pairs (t, t'), measure ξ_{t,t'} = G({t,t'}) − Δ_t − Δ_{t'} with paired CRN,
+assess whether the interaction term is negligible or structured by phase /
+distance / signal.
+
+**Gate 3b — Schedule-level validation (REQUIRED before Phase 2).** For
+B ∈ {2, 3, 4}, fix a no-leakage candidate schedule pool C_B; evaluate G(S)
+for sampled schedules S ∈ C_B; compute A(S); compute Q(S) using estimated
+ξ; and compare η_{B,C} = sup/robust-percentile |G(S) − A(S)|,
+ζ_{B,C} = sup/robust-percentile |G(S) − Q(S)|, R_B = ρ(A(S), G(S)), and
+P_B = ρ(Q(S), G(S)) with nested-bootstrap CIs. Pair heatmaps and phase-pair
+summaries are diagnostics; they do **not** by themselves validate Theorem B.
+
+Decision gate: proceed to Gate 4 only if Gate 3b validates Theorem B at the
+schedule level, i.e. ζ_{B,C} < η_{B,C} and/or P_B > R_B with uncertainty
+accounted for. Otherwise classify provisionally toward Regime IV and
+emphasize Diagnostic Framework C.
 
 Do not run dense all-pair maps until sparse diagnostics justify it.
 
@@ -92,7 +104,7 @@ If sparse interaction diagnostics show structured interactions:
 
 - Implement the pairwise surrogate scheduler (see plan §3).
 - Evaluate against CD-G and BS-AG on ProSeCo-OWT.
-- Compare recovery of oracle headroom.
+- Compare recovery of MC-oracle headroom.
 
 If interactions are negligible → skip this gate, strengthen the negative result claim.
 
@@ -126,7 +138,7 @@ Once the theory scaffold (Gate 1) is stable, writing can proceed in parallel:
 3. **ch5 — Experiments** (~15–20 pages)
    - ProSeCo-OWT backbone description.
    - Phase 0 reproducibility audit result.
-   - Protocol A (signal calibration), Phase 2b (policy comparison + MC oracle),
+   - Protocol A (signal calibration), Phase 2b (policy comparison + MC-oracle),
      Phase 3a (combinatorial search baselines).
    - Results tables and figures. Cross-backbone probe as Section 5.X.
    - Protocol C (adaptive controller) as Section 5.Y or Appendix F.
@@ -167,11 +179,22 @@ Once the theory scaffold (Gate 1) is stable, writing can proceed in parallel:
 
 ---
 
+## Fallback if Level-3 scheduling fails
+
+If Level-3 feature-conditioned scheduling fails, the thesis does not collapse.
+The contribution becomes: Theorem A baseline and empirical falsification on
+ProSeCo-OWT; Theorem B/B′ as a rigorous diagnostic framework; evidence that
+ProSeCo-OWT is interaction-driven or higher-order/chaotic; CD-G/BS-AG as
+search-based existence results using true-G feedback; and Diagnostic Framework C
+as a protocol for future model/corrector triples.
+
 ## Supervisor check-in
 
 Schedule a Zanella meeting to present:
-- Phase 3a positive result (CD-G/BS-AG recover oracle headroom).
-- Negative-Result Corollary (ranker class + PRISM rejection).
-- Theory-first programme (Theorem B, D, regime map plan).
+- Phase 3a positive result (CD-G/BS-AG recover MC-oracle headroom).
+- Empirical Ranker-Class Limitation: tested separable rankers do not recover
+  MC-oracle headroom; formal time/mean-profile envelope; non-separable PRISM
+  uses are not ruled out.
+- Theory-first programme (Theorem B/B′, Diagnostic Framework C, appendix D).
 - Phase 0 reproducibility gate.
 - Writing plan for ch3–ch7.

@@ -1,45 +1,71 @@
 # Research Direction
 
-> **Current source of truth.** Updated 2026-05-05.
+> **Current source of truth.** Updated 2026-05-06.
 
 ---
 
 ## Thesis question
 
-> For a fixed predictor schedule and fixed corrector NFE budget in masked diffusion
-> language models, can aggregate trajectory signals — entropy, confidence margin, or
-> quality mass — predict the marginal value of a corrective refinement loop well
-> enough to outperform uniform corrector placement?
+> For a fixed predictor schedule and fixed **corrector-placement budget** B in
+> masked diffusion language models, **when is informed correction timing
+> reducible to marginal signal ranking, and when does it require
+> interaction-aware or search-based scheduling?**
+
+The original marginal-signal question — "can aggregate signals (entropy,
+inverse margin, quality mass) predict Δ_t well enough to outperform uniform?"
+— remains the **baseline hypothesis** tested by Theorem A. The current
+thesis asks the broader **regime question**: marginal/rankable vs
+interaction-driven vs higher-order/chaotic vs online-decision-like timing
+(Diagnostic Framework C).
 
 ---
 
 ## Problem formalization
 
-Modern masked diffusion LMs (MDLM, ReMDM, ProSeCo, PRISM, LLaDA) run a predictor that
-unmasks tokens over T steps and optionally interleave a corrector that refines
-already-committed tokens. With a fixed predictor schedule and a fixed global budget B
-of extra corrector NFEs, the open question is **where along the trajectory** those B
-corrector loops should be placed.
+Modern masked diffusion LMs (MDLM, ReMDM, ProSeCo, PRISM, LLaDA) run a predictor
+that unmasks tokens over T steps and optionally interleave a corrector that
+refines already-committed tokens. With a fixed predictor schedule and a fixed
+**corrector-placement budget** B (corresponding extra-NFE budget
+B_NFE = c_corr · B; c_corr = 2 for ProSeCo annealed refinement), the open
+question is **where along the trajectory** those B corrector placements should
+go and **what regime** the (model, corrector, F, B) triple lies in.
 
-The thesis formalizes this as a **proxy-regret problem**: given a trajectory-level
-quality functional F, each step t has an unknown one-loop marginal gain
-Δ_t = F(y_t^{+1}) − F(y_base). A signal-driven proxy ψ(s_t) derived from aggregate
-trajectory signals (entropy H_t, inverse margin M_t^{-1}, quality mass QM_t — historical files use `Q_t`) is used
-to pick a budget-B schedule Ŝ_B.
+The thesis formalizes this through a layered framework:
 
-**Thesis story (empirical verdict, April 2026):** fixed-budget corrector allocation is
-a combinatorial trajectory-control problem. Cheap greedy rankers are the wrong solution
-class. Search procedures over schedules (CD-G, BS-AG) recover most oracle headroom.
+- **Theorem A (baseline).** Proxy-regret bound for separable-ranker scheduling:
+  G(S_B^*) − G(Ŝ_B) ≤ 2Bε + 2η_B under uniform calibration / additivity.
+- **Theorem B / B′.** Pairwise surrogate regret framework: when |G − Q| is
+  small on a fixed candidate pool C_B, optimising the pairwise surrogate is
+  near-optimal for G on the pool.
+- **Diagnostic Framework C.** Five-regime taxonomy
+  (no-op / marginal / interaction-driven / chaotic / online-decision)
+  with measurable diagnostics U_B^{MC,N}, R_B, I_B, P_B, C_B^{MC,N}.
+- **Empirical Ranker-Class Limitation.** Time-only / seed-averaged separable
+  rankers are bounded by the mean-Δ̄ envelope on the additive surrogate;
+  empirically on ProSeCo-OWT, the tested separable rankers do not recover
+  the MC-oracle headroom and the mean-Δ̄ envelope itself enters the
+  no-detectable-gain band by B = 8.
+
+Detailed statements, proofs, and theory-to-experiment map are in
+`research/candidate_theorems.md` §0–§7.
+
+**Baseline empirical verdict (April 2026, pending Phase 0 re-confirmation):**
+Tested separable rankers do not recover MC-oracle headroom on ProSeCo-OWT.
+Search procedures (CD-G, BS-AG) recover 49–84 % of MC-oracle headroom at
+B ∈ {2, 3, 4} using true-G feedback / true-G rollouts. Whether a
+*deployable* (Level-3 feature-conditioned) pairwise scheduler exists is
+the open empirical question for Phase 1 / Phase 2.
 
 ---
 
 ## Scope boundaries (what this thesis IS about)
 
-- Trajectory-level allocation of a fixed corrector NFE budget under a fixed predictor
-  schedule.
-- Signal-to-gain calibration (measuring how well ψ(s_t) predicts Δ_t).
-- Additivity/interaction of corrector placements.
-- Proxy-regret bound for top-B scheduling (Theorem A and refinements).
+- Trajectory-level allocation of a fixed corrector-placement budget B
+  under a fixed predictor schedule.
+- Signal-to-gain calibration (Theorem A, A′/A″ diagnostics).
+- Additivity / interaction structure of corrector placements (Theorem B / B′).
+- Regime classification (Diagnostic Framework C).
+- Surrogate regret bounds with explicit no-leakage candidate-pool construction.
 
 ---
 
@@ -108,7 +134,7 @@ re-confirmation):**
    rollouts.
 4. Theorem A's uniform L∞ form is empirically vacuous; the safe
    selected-schedule statement is the finite-pool corollary.
-5. The "MC oracle" used as a practical upper bound is **best-of-N random
+5. The "MC-oracle" used as a practical upper bound is **best-of-N random
    schedules**, not the exhaustive (T choose B) maximizer.
 6. A deployable Theorem-B claim requires Level-3 (feature-conditioned)
    evaluation on held-out seeds; population-only (Level 2) success is not

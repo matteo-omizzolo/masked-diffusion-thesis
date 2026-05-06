@@ -13,10 +13,10 @@ Per-step marginal gain Δ_t and per-step signals (entropy H_t, inverse margin M_
 quality mass QM_t — historical files use `Q_t`) measured for every (seed, step). Spearman ρ(ψ, Δ_t) ≈ 0.10–0.15
 (weak but positive). MC-oracle headroom over uniform = **+0.45 paired G** at B ∈ {2,3,4}.
 
-### Phase 2b — Policy comparison + MC oracle
+### Phase 2b — Policy comparison + MC-oracle
 K = 30 paired seeds. 10 greedy signal-ranker policies × B ∈ {2, 3, 4, 8, 16}.
-MC oracle (best-of-100 random schedules) at B ∈ {2, 3, 4}.
-**Three smoking guns confirming the negative result for greedy rankers:**
+MC-oracle (best-of-100 random schedules) at B ∈ {2, 3, 4}.
+**Three diagnostics supporting the scoped ranker-class limitation:**
 1. `mean_delta_oracle` (cheating oracle ranker) saturates at B = 8 — enters NULL band.
 2. Top-10 MC ∩ oracle Jaccard ≈ 1.2–1.3× random baseline across B ∈ {2,3,4}.
 3. Top-10 MC internal Jaccard ≈ bottom-10 (schedules differ just as much within top vs across top/bottom).
@@ -50,7 +50,7 @@ Best after-uncertainty close ratio = +0.015 (entropy, B=2); negative at B ≥ 3.
 | Result | Tier | Anchor |
 |---|---|---|
 | MC-oracle headroom over uniform = +0.45 at B ∈ {2,3,4} | T1 | `oracle_gap_closure.json` |
-| Greedy rankers fail by B = 8 (all 10 policies) | T1 | `policy_comparison_paired.json` |
+| Tested separable rankers do not recover MC-oracle headroom; mean-Δ̄ envelope enters no-detectable-gain band by B = 8 | T1 | `policy_comparison_paired.json` |
 | CD-G recovers 74–84 % at B ∈ {2,3,4} | T1 | `oracle_gap_closure.json` |
 | BS-AG recovers 49–64 % at B ∈ {2,3,4} | T1 | `oracle_gap_closure.json` |
 | Theorem A (uniform proxy regret) proved; A′/A″ are diagnostics; Empirical Ranker-Class Limitation has formal + empirical parts | — | `research/candidate_theorems.md` §1, §1.5 |
@@ -104,8 +104,9 @@ Raw legacy result files were removed in the May 2026 cleanup; git history preser
 cross-backbone probe was inconclusive, not confirmatory. The thesis needs to clearly
 scope this as a principled case study, not a universal claim.
 
-**Secondary risk:** Theory-experiment gap. Theorem A (L∞ form) is empirically vacuous;
-the narrative must pivot to Refinements A′/A″ as the empirically-anchored variants.
+**Secondary risk:** Theory-experiment gap. Theorem A (L∞ form) is empirically
+vacuous; the operative selected-schedule statement is the finite-pool form
+(Theorem A as B′(Q := A)). A′/A″ are diagnostics only.
 
 ---
 
@@ -113,9 +114,10 @@ the narrative must pivot to Refinements A′/A″ as the empirically-anchored va
 
 **Theory-first reassessment and Phase 0 reproducibility planning.**
 
-The previous ProSeCo-OWT result remains the baseline: rankers fail, schedule search
-works. The current aim is to reframe and extend this into a cleaner theory-first study
-of marginal, interaction-aware, and online corrector timing.
+The previous ProSeCo-OWT result remains the baseline: tested separable rankers
+do not recover MC-oracle headroom, while true-G schedule search recovers much
+of it. The current aim is to reframe and extend this into a cleaner theory-first
+study of marginal, interaction-aware, and online corrector timing.
 
 Sequential gates:
 1. Opus theory pass ✅ — Theorem A baseline, Theorem B/B′ central, Diagnostic Framework C, A′/A″ as diagnostics, Empirical Ranker-Class Limitation; D/E optional.

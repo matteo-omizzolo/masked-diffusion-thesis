@@ -112,7 +112,8 @@ Git history preserves them.
 ## What the numbers mean (quick key)
 
 - **G(S)** = F(y^S) − F(y_base) = paired quality gain from schedule S (F = −GPT-2 NLL).
-- **MC-oracle +0.45** = best-of-100 random schedules beats uniform by +0.45 at K=30.
+- **MC-oracle +0.45** = best-of-100 random schedules beats uniform by +0.45 at K=30;
+  this is not the exhaustive (T choose B) oracle.
 - **Recovery rate** = G(search_procedure) / MC-oracle +0.45 headroom.
 - **NULL band** = region where paired CI includes 0 (no detectable gain over uniform).
 - **T1** = BCa bootstrap 95 % CI excludes 0, K ≥ 30.

@@ -87,10 +87,11 @@ ruled out by the Empirical Ranker-Class Limitation (`candidate_theorems.md` §1.
 
 Working candidate: Phase 0 + Phase 1 sparse pairwise + Phase 2a population
 pairwise. Phase 2b feature-conditioned only if Phase 2a beats rankers.
-If Phase 2a fails, the thesis claim becomes "rankers fail (separable
-class); pairwise also fails on this regime; Diagnostic Framework C
-explains why; CD-G provides existence proof." Do not enter Phase 4
-(Theorem D / online controller) unless Phase 1/2 succeed and time remains.
+If Phase 2a fails, the thesis claim becomes "tested separable rankers do not
+recover MC-oracle headroom; pairwise also fails on this regime; Diagnostic
+Framework C explains why; CD-G provides an existence proof." Do not enter
+Phase 4 (Theorem D / online controller) unless Phase 1/2 succeed and time
+remains.
 
 ### OQ-L1 — Literature freshness check before final thesis claim
 
@@ -110,7 +111,7 @@ Status: deferred until July; flagged here to avoid forgetting.
 | OQ | Item | Status |
 |---|---|---|
 | OQ-W1 | ch6 LaTeX prose for Theorem A combining step | TODO; defer until after Phase 0 results |
-| OQ-W2 | ch6 LaTeX prose for Refinements A′, A″ | TODO; assumption-dependent variants |
+| OQ-W2 | ch6 LaTeX prose for Diagnostics A′, A″ | TODO; diagnostics only, not theorem variants |
 | OQ-W3 | ch6 LaTeX environment for Empirical Ranker-Class Limitation (formal time-only part + scoped empirical part) | TODO |
 | OQ-W4 | ch7 single-backbone caveat scoping (regime III vs IV language) | Defer until Phase 1 outcome |
 
@@ -120,12 +121,12 @@ Status: deferred until July; flagged here to avoid forgetting.
 
 | Question | Resolution |
 |---|---|
-| Approximate additivity realistic? | η_B measured (σ_ξ at 0.174/0.240/0.309 for B=2/3/4); A′ refinement |
-| Entropy as proxy? | Spearman ρ(ψ,Δ) ≈ 0.10–0.15; ε_R = 0.07→0.39 across B; rankers fail to recover headroom |
-| True G(S_B*)? | MC oracle (best-of-100) used as practical upper bound at B ∈ {2,3,4}; **not** the exhaustive oracle |
+| Approximate additivity realistic? | η_B measured (σ_ξ at 0.174/0.240/0.309 for B=2/3/4); A′ is now a diagnostic scale, not a refinement |
+| Entropy as proxy? | Spearman ρ(ψ,Δ) ≈ 0.10–0.15; ε_R is a diagnostic only; tested separable rankers do not recover headroom |
+| Practical oracle estimate? | MC-oracle (best-of-100) used as practical upper bound at B ∈ {2,3,4}; **not** the exhaustive oracle |
 | ProSeCo novelty? | ProSeCo provides no Δ_t / proxy-regret / scheduling theory — confirmed |
 | L∞ ε vs ε_R? | ε_R is **not** a theorem constant. The safe selected-schedule statement is the finite-pool form of Theorem A (= Theorem B′ with Q := A). R_B = ρ(A,G) and (1−|ρ|)·σ_Δ are reported as A″ diagnostics only. |
-| √B vs B² bound? | A′ (√B form) is tighter; adopted |
+| √B vs B² bound? | Superseded. A′ is now an additivity-scale diagnostic only; no √B regret theorem is active. |
 | Choice of F? | F = − GPT-2 NLL on 512-token window; treated as relative within-run metric |
 | Budget unit? | B = corrector-placement budget; B_NFE = c_corr · B (c_corr = 2 for ProSeCo) |
 | Budget sensitivity? | B ∈ {2,3,4,8,16}; ranker saturation at B=8 |
@@ -141,6 +142,6 @@ Status: deferred until July; flagged here to avoid forgetting.
 | Negative-Result Corollary status? | **Reframed as Empirical Ranker-Class Limitation**; formal part for time-only / seed-averaged separable ψ; empirical part on tested rankers; does not rule out feature-conditioned separable rankers, non-separable PRISM, pairwise / online / search policies |
 | Phase 2b decision gate? | Run if **either** (G2a-pop) population P_B^pop > R_B^pop **or** (G2a-feat) ξ_{i,t,t'} feature-predictable on held-out seeds (R² ≥ pre-specified threshold) |
 | Phase 1 uncertainty? | Nested bootstrap over (seeds, pair-pool) for P_B^{level}, ζ_{B,C}; do not classify regime unless CI of P_B − R_B and ζ_{B,C} − η_{B,C} stable |
-| MC oracle vs exhaustive oracle? | U_B^{MC,N} reports best-of-N pool oracle; U_B^* (exhaustive) is unobservable and never reported |
+| MC-oracle vs exhaustive oracle? | U_B^{MC,N} reports best-of-N pool oracle; U_B^* (exhaustive) is unobservable and never reported |
 
 Full provenance: `research/proof_worklog.md`, `research/proof_ledger.md`.

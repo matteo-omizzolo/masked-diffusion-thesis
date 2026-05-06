@@ -11,15 +11,17 @@
 MSc thesis on **signal-adaptive corrector scheduling for masked diffusion language models**,
 supervised by Prof. Giacomo Zanella (Bocconi University).
 
-**Core research question:** For a fixed predictor schedule and fixed corrector NFE budget
-in masked diffusion language models, can aggregate trajectory signals — entropy, confidence
-margin, or quality mass — predict the marginal value of a corrective refinement loop well
-enough to outperform uniform corrector placement?
+**Core research question:** For a fixed predictor schedule and fixed corrector-placement
+budget B in masked diffusion language models, when is informed correction timing
+reducible to marginal signal ranking, and when does it require interaction-aware or
+search-based scheduling?
 
 **Thesis story (April 2026 baseline):** Fixed-budget corrector allocation is a combinatorial
-schedule-search problem. Greedy signal rankers fail by B = 8. Search procedures (CD-G,
-BS-AG) recover 49–84 % of oracle headroom on ProSeCo-OWT. Theorem A + Refinements A′/A″
-+ Negative-Result Corollary all formally proved.
+schedule-search problem. Tested separable rankers do not recover MC-oracle headroom on
+ProSeCo-OWT; the mean-Δ̄ envelope enters the no-detectable-gain band by B = 8. Search procedures
+(CD-G, BS-AG) recover 49–84 % of MC-oracle headroom. Theorem A (uniform proxy regret) is proved;
+A′/A″ are diagnostics; the Empirical Ranker-Class Limitation (formal time-only part + empirical
+part on tested rankers) replaces the previous "Negative-Result Corollary".
 
 **Current phase (May 2026):** Theory-first reassessment and Phase 0 reproducibility
 planning. Goal: reframe the baseline into a cleaner theory-first study of marginal,
@@ -152,12 +154,14 @@ See `START_HERE.md` and `docs/00_current_status.md` for full current status.
 Key points:
 
 - **Baseline experiments complete.** Phase 1 (signal calibration), Phase 2b (policy
-  comparison + MC oracle), Phase 3a (combinatorial search baselines), cross-backbone
+  comparison + MC-oracle), Phase 3a (combinatorial search baselines), cross-backbone
   LLaDA-SFT probe, and Protocol C (adaptive controller CPU pilot) are all done.
 - **Primary result.** CD-G recovers 74–84 % and BS-AG 49–64 % of +0.45 MC-oracle headroom
   over uniform at B ∈ {2,3,4} on ProSeCo-OWT. Both pass at B = 8.
-- **Theory (Phase 3b).** Theorem A + Refinements A′/A″ + Negative-Result Corollary
-  formally proved. Theorem A-ad in Appendix F (honest negative Protocol C).
+- **Theory (May 2026 correction).** Theorem A is the proved marginal baseline;
+  A′/A″ are diagnostics only; the former Negative-Result Corollary is replaced
+  by the Empirical Ranker-Class Limitation; Theorem B/B′ + Diagnostic Framework C
+  are the active interaction framework. Theorem A-ad is appendix/provenance only.
 - **Current phase:** Theory-first reassessment. Theorem stack formalized
   (Theorem A baseline; Theorem B + B′ central; Diagnostic Framework C;
   Theorem D + Lemma E optional/appendix). Next: Phase 0 pre-flight assertions

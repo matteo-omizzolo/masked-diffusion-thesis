@@ -33,7 +33,7 @@ MSc thesis by Matteo Omizzolo, supervised by Prof. Giacomo Zanella (Bocconi Univ
 | Folder | Phase |
 |---|---|
 | `results/phase1_proseco_owt_full/` | Phase 1 Protocol A — signal calibration |
-| `results/phase2b_proseco_owt/` | Phase 2b — policy comparison + MC oracle |
+| `results/phase2b_proseco_owt/` | Phase 2b — policy comparison + MC-oracle |
 | `results/phase2b/` | Phase 2b — aggregated analysis outputs |
 | `results/phase3a_proseco_owt/` | Phase 3a — CD-G + BS-AG combinatorial search |
 | `results/cross_backbone/` | LLaDA-SFT bounded probe |
@@ -53,5 +53,6 @@ Then use `hpc/push.sh` to sync and `hpc/phase2b_proseco_owt.sbatch` or
 `hpc/phase3a_combinatorial.sbatch` to submit. See `scripts/README.md` for
 the full script index and `CLAUDE.md` for HPC environment details.
 
-> **Note:** No full-scale new HPC experiments until the theory scaffold (Theorem B/C/D)
-> and Phase 0 reproducibility audit are complete. See `docs/05_next_steps.md`.
+> **Note:** No full-scale new HPC experiments until the theory scaffold
+> (Theorem A baseline, Theorem B/B′, Diagnostic Framework C) and Phase 0
+> reproducibility audit are complete. See `docs/05_next_steps.md`.

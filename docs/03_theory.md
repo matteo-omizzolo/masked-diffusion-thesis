@@ -17,7 +17,7 @@ proofs, and theory-to-experiment map are in `research/candidate_theorems.md`
 | §1.1–§1.2 | **Theorem A** — marginal proxy regret 2Bε + 2η_B (uniform form) | Proved | Baseline; tested by (A2)/(A3) on candidate pool C_B |
 | §1.3 | **Diagnostics A′ (additivity scale), A″ (rankability)** | **Empirical diagnostics** (not unconditional regret refinements) | Demoted from previous "proved" status; do not control selected-schedule regret without finite-pool conversion |
 | §1.4 | Theorem A as a special case of B′ (safe finite-pool ranking corollary) | Corollary of B′ | The rigorous selected-schedule consequence of A |
-| §1.5 | **Empirical Ranker-Class Limitation** (replaces "Negative-Result Corollary") | Formal part for time-only separable ψ; empirical part on tested rankers | Tested separable rankers fail; does not bound feature-conditioned, pairwise, or online policies |
+| §1.5 | **Empirical Ranker-Class Limitation** (replaces "Negative-Result Corollary") | Formal part for time-only separable ψ; empirical part on tested rankers | Tested separable rankers do not recover MC-oracle headroom; does not bound feature-conditioned, pairwise, or online policies |
 | §2.1 | Theorem B exact: G(S_B*) − G(Ŝ) ≤ 2ζ_B + ω_B | Proved | Generic surrogate-regret inequality |
 | §2.2 | Theorem B estimated: ≤ 2ζ_B + 2α_B + ω_B | Proved (constant 2) | Operational uniform form |
 | §2.3 | **Theorem B′** finite-pool / high-probability + κ_B; data-dependence caveat | Proved | **Experimentally usable form** |
@@ -45,9 +45,8 @@ not duplicate them. Quick pointers:
 - §0 — Formal setup (trajectory, schedules, Δ_t, A(S), ξ_{t,t'}, Q(S), levels).
 - §1.1–§1.2 — Theorem A statement and proof.
 - §1.3 — Diagnostics A′ (additivity scale), A″ (rankability) — **demoted**
-  from prior "proved refinements" status to empirical diagnostics. The legacy
-  σ_ξ √(B/2) variance form and (1−|ρ|)·σ_Δ rank form are not used as theorem
-  constants in active claims.
+  from prior proof status to empirical diagnostics. The legacy scaling formulas
+  are not used as theorem constants in active claims.
 - §1.4 — Theorem A as a special case of Theorem B′ (the safe finite-pool
   selected-schedule form; replaces what A′/A″ tried to provide).
 - §1.5 — Empirical Ranker-Class Limitation (replaces "Negative-Result
@@ -66,11 +65,11 @@ not duplicate them. Quick pointers:
 
 - Any unconditional regret-refinement claim from A′ or A″ (they are
   diagnostics, not unconditional bounds).
-- Any "all rankers fail" universal statement (the formal scope of the
+- Any universal ranker-failure statement (the formal scope of the
   ranker-class limitation is time-only / seed-averaged separable ψ; the
   empirical scope is the tested ranker class).
 - Reporting the unobservable U_B^* (exhaustive oracle headroom) — only the
-  MC-pool / pool-oracle headrooms are observable.
+  MC-oracle / pool-oracle headrooms are observable.
 - Stretch C2 (Gibbs contraction). Not on critical path.
 
 ## Remaining theory tasks (LaTeX prose)

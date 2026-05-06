@@ -4,7 +4,25 @@
 
 # Proof Ledger: Provenance Tracking
 
-**Updated:** April 2026 (expanded after GPT Pro v2 assessment)
+**Updated:** April 2026 (expanded after GPT Pro v2 assessment).
+**Correction:** May 2026 — see correction block below.
+
+## Current correction — May 2026
+
+This ledger records provenance, including **superseded** theory.
+
+Current active theory is: **A → B / B′ → Diagnostic Framework C**.
+- A′ and A″ are **diagnostics** only (not regret refinements).
+- The old "Negative-Result Corollary" is **superseded** by the
+  Empirical Ranker-Class Limitation (`candidate_theorems.md` §1.5).
+- The old "Proposition C" (γ B(B−1)/2 pairwise interaction bound) is
+  **superseded** by Theorem B / B′ + Diagnostic Framework C.
+
+Older entries below are **historical** unless explicitly referenced by
+`research/candidate_theorems.md` §0–§7. Pre-revision proofs are archived
+at `docs/archive/old_theory_stack/candidate_theorems_pre_2026_05.md`.
+
+---
 
 > Tracks the origin of every proof ingredient, inequality, decomposition, or
 > modeling choice used in the thesis. Every new claim, definition, and
@@ -26,7 +44,7 @@
 | `[Validated empirically]` | Empirical check completed; see linked experiment |
 | `[Depends on calibration]` | Argument holds modulo empirical signal calibration (ε) |
 | `[Depends on approximate additivity]` | Argument holds modulo additivity bound (η_B) |
-| `[Depends on bounded pairwise interaction]` | Holds modulo γ (Proposition C) |
+| `[Depends on bounded pairwise interaction]` | Historical tag: held modulo γ in old Proposition C; superseded by Theorem B/B′ diagnostics |
 | `[Needs verification]` | Flagged for future formal or empirical work |
 | `[Empirically motivated]` | Supported by data rather than theory |
 
@@ -89,9 +107,10 @@
   framing.
 - **Tag:** `[Adapted from GPT Pro assessment v2; standard exchange argument]`
 
-### Approximate Additivity via Pairwise Interaction (Proposition C)
+### Approximate Additivity via Pairwise Interaction (Historical Proposition C)
 - **Source:** Combinatorial optimization; second-order interaction models.
 - **Adapted for:** Linking η_B to an empirically estimable pairwise bound γ.
+  Current replacement is Theorem B/B′ plus schedule-level validation of Q(S) ≈ G(S).
 - **Tag:** `[Adapted from GPT Pro assessment v2]`
 
 ### Resource Allocation Under Budget Constraint
@@ -231,7 +250,7 @@
 |-------|---------|--------|---------------|
 | Approximate additivity |G(S) − ∑ Δ_t| ≤ η_B | Theorem A | `[Depends on approximate additivity]` | Protocol B empirical measurement |
 | Calibrated proxy \|Δ_t − ψ(s_t)\| ≤ ε | Theorem A | `[Depends on calibration]` | Protocol A empirical measurement |
-| Pairwise interaction bound γ | Proposition C | `[Depends on bounded pairwise interaction]` | Protocol B pairwise diagnostic |
+| Pairwise interaction bound γ | Historical Proposition C | `[Depends on bounded pairwise interaction]` | Superseded by ζ_{B,C}, P_B schedule-level validation in Theorem B/B′ |
 | Existence of low-gain region T_low | Proposition B | `[Empirically motivated]` | Protocol A inspection of Δ_t across t |
 | Geometric contraction E_fact · ρ^k | Stretch C2 | `[Conjecture]` `[Needs verification]` | Read Ascolani et al. + Denoising Entropy; check whether discrete-MCMC contraction frameworks apply |
 | ρ(t) admits tractable functional link to s_t | Stretch C2 | `[Conjecture]` | Only relevant if C2 pursued; empirical fit |
@@ -250,7 +269,7 @@
 | Lemma A1 (oracle top-B) | `[Borrowed — standard resource allocation]` |
 | Lemma A2 (calibration regret) | `[Adapted from GPT Pro assessment v2]` |
 | Proposition B (low-gain gating) | `[Adapted from GPT Pro assessment v2]` `[Empirically motivated]` |
-| Proposition C (pairwise interaction) | `[Adapted from GPT Pro assessment v2]` |
+| Historical Proposition C (pairwise interaction) | `[Adapted from GPT Pro assessment v2]` — superseded by Theorem B/B′ + Diagnostic Framework C |
 | Stretch C2 (contraction) | `[Adapted from L&Z + Ascolani 2024]` `[Conjecture]` `[Needs verification]` |
 | Stretch C3 (confidence margin) | `[Novel framing]` `[Empirically motivated]` |
 | MI monotonicity (old C3) | `[Incorrect as stated]` `[Refuted]` — preserved in history only |

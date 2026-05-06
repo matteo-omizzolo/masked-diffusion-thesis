@@ -9,20 +9,20 @@
 
 ## Thesis in one sentence
 
-Corrector budget allocation in masked diffusion LMs is a **combinatorial
-schedule-search problem**, not a greedy signal-ranking problem. Cheap per-step
-rankers fail; search procedures (CD-G, BS-AG) recover 49–84 % of oracle
-headroom on ProSeCo-OWT.
+Corrector budget allocation in masked diffusion LMs is a **regime question**:
+when is timing reducible to marginal ranking, and when does it need interaction
+or search? On ProSeCo-OWT, tested separable rankers do not recover
+MC-oracle headroom; search procedures (CD-G, BS-AG) recover 49–84 % of that
+headroom.
 
 ---
 
 ## Current thesis question
 
-> For a fixed predictor schedule and fixed corrector NFE budget in masked
-> diffusion language models, can aggregate trajectory signals — entropy,
-> confidence margin, or quality mass — predict the marginal value of a
-> corrective refinement loop well enough to outperform uniform corrector
-> placement?
+> For a fixed predictor schedule and fixed corrector-placement budget B in
+> masked diffusion language models, when is informed correction timing
+> reducible to marginal signal ranking, and when does it require
+> interaction-aware or search-based scheduling?
 
 ---
 
@@ -73,7 +73,7 @@ headroom on ProSeCo-OWT.
   the right policy class for the observed headroom on ProSeCo-OWT.
 - **PRISM pivot:** Not pursued as a thesis pillar. PRISM-style quality
   signals, **when used as separable per-step scores**, fall within the
-  ranker class limited by the Negative-Result Corollary; a non-separable
+  ranker class limited by the Empirical Ranker-Class Limitation (`research/candidate_theorems.md` §1.5); a non-separable
   use of PRISM is not ruled out and remains optional / future work.
 
 ---

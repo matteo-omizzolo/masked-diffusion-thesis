@@ -2,7 +2,9 @@
 > This is not final thesis status. It defines the next research phase:
 > theory scaffold → Phase 0 reproducibility → interaction/online timing experiments.
 > Feasibility of the full programme is under assessment.
-> Current thesis baseline: ProSeCo-OWT shows ranker failure and search success (see `START_HERE.md`).
+> Current thesis baseline: ProSeCo-OWT shows tested separable rankers do not
+> recover MC-oracle headroom, while search procedures recover substantial
+> headroom (see `START_HERE.md`).
 >
 > **Status (2026-05):** Theorem stack formalized. Formal definitions, theorems, proofs,
 > and theory-to-experiment map live in `research/candidate_theorems.md` §0–§7.
@@ -22,12 +24,15 @@
 The current repo already contains a cleaned documentation structure and a first complete experimental/theoretical story:
 
 - ProSeCo-OWT shows nonzero headroom over uniform corrector placement.
-- Greedy/separable per-step rankers fail by budget B = 8.
-- Search procedures over schedules, CD-G and BS-AG, recover substantial oracle headroom.
+- Tested separable per-step rankers do not recover MC-oracle headroom; the
+  mean-Δ̄ envelope enters the no-detectable-gain band by budget B = 8.
+- Search procedures over schedules, CD-G and BS-AG, recover substantial
+  MC-oracle headroom.
 - The current Theorem A gives a proxy-regret bound for marginal top-B scheduling under additivity and proxy calibration.
 - The original L-infinity version of Theorem A is empirically too pessimistic/vacuous.
 - Protocol C, a simple bucketed adaptive controller, was an honest negative.
-- The current story is coherent but narrow: "rankers fail; search works."
+- The current story is coherent but narrow: "tested separable rankers do not
+  recover MC-oracle headroom; search works."
 
 We now want a stronger thesis direction:
 
@@ -68,7 +73,8 @@ Do not run new experiments merely because they might be interesting. Every run m
 
 Before extending the project, reproduce the existing ProSeCo-OWT results enough to verify that:
 
-- G(S), A(S), Delta_t, F, and the NFE budget are consistently defined.
+- G(S), A(S), Delta_t, F, and the corrector-placement budget B
+  (with B_NFE = c_corr · B) are consistently defined.
 - Pairing/common random numbers are implemented correctly.
 - Existing Phase 2b and Phase 3a conclusions are qualitatively reproducible.
 
@@ -99,7 +105,9 @@ A failed scheduler can still be a thesis contribution if it falsifies a clean th
 
 ### 2.2 Main research question
 
-> Given a masked diffusion language model with an informed corrector and a fixed extra NFE budget, when should correction steps be applied along the denoising trajectory?
+> Given a masked diffusion language model with an informed corrector and a
+> fixed corrector-placement budget B (extra-NFE budget B_NFE = c_corr · B),
+> when should correction steps be applied along the denoising trajectory?
 
 ### 2.3 Refined research questions
 
@@ -171,7 +179,7 @@ Before coding, create a table like this in the active plan.
 | Theorem A util. | 2Bε + 2η_{B,C} < ranker headroom | plug-in vs measured headroom on C_B | Theorem A operative on C_B | Structural bound only |
 | Diagnostic A′ (additivity scale) | η^typ_{B,D} small | Phase 0/2b residuals over D | A is informative on D | A is uninformative |
 | Diagnostic A″ (rankability) | R_B = ρ(A, G) high | Phase 0/2b ranking | A is rank-informative | Move to richer surrogate |
-| Theorem B (B2) | ζ_{B,C} < η_{B,C}; P_B^{level} > R_B at level | Phase 1 sparse pairwise (with §Uncertainty protocol) | Interaction regime III | → Regime IV |
+| Theorem B (B2) | ζ_{B,C} < η_{B,C}; P_B^{level} > R_B at level | Phase 1 schedule-level validation after sparse pair diagnostics (with §Uncertainty protocol) | Interaction regime III | → Regime IV |
 | Theorem B′ (B3′) | |Q − Q̂| ≤ α_{B,δ} on C_B (held-out, fixed pool) | Phase 1/2 leave-seed-out, no-leakage pool construction | Pairwise scheduler buildable on C_B | Surrogate undersampled / pool data-dependent |
 | Theorem B′ κ_B | C_B near MC pool oracle | Phase 2 pool comparison | Within-pool regret meaningful vs MC pool | Restrict claim to within-pool |
 | Theorem B util. | C_B^feat statistically positive on **held-out** seeds (Level 3) | Phase 2b feature-conditioned eval | **Theorem B central; Level-3 deployable** | Population-only or non-deployable |
@@ -194,7 +202,8 @@ Verify that previous results are real before extending them.
 ### Research questions
 
 - RQ0.1: Can we reproduce the qualitative Phase 2b and Phase 3a conclusions?
-- RQ0.2: Are G(S), A(S), Delta_t, F, and the NFE budget consistently defined?
+- RQ0.2: Are G(S), A(S), Delta_t, F, and the corrector-placement budget B
+  (with B_NFE = c_corr · B) consistently defined?
 - RQ0.3: Are common random numbers / paired seeds correctly implemented?
 - RQ0.4: Are model checkpoint paths, tokenizers, reference metric, and corrector settings correct?
 
@@ -239,7 +248,7 @@ If any pre-flight assertion fails, **stop** and fix before smoke.
 
 **Step 4 — K=30 critical replication (only after Step 3 matches qualitatively).**
    - K = 30; T = 64; B ∈ {2, 3, 4, 8}.
-   - Policies: uniform, marginal rankers, MC oracle best-of-100, CD-G, BS-AG.
+   - Policies: uniform, marginal rankers, MC-oracle best-of-100, CD-G, BS-AG.
 
 ### Models
 
@@ -250,7 +259,7 @@ If any pre-flight assertion fails, **stop** and fix before smoke.
 Qualitatively reproduce:
 
 - MC-oracle headroom at B in {2,3,4};
-- greedy rankers fail by B = 8;
+- tested separable rankers do not recover MC-oracle headroom by B = 8;
 - CD-G and BS-AG beat uniform.
 
 ### Decision gate
@@ -312,6 +321,27 @@ Run:
 - All T choose 2 = 2016 pairs.
 - Purpose: visualization and structural analysis, not final claims.
 
+### Phase 1c — schedule-level validation of Q(S) ≈ G(S) (REQUIRED for Theorem B)
+
+**Pair heatmaps and phase-pair summaries are not by themselves enough to
+validate Theorem B / B′.** Theorem B's hypothesis is |G(S) − Q(S)| ≤ ζ_{B,C}
+on actual size-B schedules. ξ_{t,t'} can look structured at B = 2 while
+higher-order effects dominate at B ∈ {3, 4}. Phase 1c is required.
+
+For each B ∈ {2, 3, 4}:
+
+1. **Fix a no-leakage candidate pool C_B** (random sampling, beam candidates
+   from training-seed Δ̂/ξ̂, or Q̂-greedy from training-seed Q̂; **never**
+   pools selected using held-out G).
+2. Evaluate G(S) on each S ∈ C_B with paired CRN.
+3. Compute A(S) and Q(S) using ξ̂ from Phase 1a.
+4. Report (with the §Uncertainty protocol nested bootstrap):
+   - η_{B,C} := robust-percentile or sup over C_B of |G(S) − A(S)|;
+   - ζ_{B,C} := robust-percentile or sup over C_B of |G(S) − Q(S)|;
+   - R_B := ρ_Spearman(A(S), G(S));
+   - P_B := ρ_Spearman(Q(S), G(S));
+   - the difference CIs ζ_{B,C} − η_{B,C} and P_B − R_B.
+
 ### Analysis
 
 Produce:
@@ -354,9 +384,25 @@ uncertainty. Required protocol:
 
 ### Decision gate
 
-- If pairwise structure exists: proceed to Phase 2.
-- If no structure exists: emphasize regime diagnostics and consider
-  online / controller only as a falsification study.
+The gate is **schedule-level**, not pair-level: pair heatmaps must be
+followed by Phase 1c to validate Q(S) ≈ G(S) on size-B schedules.
+
+Proceed to Phase 2 if **at the candidate pool C_B chosen in Phase 1c**:
+
+- (G1-pair) ξ̂ has stable phase / distance / signal structure (Phase 1a/1b),
+  **and**
+- (G1-sched) ζ_{B,C} < η_{B,C} **or** P_B > R_B at B ∈ {2, 3, 4}, with the
+  CI of ζ_{B,C} − η_{B,C} **or** P_B − R_B (under the nested bootstrap)
+  excluding 0.
+
+If only (G1-pair) holds without (G1-sched): report as evidence of pair
+structure that does not yet validate Theorem B at the schedule level;
+classify provisionally toward Regime IV and consider falsification studies
+before any deployable scheduler claim.
+
+If neither holds: classify as Regime IV (higher-order / chaotic);
+emphasize Diagnostic Framework C and consider online / controller only as
+a falsification study.
 
 ---
 
@@ -385,7 +431,8 @@ Phase 2b runs **only if** Phase 2a beats rankers. Theorem B / B′ is
 - RQ2.1: Can a pairwise surrogate schedule beat uniform and marginal rankers?
 - RQ2.2: How much MC-oracle headroom does it recover?
 - RQ2.3: Is phase-pair structure enough, or are signal-conditioned interactions needed?
-- RQ2.4: Does the method still help at B = 8, where rankers fail?
+- RQ2.4: Does the method still help at B = 8, where tested separable rankers
+  do not recover MC-oracle headroom?
 
 ### Schedulers
 
@@ -398,7 +445,7 @@ Phase 2b runs **only if** Phase 2a beats rankers. Theorem B / B′ is
 - margin top-B;
 - quality-mass top-B;
 - mean_delta_oracle;
-- MC oracle best-of-100;
+- MC-oracle best-of-100;
 - CD-G;
 - BS-AG.
 
@@ -463,16 +510,17 @@ Track optimization gap if possible by comparing optimizers.
 
 - paired gain over uniform;
 - BCa bootstrap CI;
-- closure ratio against MC oracle;
+- closure ratio against MC-oracle;
 - comparison to mean_delta_oracle;
 - rho(Q_hat(S), G(S)) on held-out sampled schedules;
-- zeta_B estimate: |G(S) - Q(S)|;
+- ζ_{B,C} estimate: |G(S) - Q(S)| on the fixed no-leakage candidate pool;
 - alpha_B estimate: |Q_hat(S) - Q(S)| if Q is available;
 - true-G calls required at inference.
 
 ### Expected outcomes
 
-**Best case:** pairwise scheduler beats rankers and recovers 20-50% of oracle headroom without true-G inference calls.
+**Best case:** pairwise scheduler beats tested separable rankers and recovers
+20-50% of MC-oracle headroom without true-G inference calls.
 
 **Medium case:** pairwise surrogate predicts G better than A but does not robustly beat uniform.
 
@@ -501,6 +549,13 @@ regime-map / online-control diagnostics.
 If Phase 2b succeeds (C_B^feat statistically positive on held-out seeds):
 pairwise feature-conditioned timing becomes the main deployable
 contribution.
+
+If Level-3 feature-conditioned scheduling fails, the thesis does not collapse.
+The contribution becomes: Theorem A baseline and its empirical falsification
+on ProSeCo-OWT; Theorem B/B′ as a rigorous diagnostic framework; evidence
+that ProSeCo-OWT is interaction-driven or higher-order/chaotic; CD-G/BS-AG
+as search-based existence results using true-G feedback; and Diagnostic
+Framework C as a protocol for future model/corrector triples.
 
 ---
 
@@ -651,7 +706,7 @@ Correct if estimated immediate advantage plus future value exceeds skip value.
 
 - Train on calibration seeds.
 - Evaluate on held-out seeds.
-- Compare to uniform, marginal rankers, pairwise scheduler, BS-AG, MC oracle.
+- Compare to uniform, marginal rankers, pairwise scheduler, BS-AG, MC-oracle.
 
 ### Key diagnostic: state aliasing
 
@@ -748,7 +803,8 @@ and regime-map (Phase 3) before cutting interaction diagnostics (Phase 1).
 
 - Phase 1 sparse pairwise ξ_{t,t'} diagnostics on ProSeCo-OWT.
 - Compute ζ_B, ρ(Q,G), I_B; classify regime.
-- If P_B > R_B and ζ_B < η_B: build pairwise surrogate scheduler (start of Phase 2).
+- If P_B > R_B and/or ζ_{B,C} < η_{B,C} on size-B schedules with uncertainty
+  accounted for: build pairwise surrogate scheduler (start of Phase 2).
 - Otherwise: classify ProSeCo-OWT as regime IV (chaotic) and document.
 
 ## July
@@ -778,8 +834,8 @@ and regime-map (Phase 3) before cutting interaction diagnostics (Phase 1).
 - If Phase 1 shows ζ_B ≥ η_B (no pairwise improvement) → **stop** Phase 2,
   document as regime IV, write thesis as case study.
 - If Phase 2 held-out scheduler does not beat rankers → **stop**, document
-  honest negative, focus thesis on Theorem A + Negative-Result Corollary
-  + diagnostic framework.
+  honest negative, focus thesis on Theorem A + Empirical Ranker-Class Limitation
+  + Theorem B/B′ diagnostic framework.
 - Theorem D (online controller, Phase 4) is the **first** thing to cut if time
   is tight. It is appendix-only by default.
 
@@ -791,7 +847,9 @@ and regime-map (Phase 3) before cutting interaction diagnostics (Phase 1).
 
 Pairwise interactions are structured, pairwise scheduler beats rankers, and at least one second model supports the regime framework.
 
-**Thesis claim:** Corrector timing can be interaction-driven; marginal rankers fail, but interaction-aware scheduling partially recovers oracle headroom.
+**Thesis claim:** Corrector timing can be interaction-driven; tested marginal
+rankers do not recover the available MC-oracle headroom, but interaction-aware
+scheduling partially recovers it.
 
 ## Outcome B — still strong
 
@@ -824,9 +882,9 @@ Done:
 - Theorem A statement and proof (§1).
 - Theorem B exact-Q form, statement and proof (§2.1).
 - Theorem B estimated-Q̂ form, statement and proof with corrected constant 2α_B (§2.2).
-- Proposition C regime taxonomy and diagnostics (§3).
+- Diagnostic Framework C regime taxonomy and diagnostics (§3).
 - Theorem D statement and proof sketch with honest 2Tδ constant (§4).
-- Proposition E burn-in exclusion sketch (§5).
+- Lemma E burn-in exclusion sketch (§5).
 - Theory-to-experiment map (§7).
 
 ### Next concrete tasks (sequential, gated)

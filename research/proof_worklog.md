@@ -6,8 +6,26 @@
 
 **Started:** April 2026
 **Author:** Matteo Omizzolo
-**Status (May 2026):** Phase 3b complete — Theorem A, Refinements A′/A″, and
-Negative-Result Corollary formally proved. LaTeX prose in ch6 is TODO.
+
+## Current correction — May 2026
+
+This is a chronological worklog. It contains historical derivations and
+**superseded** claims.
+
+Current active status:
+- Theorem A remains the marginal baseline theorem (uniform form proved).
+- A′ and A″ are **diagnostics**, not regret refinements.
+- The old Negative-Result Corollary is **replaced** by the Empirical
+  Ranker-Class Limitation (formal time-only part + scoped empirical part).
+- Theorem B / B′ is the central rigorous interaction framework.
+- Diagnostic Framework C is the active regime protocol.
+
+For current theory, use `research/candidate_theorems.md` §0–§7 and
+`docs/03_theory.md`. Do not use older entries in this worklog as current
+thesis status. Pre-revision proofs are archived at
+`docs/archive/old_theory_stack/candidate_theorems_pre_2026_05.md`.
+
+---
 
 > This is a chronological research log. It records derivation attempts, insights,
 > failed directions, and corrections. Each entry is tagged with provenance and
@@ -97,7 +115,7 @@ later sweeps fine-tune.
 [Analogy to Gibbs sampling convergence; see Adapting the Gibbs Sampler (2018)]
 
 **Correctness status:** `plausible but incomplete` — diminishing returns is a natural
-assumption for Gibbs-style updates but has not been formally proved for masked diffusion
+assumption for Gibbs-style updates but has no formal proof for masked diffusion
 correctors. Would need to show that the KL contraction factor per Gibbs sweep is bounded.
 The Ascolani et al. 2024 entropy contraction result may provide the right bound.
 
@@ -263,7 +281,10 @@ the signal s_t, the theorem writes itself.
 
 ---
 
-## Summary of Current State
+## Historical summary after Entry 5 (superseded)
+
+> Superseded by the May 2026 correction block at the top of this file and by
+> `research/candidate_theorems.md` §0–§7.
 
 Three promising directions explored:
 
@@ -318,7 +339,10 @@ for the worklog are:
    token-change rate with the quality gain. Calibration must be done against
    Δ_t, not TCR_t.
 
-### New theorem stack
+### Historical April 2026 theorem stack (superseded)
+
+> Current replacement: Theorem A baseline → Theorem B/B′ → Diagnostic
+> Framework C; A′/A″ are diagnostics only.
 
 Proposed in GPT Pro's theory plan, adopted in the April 2026 restructure:
 
@@ -588,10 +612,15 @@ heuristic negative result (diagnostic run 478600). ProSeCo selection based on ar
 
 ## Entry 8 — Phase 3b Theory Finalisation (April 2026)
 
-**Status:** ACTIVE → COMPLETE 2026-04-26.
-**Scope:** Formal proofs of Refinements A′ and A″ + formal Negative-Result
-Corollary, completing the Phase 3b theory contract specified in
-docs/archive/ (archived) "Immediate next milestone".
+> **May 2026 correction:** This entry is historical provenance. Its promoted
+> A′/A″ and Negative-Result-Corollary claims are superseded by the current
+> correction block at the top of this worklog and by
+> `research/candidate_theorems.md` §0–§7.
+
+**Historical status:** marked complete on 2026-04-26; no longer active.
+**Historical scope:** Formal proofs of Refinements A′ and A″ + formal
+Negative-Result Corollary, completing the Phase 3b theory contract specified
+in docs/archive/ (archived) "Immediate next milestone".
 
 ### What was promoted from candidate to formal
 

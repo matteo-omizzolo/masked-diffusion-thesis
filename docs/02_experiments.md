@@ -37,16 +37,16 @@ Low-gain T_low region confirmed at early steps (R_t ≈ ∅). MC-oracle headroom
 
 ---
 
-## Phase 2b — Policy comparison + MC oracle
+## Phase 2b — Policy comparison + MC-oracle
 
 **What:** K = 30 paired seeds. 10 greedy signal-ranker policies × B ∈ {2, 3, 4, 8, 16}.
-MC oracle (best-of-100 random schedules) at B ∈ {2, 3, 4}.
+MC-oracle (best-of-100 random schedules) at B ∈ {2, 3, 4}.
 
 **Key findings (all T1):**
 - MC-oracle headroom U_B^{MC,100} = +0.45 paired G at B ∈ {2, 3, 4}; 95 % BCa CI
   excludes 0. Note: this is the best-of-100 random schedule pool oracle; the
   exhaustive (T choose B) oracle is unobservable.
-- All 10 tested separable rankers fail to recover MC-oracle headroom. The
+- All 10 tested separable rankers do not recover MC-oracle headroom. The
   cheating `mean_delta_oracle` (time-only) ranker saturates and enters the
   no-detectable-gain band by B = 8.
 - Top-10 MC ∩ oracle Jaccard ≈ 1.2–1.3× random baseline (schedules do not concentrate
@@ -134,7 +134,8 @@ K = 8 seeds, GPT-2 reference.
 - ε̃ / ε ∈ [0.983, 0.986] — state conditioning shrinks ε by < 1.7 %.
 - Best after-uncertainty close ratio = +0.015 (entropy, B=2); negative at B ≥ 3.
 - Hamming distance from threshold schedule to best MC ≈ 2B (max possible): no overlap.
-- Theorem A-ad: formally proved, promoted to Appendix F.
+- Theorem A-ad: historical appendix/provenance item; not part of the active
+  main theorem stack.
 - No GPU or HPC used. No further adaptive-controller work authorized.
 
 **Raw results:** `results/protocol_c_owt/protocol_c_summary.json`
