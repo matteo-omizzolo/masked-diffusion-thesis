@@ -54,5 +54,6 @@ Then use `hpc/push.sh` to sync and `hpc/phase2b_proseco_owt.sbatch` or
 the full script index and `CLAUDE.md` for HPC environment details.
 
 > **Note:** No full-scale new HPC experiments until the theory scaffold
-> (Theorem A baseline, Theorem B/B′, Diagnostic Framework C) and Phase 0
-> reproducibility audit are complete. See `docs/05_next_steps.md`.
+> (Theorem A baseline, Theorem B/B′, Diagnostic Framework C) is stable,
+> PF1–PF8 pass, and the K=3 smoke matches qualitatively. See
+> `docs/05_next_steps.md`.

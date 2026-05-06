@@ -2,7 +2,8 @@
 
 > **Current source of truth.** Updated 2026-05-05.
 > Phase: theory-first reassessment and Phase 0 reproducibility planning.
-> No full-scale HPC experiments until theory scaffold + Phase 0 audit are complete.
+> No full-scale HPC experiments until the theory scaffold is stable, PF1–PF8
+> pass, and the K=3 smoke matches qualitatively.
 
 ---
 
@@ -40,7 +41,7 @@ Theory-to-experiment map: `research/candidate_theorems.md` §7. Backbone is
 Before launching any new experiment, reproduce the existing ProSeCo-OWT baseline.
 
 **Step 2a — code path audit.**
-- [ ] Local script import checks: `python -c "import src.mdm_playground"` passes.
+- [ ] Local package import check: `python -c "import mdm_playground"` passes.
 - [ ] Stage ProSeCo-OWT checkpoint: `python scripts/stage_proseco_owt.py`.
 
 **Step 2b — pre-flight assertions (BLOCKING; no smoke until these pass).**
@@ -59,6 +60,11 @@ manually verified) before any HPC submission, including K=3 smoke:
 - [ ] **PF7 corrector action set** — ProSeCo corrects only positions in R_t.
 - [ ] **PF8 signal/action-set consistency** — H_t, M_t^{-1}, QM_t are computed
       over the same R_t the corrector acts on (avoid historical Bug #1).
+
+Current local entry point: `pytest tests/test_phase0_preflight.py -q`.
+Checkpoint-backed ProSeCo equivalence checks may remain skipped only with
+explicit reasons until the backend exposes branch/schedule comparison, RNG
+trace, and acted-on R_t hooks.
 
 **Step 2c — K=3 smoke (only after Step 2b passes).**
 - [ ] K=3 seeds, T=64, B ∈ {2,4}; uniform + mean_delta_oracle + CD-G + BS-AG.
@@ -88,6 +94,10 @@ for sampled schedules S ∈ C_B; compute A(S); compute Q(S) using estimated
 ζ_{B,C} = sup/robust-percentile |G(S) − Q(S)|, R_B = ρ(A(S), G(S)), and
 P_B = ρ(Q(S), G(S)) with nested-bootstrap CIs. Pair heatmaps and phase-pair
 summaries are diagnostics; they do **not** by themselves validate Theorem B.
+Q(S) must be computed from measured ξ for every pair inside S, or from a
+pre-registered ξ estimator fitted only on training pairs/seeds. Missing ξ
+values must not be filled using held-out G; uncovered schedules are ineligible
+for the Q(S) validation pool.
 
 Decision gate: proceed to Gate 4 only if Gate 3b validates Theorem B at the
 schedule level, i.e. ζ_{B,C} < η_{B,C} and/or P_B > R_B with uncertainty
@@ -95,6 +105,23 @@ accounted for. Otherwise classify provisionally toward Regime IV and
 emphasize Diagnostic Framework C.
 
 Do not run dense all-pair maps until sparse diagnostics justify it.
+
+## Restart experiment contract
+
+Every future experiment phase must produce: config JSON/YAML with git commit
+hash, per-seed raw rows, aggregate summary JSON, analysis script, paired
+bootstrap CI where applicable, one concise interpretation markdown or summary
+section, canonical plots when meaningful, and the exact command to regenerate
+plots from raw results.
+
+Each experiment must state the research question, theorem/assumption tested,
+expected outcome, observed outcome, interpretation, opened/closed gate, and
+the first plot/table to inspect. Phase 0 uses only a sanity table comparing old
+vs rerun keys. Phase 1 defaults to ξ heatmap, P(ξ>0) heatmap, phase-pair
+summary, Q-vs-G versus A-vs-G scatter, ζ_{B,C} versus η_{B,C}, and CI for
+P_B − R_B. Phase 2 defaults to gain over uniform, closure ratio versus
+MC-oracle or pool oracle, held-out Q_hat-vs-G scatter, and true-G calls versus
+performance.
 
 ---
 

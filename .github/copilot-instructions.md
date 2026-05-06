@@ -36,10 +36,12 @@ status — those are historical and may contradict current docs.
   Fixed-budget corrector allocation is a combinatorial schedule-search problem.
 - **Current phase (May 2026):** Theory-first reassessment. Goal: characterize when
   corrector timing is marginal vs. interaction-driven vs. online-controllable.
-  Sequential gates: Opus theory pass → Phase 0 reproducibility audit → interaction
-  diagnostics → pairwise scheduler → LaTeX writing.
-- **No full-scale HPC experiments** until the theory scaffold (Theorem B/C/D) and
-  Phase 0 reproducibility audit are complete.
+  Sequential gates: Opus theory pass → PF1–PF8 pre-flight checks → K=3 smoke
+  → K=30 critical replication if needed → interaction diagnostics → pairwise
+  scheduler → LaTeX writing.
+- **No full-scale HPC experiments** until the theory scaffold (Theorem A/B/B′
+  + Diagnostic Framework C; D/E optional) is stable, PF1–PF8 pass, and the
+  K=3 smoke matches qualitatively.
 
 Keep interpretation precise:
 - Do not overclaim universal impossibility.

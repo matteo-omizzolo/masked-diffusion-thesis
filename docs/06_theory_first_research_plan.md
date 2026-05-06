@@ -80,16 +80,9 @@ Before extending the project, reproduce the existing ProSeCo-OWT results enough 
 
 ### 1.4 Minimalism
 
-Do not create many new status documents. Prefer one compact new planning document and one theory document. Keep the repo easy to navigate.
-
-Recommended new active files, if needed:
-
-```text
-research/theory_corrector_timing.md
-experiments/ or docs/06_research_plan.md only if the repo already has such a convention
-```
-
-If creating a new doc would duplicate existing docs, update the existing doc instead.
+Do not create new active theory/planning docs. Update
+`research/candidate_theorems.md`, `docs/06_theory_first_research_plan.md`,
+and `research/open_questions.md` instead.
 
 ### 1.5 Honest negative results are allowed
 
@@ -334,7 +327,11 @@ For each B ∈ {2, 3, 4}:
    from training-seed Δ̂/ξ̂, or Q̂-greedy from training-seed Q̂; **never**
    pools selected using held-out G).
 2. Evaluate G(S) on each S ∈ C_B with paired CRN.
-3. Compute A(S) and Q(S) using ξ̂ from Phase 1a.
+3. Compute A(S) and Q(S). For Q(S), every pair inside S must either have a
+   measured ξ value or be covered by a pre-registered ξ estimator fitted only
+   on training pairs/seeds. Missing ξ values must not be silently filled using
+   held-out G. If neither measured pairs nor a no-leakage estimator covers S,
+   that schedule is not eligible for the Q(S) validation pool.
 4. Report (with the §Uncertainty protocol nested bootstrap):
    - η_{B,C} := robust-percentile or sup over C_B of |G(S) − A(S)|;
    - ζ_{B,C} := robust-percentile or sup over C_B of |G(S) − Q(S)|;
@@ -423,8 +420,9 @@ Phase 2 has two sub-stages corresponding to the hierarchy in
   on held-out seeds with **no true G_i calls at inference**. This is the
   only stage that supports a deployable inference-time scheduler claim.
 
-Phase 2b runs **only if** Phase 2a beats rankers. Theorem B / B′ is
-"central deployable" only at Level 3.
+Phase 2b runs if population pairwise structure is positive or feature-predictable
+interaction structure exists; population-scheduler success is not the only gate.
+Theorem B / B′ is "central deployable" only at Level 3.
 
 ### Research questions
 
@@ -796,8 +794,10 @@ and regime-map (Phase 3) before cutting interaction diagnostics (Phase 1).
 ## May (current)
 
 - Theorem stack formalized in `research/candidate_theorems.md` (DONE 2026-05).
-- Phase 0 reproducibility smoke (K=3 on ProSeCo-OWT). **Gate.**
-- If smoke passes, begin sparse pairwise diagnostics design (no full HPC yet).
+- Implement or manually verify PF1–PF8. **Gate.**
+- Then run Phase 0 reproducibility smoke (K=3 on ProSeCo-OWT).
+- If smoke passes, run K=30 critical replication if needed, then begin sparse
+  pairwise diagnostics design (no full HPC before the gates).
 
 ## June
 
@@ -889,17 +889,19 @@ Done:
 
 ### Next concrete tasks (sequential, gated)
 
-1. **Phase 0 smoke** (K=3, ProSeCo-OWT). Confirm baseline reproducibility.
-   This is the gate before any Phase 1 design work.
-
-2. **Pre-flight tests for the existing scripts**: deterministic base generation;
+1. **Pre-flight tests for the existing scripts**: deterministic base generation;
    empty schedule equals base; single-correction equals Protocol A; budget
    accounting; F scoring consistency; CRN.
 
-3. **Phase 1 sparse pairwise ξ_{t,t'} estimator** — design only. Do not run
+2. **Phase 0 smoke** (K=3, ProSeCo-OWT). Confirm baseline reproducibility.
+   This runs only after PF1–PF8 are implemented or manually verified.
+
+3. **K=30 critical replication** — only if the K=3 smoke matches qualitatively.
+
+4. **Phase 1 sparse pairwise ξ_{t,t'} estimator** — design only. Do not run
    on HPC until Phase 0 smoke passes.
 
-4. **Hold the cut decisions**: if any gate fails, cut Theorem D / Phase 4 first,
+5. **Hold the cut decisions**: if any gate fails, cut Theorem D / Phase 4 first,
    then Phase 3 secondary backbone, then PRISM, *before* cutting Phase 1.
 
 ---

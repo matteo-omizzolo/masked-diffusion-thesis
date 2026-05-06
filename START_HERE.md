@@ -92,7 +92,8 @@ We are no longer in "writing only" mode. The current phase is **theory-first rea
 3. **Phase 1 interaction diagnostics** — only if Phase 0 passes; sparse pairwise
    ξ̂_{t,t'} estimation at Levels 1–2.
 4. **Phase 2 pairwise scheduler** — Phase 2a population (Level 2) → Phase 2b
-   feature-conditioned (Level 3, deployable) only if 2a beats rankers.
+   feature-conditioned (Level 3, deployable) if population pairwise structure
+   is positive or feature-predictable interaction structure exists.
 5. **Phase 3 regime map** — optional secondary backbone.
 6. **LaTeX writing** — ch3, ch4, ch5, ch7, Abstract, Introduction, Conclusion.
 

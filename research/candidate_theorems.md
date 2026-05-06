@@ -188,9 +188,19 @@ Let S_A^* = argmax_{|S|=B} A(S). By Lemma A1 (below) S_A^* is the B indices of
 largest Δ_t, so A(S_B^*) ≤ A(S_A^*). By Lemma A2 with proxy ψ on Δ-values,
 A(S_A^*) − A(Ŝ_B) ≤ 2 B ε. Substituting into (★) gives the bound. ∎
 
-Lemma A1 (oracle top-B under exact additivity), Lemma A2 (calibration regret
-under exact additivity, swap-by-swap exchange) are stated and proved in the
-Historical Provenance section below.
+**Lemma A1 — top-B under exact additivity.** If A(S) = ∑_{t∈S} Δ_t and
+|S| = B, then any set of the B largest Δ_t maximizes A(S).
+
+**Proof.** If selected t has lower Δ_t than unselected t′, exchange t for t′;
+A cannot decrease. Repeat until only B largest-Δ_t indices remain. ∎
+
+**Lemma A2 — proxy top-B regret.** If |Δ_t − ψ_t| ≤ ε for all t and Ŝ_B is
+top-B by ψ, then A(S_A^*) − A(Ŝ_B) ≤ 2Bε.
+
+**Proof.** Pair elements of S_A^* \ Ŝ_B with elements of Ŝ_B \ S_A^*. For
+each pair (o, s), ψ_s ≥ ψ_o by top-B optimality under ψ, so
+Δ_o ≤ ψ_o + ε ≤ ψ_s + ε ≤ Δ_s + 2ε. Summing over at most B pairs gives the
+claim. ∎
 
 ### 1.3 Diagnostics A′, A″ (additivity scale, rankability — *not* unconditional regret refinements)
 

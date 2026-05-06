@@ -26,7 +26,8 @@ part on tested rankers) replaces the previous "Negative-Result Corollary".
 **Current phase (May 2026):** Theory-first reassessment and Phase 0 reproducibility
 planning. Goal: reframe the baseline into a cleaner theory-first study of marginal,
 interaction-aware, and online corrector timing. No full-scale HPC runs until the theory
-scaffold (Theorem A/B/B′ + Diagnostic Framework C; D/E optional) and Phase 0 reproducibility audit are complete.
+scaffold (Theorem A/B/B′ + Diagnostic Framework C; D/E optional) is stable and
+Phase 0 pre-flight checks PF1–PF8 pass.
 
 **Key distinction:** This thesis targets corrector *scheduling* (when to spend corrective
 effort across the trajectory), not token-selection policies (which tokens to correct),
@@ -80,7 +81,8 @@ predictor schedules (when to unmask), or corrector kernel design (how to correct
 ## HPC workflow
 ```bash
 bash hpc/push.sh       # rsync code (excludes checkpoints, .venv, results)
-bash hpc/submit.sh t1000p  # all 3 strategies on 3 GPUs in 1 job (recommended)
+sbatch hpc/phase2b_proseco_owt.sbatch      # only after PF1–PF8 and K=3 smoke
+sbatch hpc/phase3a_combinatorial.sbatch    # only after Phase 2b replication gate
 # NOTE: pull.sh uses GNU rsync flags, broken on macOS. Use SSH instead:
 ssh 3316152@slogin.hpc.unibocconi.it "python3 -c 'import json; print(...)'"
 ```
@@ -167,7 +169,7 @@ Key points:
   Theorem D + Lemma E optional/appendix). Next: Phase 0 pre-flight assertions
   PF1–PF8 (blocking) → K=3 smoke → K=30 replication → Phase 1 interaction
   diagnostics → writing.
-- **No full-scale HPC** until theory scaffold and Phase 0 are complete.
+- **No full-scale HPC** until PF1–PF8 pass and the K=3 smoke matches qualitatively.
 - **Backbone:** ProSeCo-OWT only (LLaDA-SFT probe inconclusive).
 - **Reading:** ProSeCo, PRISM, MDLM, ReMDM, L&Z Error Bounds done.
 
@@ -209,12 +211,13 @@ Prefer editing existing active docs.
 Current entry points: `START_HERE.md` and `docs/README.md`.
 Archived files are historical only (`docs/archive/`, `archive/`).
 Current research phase: theory-first reassessment and Phase 0 reproducibility planning.
-No full-scale HPC runs until the theory scaffold and Phase 0 reproducibility audit are complete.
+No full-scale HPC runs until the theory scaffold is stable, PF1–PF8 pass, and
+the K=3 smoke matches qualitatively.
 
 ## Next steps (current — May 2026)
 
 1. Opus theory pass ✅ — Theorem A/B/B′ + Diagnostic Framework C; D/E optional.
-2. Phase 0 reproducibility audit — reproduce ProSeCo-OWT baseline locally (K=3 smoke first).
+2. Phase 0 reproducibility audit — implement or manually verify PF1–PF8 first, then K=3 smoke, then K=30 replication only if the smoke matches qualitatively.
 3. Interaction diagnostics — only after Phase 0 passes.
 4. Pairwise scheduler — only if interaction diagnostics show structure.
 5. LaTeX writing — ch3, ch4, ch5, ch7, Abstract, Introduction, Conclusion.

@@ -24,7 +24,7 @@
 ```
 results/phase1_proseco_owt_full/
   protocol_a/
-    trajectory_seed{000..049}.json   # per-step Δ_t, H_t, M_t, Q_t
+    trajectory_seed{000..049}.json   # per-step Δ_t, H_t, M_t, QM_t (raw key: Q_t)
   protocol_b/                        # (Protocol B pairwise diagnostics)
   policy_comparison/                 # Phase 2a pilot (superseded by Phase 2b)
   summary.json                       # Phase 1 aggregate

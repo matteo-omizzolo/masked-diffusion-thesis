@@ -10,7 +10,7 @@
 ### Phase 1 — Protocol A (signal calibration)
 50 OWT trajectories × T = 64 steps, ProSeCo-OWT backbone.
 Per-step marginal gain Δ_t and per-step signals (entropy H_t, inverse margin M_t^{-1},
-quality mass QM_t — historical files use `Q_t`) measured for every (seed, step). Spearman ρ(ψ, Δ_t) ≈ 0.10–0.15
+quality mass QM_t; raw key: `Q_t`) measured for every (seed, step). Spearman ρ(ψ, Δ_t) ≈ 0.10–0.15
 (weak but positive). MC-oracle headroom over uniform = **+0.45 paired G** at B ∈ {2,3,4}.
 
 ### Phase 2b — Policy comparison + MC-oracle
@@ -70,7 +70,7 @@ Best after-uncertainty close ratio = +0.015 (entropy, B=2); negative at B ≥ 3.
 | Refinement A′ | **Demoted to additivity-scale diagnostic.** No longer presented as a regret refinement. |
 | Refinement A″ | **Demoted to rankability diagnostic.** ε_R is not a theorem constant. |
 | ReMDM-loop, MDLM Phase 1 | Archived. Backend issues and near-zero Δ_t. See abandoned-backend lessons table below. |
-| Full-scale HPC new runs | Gated — pending theory scaffold + Phase 0 audit. |
+| Full-scale HPC new runs | Gated — pending stable theory scaffold, PF1–PF8, and K=3 smoke. |
 
 ---
 
@@ -121,12 +121,13 @@ study of marginal, interaction-aware, and online corrector timing.
 
 Sequential gates:
 1. Opus theory pass ✅ — Theorem A baseline, Theorem B/B′ central, Diagnostic Framework C, A′/A″ as diagnostics, Empirical Ranker-Class Limitation; D/E optional.
-2. Phase 0 reproducibility audit — reproduce ProSeCo-OWT baseline locally.
+2. Phase 0 reproducibility audit — implement or manually verify PF1–PF8, then K=3 smoke, then K=30 critical replication only if the smoke matches qualitatively.
 3. Interaction diagnostics — only after Phase 0 passes.
 4. Pairwise scheduler — only if diagnostics show structure.
 5. LaTeX writing — running in parallel once the theory scaffold is stable.
 
-No full-scale new HPC experiments should be launched until the theory scaffold and
-Phase 0 reproducibility audit are complete. See `docs/05_next_steps.md` for the
+No full-scale new HPC experiments should be launched until the theory scaffold is
+stable, PF1–PF8 pass, and the K=3 smoke matches qualitatively. See
+`docs/05_next_steps.md` for the
 sequential action plan and `docs/06_theory_first_research_plan.md` for the full
 theory-first programme.

@@ -86,7 +86,10 @@ ruled out by the Empirical Ranker-Class Limitation (`candidate_theorems.md` §1.
 ### OQ-T7 — Minimum experiment set for August writing freeze
 
 Working candidate: Phase 0 + Phase 1 sparse pairwise + Phase 2a population
-pairwise. Phase 2b feature-conditioned only if Phase 2a beats rankers.
+pairwise. Phase 2b feature-conditioned runs if either population pairwise
+structure is positive (P_B^pop > R_B^pop with CI excluding 0) or
+feature-predictable interaction structure exists on held-out seeds under a
+pre-specified R² or rank-correlation threshold.
 If Phase 2a fails, the thesis claim becomes "tested separable rankers do not
 recover MC-oracle headroom; pairwise also fails on this regime; Diagnostic
 Framework C explains why; CD-G provides an existence proof." Do not enter
