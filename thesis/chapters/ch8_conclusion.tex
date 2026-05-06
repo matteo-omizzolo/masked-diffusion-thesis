@@ -1,15 +1,68 @@
 \chapter{Conclusion}
 \label{ch:conclusion}
 
-%% Status: PLACEHOLDER — write last.
-%%
-%% Structure:
-%%   \section{Summary of Contributions}
-%%   \section{Limitations and Open Questions}
-%%   \section{Future Work}
-%%
-%% Key points to address:
-%%   - What was formally established (theorem statement)
-%%   - What the experiments validated
-%%   - What remains open (the other candidate gaps not pursued)
-%%   - Directions for future work in informed correctors for MDMs
+\section{Summary of Contributions}
+\label{sec:ch8-summary}
+
+This thesis has studied fixed-budget informed-corrector timing for masked
+diffusion language models. The central question is when schedule-gain
+optimisation is reducible to marginal signal ranking, and when it requires
+interaction-aware or search-based scheduling. The thesis addresses this through
+a model- and corrector-agnostic mathematical framework and an empirical case
+study on ProSeCo-OWT.
+
+The five formal contributions are as follows. First, the thesis formulates
+fixed-budget corrector timing as a schedule-gain problem, separated from
+remasking, token selection, predictor scheduling, and corrector-kernel design.
+Second, Theorem~A establishes a marginal proxy regret bound: under approximate
+additivity and proxy calibration, top-$B$ ranking of separable step-scores
+achieves bounded regret against the exhaustive schedule oracle. Third,
+Theorem~B and Theorem~B$'$ provide a pairwise-surrogate regret framework with
+a finite-pool high-probability form that can be tested experimentally without
+leakage. Fourth, Diagnostic Framework~C operationalises regime classification.
+Fifth, the ProSeCo-OWT case study provides prior baseline evidence that tested
+separable rankers do not recover the best-of-$N$ Monte Carlo oracle headroom,
+while coordinate-descent greedy (CD-G) and beam-search greedy (BS-AG) search
+procedures recover 74--84\% and 49--64\% of that headroom at $B\in\{2,3,4\}$.
+
+\section{Limitations}
+\label{sec:ch8-limitations}
+
+Several important limitations qualify the conclusions. The empirical claims
+rest on prior results pending Phase~0 reproducibility re-confirmation. Until
+the pre-flight assertion suite (PF1--PF8) passes on the real ProSeCo-OWT
+backend and the K=3 smoke test reproduces the qualitative pattern, these
+statements are planning evidence rather than final thesis evidence.
+
+The empirical scope is single-backbone. A bounded LLaDA-SFT probe did not
+establish transferable MC-oracle headroom at the tested resolution. Whether
+the regime characteristics observed on ProSeCo-OWT generalise to other masked
+diffusion backends remains an open question.
+
+The search procedures CD-G and BS-AG use true schedule-gain feedback and are
+structural existence results. They demonstrate that better-than-uniform
+schedules exist, but do not constitute a deployable scheduler. A deployable
+Level-3 feature-conditioned scheduler requires a predictor trained on training
+seeds and evaluated on held-out seeds; this has not yet been constructed.
+
+All empirical conclusions are conditional on the chosen quality functional
+$F$ (negative GPT-2 negative log-likelihood in the ProSeCo-OWT case study).
+
+\section{Future Work}
+\label{sec:ch8-future-work}
+
+Immediate next steps are methodological. Phase~0 re-confirmation is the
+blocking prerequisite: PF1--PF8 must pass with the real ProSeCo-OWT backend,
+then the K=3 smoke test must reproduce the qualitative pattern, and only then
+should K=30 replication and new experiments proceed. Phase~1 interaction
+diagnostics should estimate pairwise interactions $\xi_{t,t'}$ at Levels~1
+and~2 to classify ProSeCo-OWT under the Diagnostic Framework~C protocol.
+If pairwise structure is positive and schedule-level validation of $Q(S)$
+against $G(S)$ succeeds on a no-leakage candidate pool, Phase~2 pairwise
+scheduling can proceed.
+
+Longer-term directions include Level-3 feature-conditioned schedulers,
+extension to additional backbones, and investigation of whether non-separable
+quality-guided refinement (such as PRISM used as a full refinement backend
+rather than a separable step-score) provides headroom beyond the tested
+separable ranker class.

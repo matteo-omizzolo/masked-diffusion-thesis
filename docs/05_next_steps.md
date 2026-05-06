@@ -47,7 +47,7 @@ experiment/discussion claims before those gates.
 Before launching any new experiment, reproduce the existing ProSeCo-OWT baseline.
 
 **Step 2a — code path audit.**
-- [ ] Local package import check: `python -c "import mdm_playground"` passes.
+- [x] Local package import check: `python -c "import mdm_playground"` passes. ✅ (2026-05-06)
 - [ ] Stage ProSeCo-OWT checkpoint: `python scripts/stage_proseco_owt.py`.
 
 **Step 2b — pre-flight assertions (BLOCKING; no smoke until these pass).**
@@ -68,10 +68,10 @@ manually verified) before any HPC submission, including K=3 smoke:
       over the same R_t the corrector acts on (avoid historical Bug #1).
 
 Current local entry point: `pytest tests/test_phase0_preflight.py -q`.
-The real ProSeCo backend exposes `return_trace=True` hooks for branch/schedule
-comparison, RNG fingerprints, and acted-on R_t positions. Checkpoint-backed
-checks may remain skipped only when the staged snapshot is unavailable; run
-them with `PROSECO_OWT_CHECKPOINT=/path/to/proseco_owt pytest tests/test_phase0_preflight.py -q`.
+Status (2026-05-06): 8 passed, 3 skipped. Skipped = PF3/PF5/PF7 real-backend
+checks. `PROSECO_OWT_CHECKPOINT` is unset; K=3 smoke remains blocked.
+When checkpoint is staged, run:
+`PROSECO_OWT_CHECKPOINT=/path/to/proseco_owt pytest tests/test_phase0_preflight.py -q`.
 
 **Step 2c — K=3 smoke (only after Step 2b passes).**
 - [ ] K=3 seeds, T=64, B ∈ {2,4}; uniform + mean_delta_oracle + CD-G + BS-AG.
@@ -169,7 +169,8 @@ Remaining writing should wait on the relevant empirical gates:
 2. **Discussion / limitations** — write after Phase 1 determines whether
    ProSeCo-OWT is interaction-driven or higher-order/chaotic under Diagnostic
    Framework C.
-3. **Abstract and conclusion** — write last, after experiment claims are fixed.
+3. **Abstract and conclusion** — conservative drafts written (2026-05-06); update
+   after experiment claims are settled from Phase 0 / Phase 1.
 4. **Final ch6 polish** — update wording and empirical anchors after Phase 0 /
    Phase 1; do not redesign the theorem stack.
 

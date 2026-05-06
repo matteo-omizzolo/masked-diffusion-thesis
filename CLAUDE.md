@@ -166,11 +166,20 @@ Key points:
 - **Backbone:** ProSeCo-OWT only (LLaDA-SFT probe inconclusive).
 - **Reading:** ProSeCo, PRISM, MDLM, ReMDM, L&Z Error Bounds done.
 
-### Writing status
+### Writing status (2026-05-06)
 - ch1–ch5: full PASS 2 drafts done as study-guide chapters leading into ch6.
 - ch6 (Contribution): full self-contained mathematical framework drafted.
-- ch7 / experiments: TODO after Phase 0 re-confirmation.
-- Abstract / Conclusion: TODO.
+- ch7 / experiments: honest scaffold (Phase 0 gate language). No empirical claims.
+- Abstract: conservative draft written. Update after Phase 0 / Phase 1.
+- Conclusion: conservative draft written. Update after Phase 0 / Phase 1.
+
+### LaTeX build
+Run from inside the `thesis/` directory:
+```bash
+cd thesis && latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=/tmp/masked-thesis-build main.tex
+```
+Running from the repo root fails because `\input{macros}` resolves relative to the working directory.
+Last successful build: 2026-05-06 (55 pages). Remaining warnings: hyperref math-token (2, fixed), one overfull hbox (fixed), biblatex name-format (fixed), bibliography layout overflows (cosmetic; draft acceptable).
 
 ## Claude Code tools & plugins
 
