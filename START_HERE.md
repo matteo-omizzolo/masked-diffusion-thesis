@@ -51,16 +51,19 @@ headroom.
   consequence of A is its finite-pool form (Theorem A as B′(Q := A)). The
   former "Negative-Result Corollary" is reframed as the **Empirical
   Ranker-Class Limitation** with a formal part for time-only / seed-averaged
-  separable rankers and an empirical part on tested rankers. ch6 skeleton drafted.
+  separable rankers and an empirical part on tested rankers. ch6 full
+  mathematical framework drafted.
 
 ---
 
 ## What is NOT done (open)
 
-- **LaTeX chapters 3, 4, 5, 7.** Background (discrete diffusion, correctors,
-  experiments) and discussion. ch6 skeleton exists; bodies are TODO.
-- **Abstract + Introduction + Conclusion.** Not started.
-- **Clean Theorem A proof in LaTeX.** Skeleton in ch6; full narrative not written.
+- **LaTeX ch1–ch6.** Introduction, background, informed-corrector bridge, and
+  ch6 mathematical framework now have full drafts. They still need supervisor
+  review and final polish after Phase 0.
+- **LaTeX ch7 / experiments, abstract, conclusion.** Not written.
+- **Empirical anchors.** Prior ProSeCo-OWT results remain pending Phase 0
+  re-confirmation before final thesis claims.
 
 ---
 
@@ -95,7 +98,8 @@ We are no longer in "writing only" mode. The current phase is **theory-first rea
    feature-conditioned (Level 3, deployable) if population pairwise structure
    is positive or feature-predictable interaction structure exists.
 5. **Phase 3 regime map** — optional secondary backbone.
-6. **LaTeX writing** — ch3, ch4, ch5, ch7, Abstract, Introduction, Conclusion.
+6. **LaTeX writing** — ch1–ch6 drafted; ch7 / experiments, Abstract, and
+   Conclusion remain.
 
 > No full-scale new HPC experiments until pre-flight assertions PF1–PF8 are
 > implemented or manually verified, K=3 smoke matches existing keys, and the
@@ -115,7 +119,7 @@ We are no longer in "writing only" mode. The current phase is **theory-first rea
 | Raw results index | `docs/04_results_index.md` |
 | Detailed theorems (worklog) | `research/candidate_theorems.md` |
 | Proof derivations | `research/proof_worklog.md` |
-| ch6 LaTeX skeleton | `thesis/chapters/ch6_contribution.tex` |
+| ch6 mathematical framework | `thesis/chapters/ch6_contribution.tex` |
 | HPC / environment | `CLAUDE.md` §HPC |
 
 > For agents: see `docs/README.md` for the complete doc structure.

@@ -1,221 +1,46 @@
 \chapter{Experiments}
 \label{ch:experiments}
 
-%% Status: PLACEHOLDER — fill after gap decision (post Zanella meeting).
-%%
-%% Setup (already in place):
-%%   - Main discovery backbone: ProSeCo-OWT (K=30, T=64, MDLM-OWT 130M)
-%%   - Bounded external-validity probe: ProSeCo-LLaDA-SFT (K=8, T=64, B ∈ {2, 4})
-%%   - Code: kuleshov-group/remdm (patched, in external/remdm/)
-%%   - Infrastructure: HPC Bocconi cluster, up to 4x A100 80GB
-%%   - No new training; inference-only
-%%
-%% ------------------------------------------------------------------------------------
-%% SCOPE / POSITIONING NOTE (2026-04-24) — read before drafting prose
-%% ------------------------------------------------------------------------------------
-%% This chapter presents the empirical story in TWO ASYMMETRIC TIERS. Keep the
-%% asymmetry visible throughout; never merge the two backbones into a single
-%% "generalised" empirical claim.
-%%
-%% TIER 1 — MAIN DISCOVERY BACKBONE (ProSeCo-OWT, K=30, T=64):
-%%   This is the primary empirical body of the thesis. All signal-adaptive
-%%   corrector-scheduling claims at Tier T1/T2 ride on OWT.
-%%   - Phase 1 (chronology): ProSeCo-OWT single-step audit + MC variance baseline
-%%   - Phase 2b (paired K=30): 10 policies × 2 Bs, BCa paired CIs, MC-oracle headroom
-%%     + approx. +0.45 NLL over uniform at B=8 (T2-eligible)
-%%   - Phase 3a (combinatorial): CD-G + BS-AG search procedures close 49-84% of
-%%     the MC-oracle gap, exceeding any separable-ranker envelope
-%%   - Yields: (a) ranker-class negative result (smoking guns 1-3);
-%%             (b) search-class positive (non-trivial budget allocation beats uniform
-%%                 under the same informed-kernel + budget constraints)
-%%
-%% TIER 2 — BOUNDED EXTERNAL-VALIDITY PROBE (ProSeCo-LLaDA-SFT 8B, K=8, T=64):
-%%   This is a second-triple data point at T3 tier (n=8 < 30). It exists to
-%%   check whether the ranker-class observations survive a backbone change,
-%%   NOT to revalidate the OWT theorem ingredients. Phase 3a on this backbone
-%%   is NOT authorized; the single reopening precondition is documented in
-%%   docs/thesis/next_steps/POST_CROSS_BACKBONE_DECISION.md §6.
-%%   - Reports (under the tested bounded setup, T=64, B ∈ {2, 4}, GPT-2 reference):
-%%     (a) uniform-not-beaten observation is corroborated at T3 tier;
-%%     (b) positive MC-oracle headroom over uniform did not transfer at the tested
-%%         budgets;
-%%     (c) per-trajectory > mean-profile ordering transfers.
-%%   - Three non-discriminable hypotheses for non-transfer of (b): H1 corrector
-%%     dominance at informed-kernel K=ProSeCo; H2 protocol sparseness (T=64, B<=4);
-%%     H3 GPT-2 reference mismatch for LLaDA-SFT output distribution.
-%%     See CROSS_BACKBONE_REPLICATION_RESULTS.md §11.1.
-%%
-%% The chapter MUST NOT say:
-%%   - "LLaDA-SFT confirms / disconfirms Theorem A" (Theorem A is about the
-%%     ranker class on any (backbone, corrector, F) triple where assumptions
-%%     (1)-(3) hold; the bounded probe measured the driving quantities on a
-%%     second triple at T3 tier).
-%%   - "Uniform is optimal across masked diffusion corrector scheduling"
-%%     (nothing in the evidence supports this broadened claim).
-%%   - "LLaDA-SFT replaces / displaces / weakens the OWT mainline"
-%%     (OWT K=30 remains the main discovery backbone).
-%%   - "LLaDA-SFT validates the ranker-class negative result outside OWT"
-%%     (at Tier-3, it corroborates; it does not validate).
-%%
-%% Archived Phase 1 era material (T=256 / T=512 MDLM / ReMDM step-sweeps) is
-%% infrastructure only and MUST NOT be cited as evidence for thesis claims.
-%% ------------------------------------------------------------------------------------
+This chapter is intentionally a scaffold. It should be written only after
+Phase 0 re-confirms the real ProSeCo-OWT backend path and the old qualitative
+pattern. Until then, prior results are background for planning, not final
+thesis evidence.
 
-%% ---------------------------------------------------------------
 \section{Experimental Setup}
 \label{sec:exp-setup}
 
-%% Cover:
-%%   - Fixed predictor schedule (T=64 on both backbones)
-%%   - Fixed informed corrector kernel (ProSeCo-style annealed refinement)
-%%   - Fixed extra corrector NFE budget B
-%%   - Paired-G protocol (paired seeds, BCa bootstrap CIs)
-%%   - Tier T1–T4 evidence ladder (ANALYSIS_SPEC.md)
-%%   - Signal set: entropy, confidence margin, quality mass
-%%   - Policies: uniform, top_B (per-trajectory + mean-profile), burn-in gated,
-%%     front / back / middle, inverted variants
-%%   - Reference corpora (OWT reference; GPT-2 reference for LLaDA-SFT bounded probe)
+To be written after Phase 0. The setup should state the fixed predictor
+schedule, fixed informed corrector, placement budget $B$, extra-NFE budget
+$B_{\mathrm{NFE}} = c_{\mathrm{corr}}B$, paired common-random-number protocol,
+quality functional $F$, evidence tiers, and bootstrap procedure.
 
-%% ---------------------------------------------------------------
-\section{Main Discovery Backbone: ProSeCo-OWT (K=30, T=64)}
-\label{sec:owt-main}
+\section{Phase 0 Reproducibility}
+\label{sec:exp-phase0}
 
-\subsection{Phase 1 --- Chronology and MC Variance Baseline}
-\label{sec:owt-phase1}
+To be written after the checkpoint-backed PF1--PF8 checks and K=3 smoke.
+This section should report whether the current code path reproduces the old
+qualitative ProSeCo-OWT keys before any new experiment is trusted.
 
-%% Summarise results/phase1_proseco_owt_full/ artefact.
-%% Key role: establishes single-step ΔF statistics and MC σ_ξ baseline used in
-%% Theorem A Refinement A′ (variance-form η_B).
+\section{ProSeCo-OWT Case Study}
+\label{sec:exp-proseco-owt}
 
-\subsection{Phase 2b --- Paired-G Protocol, K=30}
-\label{sec:owt-phase2b}
+To be written after Phase 0. The main body should report the ProSeCo-OWT
+case study with current scoped language: tested separable rankers do not
+recover MC-oracle headroom under the verified protocol, while CD-G and BS-AG
+are search-based existence results using true schedule-gain feedback.
 
-%% Summarise docs/thesis/experiments/PHASE3A_COMBINATORIAL_RESULTS.md and
-%% results/phase2b_proseco_owt/ + results/phase2b/ aggregates.
-%% Report:
-%%   - Paired BCa 95% CIs for all 10 policies at B ∈ {2, 4, 8}
-%%   - MC-oracle headroom over uniform: +0.45 NLL at B=8 (T2-eligible)
-%%   - Three ranker-class smoking guns:
-%%       (1) mean_delta_oracle saturation enters NULL band by B=8
-%%       (2) per-trajectory > mean-profile ordering
-%%       (3) Spearman ρ(A, G) characterisation used in Refinement A″
+\section{Interaction Diagnostics}
+\label{sec:exp-interaction-diagnostics}
 
-\subsection{Phase 3a --- Combinatorial Scheduling (Search Class)}
-\label{sec:owt-phase3a}
+To be written after Phase 1. This section should report schedule-level
+validation of $Q(S)$ against $G(S)$ on no-leakage size-$B$ candidate pools,
+not only pairwise heatmaps. It should state whether Theorem B/B$'$ is useful
+on the verified pool and at which level of analysis.
 
-%% Summarise results/phase3a_proseco_owt/ and
-%% docs/thesis/experiments/PHASE3A_COMBINATORIAL_RESULTS.md.
-%% Report:
-%%   - CD-G closure: 74–84% of MC-oracle gap (T1-eligible)
-%%   - BS-AG closure: 49–64% of MC-oracle gap (T2-eligible)
-%%   - Both exceed the mean_delta_oracle envelope → separable-ranker negative
-%%     result does NOT generalise to "informed scheduling"
-%%   - Ties to Theorem A's Negative-Result Corollary (ranker-class scope)
-
-%% ---------------------------------------------------------------
-\section{External-Validity Probe: LLaDA-SFT (Bounded, Tier-3)}
-\label{sec:llada-sft-probe}
-
-%% ------------------------------------------------------------------------------------
-%% IMPORTANT — this section must remain subordinate to §\ref{sec:owt-main} in:
-%%   (a) page length (OWT body substantially longer),
-%%   (b) claim strength (OWT claims at T1/T2; probe claims at T3),
-%%   (c) visual/typographic weight (probe appears as a clearly-labelled appendix-
-%%       style subsection, NOT as a co-equal second empirical study).
-%% ------------------------------------------------------------------------------------
-
-\subsection{Setup and Scope}
-\label{sec:llada-sft-setup}
-
-%% Cover:
-%%   - Backbone: LLaDA-SFT 8B + ProSeCo corrector
-%%   - K=8 paired seeds (Tier-3; n=8 < 30)
-%%   - T=64, B ∈ {2, 4}
-%%   - GPT-2 reference (reference-mismatch caveat H3)
-%%   - Explicit framing: second-triple data point; NOT a revalidation of
-%%     OWT theorem ingredients.
-
-\subsection{Phase 2b Results Under the Tested Bounded Setup}
-\label{sec:llada-sft-p2b}
-
-%% Summarise docs/thesis/experiments/CROSS_BACKBONE_REPLICATION_RESULTS.md §10.
-%% Report, with scope-limited wording:
-%%   - Under the tested bounded setup: uniform was not beaten by any informed
-%%     policy at B ∈ {2, 4} (corroborates OWT ranker-class observation at T3 tier).
-%%   - Positive MC-oracle headroom over uniform did NOT transfer at the tested
-%%     budgets (single reopening precondition: §6 of POST_CROSS_BACKBONE_DECISION.md).
-%%   - Per-trajectory > mean-profile ordering transfers (qualitative T3).
-%%   - MUST NOT say "uniform is optimal" or "MC-oracle headroom is absent on
-%%     LLaDA-SFT" (scope: tested bounded protocol only).
-
-\subsection{Three Non-Discriminable Hypotheses}
-\label{sec:llada-sft-hypotheses}
-
-%% Verbatim from CROSS_BACKBONE_REPLICATION_RESULTS.md §11.1:
-%%   - H1 (corrector dominance): ProSeCo at informed-kernel strength overwhelms
-%%     differences between budget-allocation policies on LLaDA-SFT.
-%%   - H2 (protocol sparseness): T=64 and B ∈ {2, 4} provides too few allocation
-%%     degrees of freedom to exhibit policy separation.
-%%   - H3 (reference mismatch): GPT-2 reference does not match LLaDA-SFT output
-%%     distribution closely enough for MAUVE/NLL to resolve headroom.
-%% State explicitly: these are non-discriminable under the current data.
-
-\subsection{Phase 3a No-Go and Reopening Precondition}
-\label{sec:llada-sft-phase3a-nogo}
-
-%% Verbatim from POST_CROSS_BACKBONE_DECISION.md §6:
-%%   - Phase 3a on this backbone is NOT authorized.
-%%   - Single documented reopening precondition:
-%%     mc_oracle_minus_uniform.bootstrap_95_ci_lo > 0.05 NLL on a re-run that
-%%     addresses H2 or H3.
-%%   - The bounded probe does NOT displace the OWT Phase 2b / Phase 3a mainline.
-
-%% ---------------------------------------------------------------
-\section{Cross-Backbone Transfer Summary}
-\label{sec:cross-backbone-summary}
-
-%% Mirror CROSS_BACKBONE_REPLICATION_RESULTS.md §11 transfer table with
-%% scope-limited wording. Each row: (observation on OWT, LLaDA-SFT K=8 bounded
-%% status, scope-limited verdict).
-%% Examples (softened per 2026-04-23 rewrite):
-%%   - OWT ranker-class negative result (uniform ≥ all separable rankers at B=8)
-%%     → LLaDA-SFT bounded status: uniform was not beaten under the tested setup
-%%     → Verdict: corroborated at T3 tier under tested bounded setup
-%%
-%%   - OWT MC-oracle +0.45 NLL headroom over uniform at B=8
-%%     → LLaDA-SFT bounded status: no positive headroom at tested budgets
-%%     → Verdict: did not transfer at the tested budgets (T=64, B ∈ {2, 4},
-%%       GPT-2 reference); three non-discriminable hypotheses H1-H3; reopening
-%%       precondition documented
-%%
-%%   - OWT per-trajectory > mean-profile ordering
-%%     → LLaDA-SFT bounded status: same ordering observed
-%%     → Verdict: transferred (T3 qualitative)
-
-%% ---------------------------------------------------------------
 \section{Discussion}
 \label{sec:exp-discussion}
 
-%% Three threads:
-%%
-%%   1. Ranker-class negative result (OWT main body; LLaDA-SFT corroboration at T3):
-%%      The separable per-step ranker class is upper-bounded by the
-%%      mean_delta_oracle envelope, which enters the NULL band by B=8 on OWT.
-%%      Under the tested bounded LLaDA-SFT setup, uniform is not beaten either.
-%%
-%%   2. Search-class positive (OWT only; LLaDA-SFT not tested):
-%%      CD-G + BS-AG search procedures close 49-84% of the MC-oracle gap on
-%%      OWT. This result is NOT replicated on LLaDA-SFT and is not claimed to
-%%      transfer; Phase 3a on LLaDA-SFT is not authorized.
-%%
-%%   3. What the bounded probe does and does not establish:
-%%      - Does: second-triple data point; corroborates ranker-class observation
-%%        at T3 tier; motivates the three-hypothesis decomposition H1-H3 as
-%%        open questions for future work.
-%%      - Does not: broaden the thesis object; validate adaptive-budgeted
-%%        controllers (Theorem A-ad, future work only); establish that
-%%        MC-oracle headroom is backbone-generic or backbone-specific.
-
-%% Note: do NOT reference or re-use archived step-sweep results
-%% (T=256, T=512 MDLM/ReMDM runs) as evidence for thesis claims.
-%% Those runs are infrastructure only.
+To be written after Phase 1 / Phase 2 gates. The discussion should preserve
+the single-backbone scope, distinguish MC-oracle and pool-oracle headroom from
+the unobservable exhaustive oracle, and avoid deployable scheduler claims
+unless a Level-3 feature-conditioned scheduler succeeds on held-out seeds.

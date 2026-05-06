@@ -1,274 +1,144 @@
-\chapter{Background: Continuous Diffusion Models}
+\chapter{Background: Diffusion as Iterative Denoising}
 \label{ch:background-diffusion}
 
-Diffusion models define a generative process by learning to reverse a gradual noising
-procedure. In the continuous setting, this noising procedure is a stochastic differential
-equation (SDE) that transforms structured data into unstructured noise; generation then
-amounts to integrating the time-reversed SDE. The foundational ideas --- score matching,
-the reverse SDE, and predictor-corrector sampling --- transfer directly to the discrete
-masked setting studied in this thesis, and this chapter develops them in the form that
-makes that transfer cleanest.
+Diffusion models are generative models built around a simple idea: corrupt data
+gradually, then learn to reverse the corruption. This chapter reviews that idea
+at the level needed for the thesis. The goal is not to develop the full
+continuous-time theory of score-based diffusion, but to isolate the concepts
+that survive the move to text: a state space, a noising process, a learned
+reverse process, a denoising horizon, and an inference-time budget.
 
-The chapter is organised as follows. Section~\ref{sec:score-matching} reviews the score
-function and the denoising score matching objective. Section~\ref{sec:diffusion-sde}
-develops the SDE framework and places DDPM within it.
-Section~\ref{sec:diffusion-sampling} covers the main families of samplers, with
-particular attention to the predictor-corrector scheme whose discrete analogue is the
-subject of this thesis. Section~\ref{sec:cfg} briefly covers classifier-free guidance.
-Section~\ref{sec:ch2-summary} concludes by mapping the continuous concepts onto their
-discrete counterparts.
+\section{Generative Modelling Setup}
+\label{sec:ch2-generative-setup}
 
-%% ---------------------------------------------------------------
-\section{Score Matching and the Denoising Objective}
-\label{sec:score-matching}
+Let $\pdata$ denote the unknown data distribution on a space $\mathcal{X}$.
+A generative model defines a distribution $p_\theta$ intended to approximate
+$\pdata$. Sampling from $p_\theta$ should produce new objects that resemble the
+training data. In language modelling, the objects are token sequences; in
+image modelling, they are arrays of pixel values or latent vectors.
 
-\subsection{The score function}
-\label{ssec:score-function}
+Diffusion models introduce an auxiliary family of noisy distributions
+$(p_t)_{t\in[0,1]}$. The endpoint $p_0$ is the data distribution and $p_1$ is a
+simple noise distribution. Generation starts from noise and follows a learned
+reverse path back toward data. In discrete implementations the interval
+$[0,1]$ is replaced by a finite horizon $T$ and a sequence of states
+$x_T,x_{T-1},\ldots,x_0$.
 
-Let $p_t$ denote the marginal distribution of the noisy data at time $t \in [0, 1]$,
-with $p_0 = \pdata$ the data distribution and $p_1$ a tractable noise distribution (in
-practice, an isotropic Gaussian). The \emph{score function} of $p_t$ is
-\begin{equation}
-  \nabla_{x} \log p_t(x),
-  \label{eq:score-function}
-\end{equation}
-which points in the direction of increasing log-probability. If one had access to the
-true score at every noise level, one could integrate the reverse SDE and recover samples
-from $\pdata$ (Anderson~\citeyear{anderson1982reverse}; see
-Section~\ref{sec:diffusion-sde}). The core idea of score-based generative modelling is
-to train a neural network $\stheta(x, t)$ to approximate this quantity.
+The modelling problem has two parts. The forward process $q$ is chosen by the
+designer and can be simulated exactly. The reverse process is learned. At
+sampling time, the model uses the learned reverse process to denoise a noisy
+state step by step.
 
-\subsection{Score matching}
-\label{ssec:score-matching}
+\section{Forward Noising and Reverse Denoising}
+\label{sec:ch2-forward-reverse}
 
-\textcite{song2019ncsn} propose learning the score by minimising the \emph{score
-matching} objective \parencite{hyvarinen2005estimation},
-\begin{equation}
-  \mathcal{L}_{\mathrm{SM}}(\theta)
-  = \E_{t}\E_{p_t(x)}\!\left[
-      \tfrac{1}{2}\norm{\stheta(x,t)}^2 + \nabla_x \cdot \stheta(x,t)
-    \right].
-  \label{eq:score-matching}
-\end{equation}
-The divergence term makes this objective impractical at high dimension. The key insight of
-\textcite{vincent2011connection} is that the score of the marginal can be estimated via
-the score of the tractable transition kernel:
-\begin{equation}
-  \nabla_{x_t} \log p_t(x_t)
-  = \E\!\left[\nabla_{x_t} \log q(x_t \mid x_0) \;\Big|\; x_t\right].
-  \label{eq:score-posterior}
-\end{equation}
-This yields the \emph{denoising score matching} (DSM) objective,
-\begin{equation}
-  \mathcal{L}_{\mathrm{DSM}}(\theta)
-  = \E_{t}\E_{x_0 \sim \pdata}\E_{x_t \sim q(\cdot\mid x_0)}\!\left[
-      \norm{\stheta(x_t, t) - \nabla_{x_t} \log q(x_t \mid x_0)}^2
-    \right],
-  \label{eq:dsm}
-\end{equation}
-where $q(x_t \mid x_0)$ is the forward transition at time $t$ given the clean datum $x_0$.
-The DSM loss~\eqref{eq:dsm} has the same minimiser as the intractable
-objective~\eqref{eq:score-matching} (up to a constant), but is computable by simulation
-from the forward process. Training thus requires only forward-process samples, not
-score evaluations.
+In continuous diffusion models, the forward process is often Gaussian. A clean
+data point $x_0$ is progressively mixed with noise:
+\[
+  x_t = \sqrt{\bar{\alpha}_t}\,x_0
+        + \sqrt{1-\bar{\alpha}_t}\,\varepsilon,
+  \qquad \varepsilon \sim \mathcal{N}(0,I).
+\]
+When $t$ is large, the signal term is small and $x_t$ is nearly Gaussian noise.
+The DDPM formulation of \textcite{ho2020ddpm} uses this idea in discrete time.
+Score-based diffusion models express the same principle through stochastic
+differential equations and learned score functions \parencite{song2021score}.
 
-%% ---------------------------------------------------------------
-\section{Diffusion as a Stochastic Process}
-\label{sec:diffusion-sde}
+The reverse step asks for a distribution of less-noisy states given the current
+noisy state. In general this reverse conditional is not available exactly, so a
+neural network is trained to approximate the relevant denoising quantity. One
+may train the model to predict the added noise, the clean data, or the score
+$\nabla_x \log p_t(x)$, depending on parameterisation
+\parencite{song2019ncsn,vincent2011connection}. All three views support the
+same operational picture: generation is iterative denoising.
 
-\subsection{The forward SDE}
-\label{ssec:forward-sde}
+\section{Markov-Chain Viewpoint}
+\label{sec:ch2-markov-view}
 
-A broad family of diffusion models can be unified under the framework of
-\textcite{song2021score}, who describe the forward process as the It\^o SDE
-\begin{equation}
-  \dif x_t = f(x_t, t)\,\dif t + g(t)\,\dif \Wt,
-  \label{eq:forward-sde}
-\end{equation}
-where $f(\cdot,t) : \mathbb{R}^d \to \mathbb{R}^d$ is the \emph{drift}, $g(t) > 0$ is
-the scalar \emph{diffusion coefficient}, and $\Wt$ is a standard Brownian motion. The
-two canonical choices of drift and diffusion give:
-\begin{itemize}[nosep]
-  \item \textbf{Variance-preserving (VP-SDE)}: $f(x,t) = -\tfrac{1}{2}\beta(t) x$,
-        $g(t) = \sqrt{\beta(t)}$, which preserves $\E[\norm{x_t}^2]$ and sends $p_t$
-        toward $\mathcal{N}(0, I)$.
-  \item \textbf{Variance-exploding (VE-SDE)}: $f = 0$,
-        $g(t) = \sqrt{\dif \sigma^2(t)/\dif t}$, which inflates noise variance without
-        normalising the signal.
-\end{itemize}
-In both cases the marginal $p_t(x_t \mid x_0)$ is Gaussian with computable mean and
-variance, making simulation from the forward process straightforward.
+The sampling procedure can be viewed as an inhomogeneous Markov chain. A state
+at time $t$ is transformed into a state at time $t-1$ using a transition kernel
+that depends on the current noise level:
+\[
+  x_t \longrightarrow x_{t-1} \longrightarrow \cdots \longrightarrow x_0 .
+\]
+The transition kernel is approximate because it uses a learned denoiser and a
+finite discretisation. The number of transitions is an inference-time design
+choice. More transitions usually means more computation and a closer
+approximation to the ideal reverse process; fewer transitions reduce compute
+but increase discretisation or approximation error.
 
-\subsection{DDPM as a discrete-time special case}
-\label{ssec:ddpm}
+This Markov-chain viewpoint is important for the thesis because correctors are
+additional transition kernels inserted into an existing trajectory. In
+continuous predictor-corrector samplers, the predictor is a discretised reverse
+SDE or ODE step and the corrector is often a Langevin step that refines the
+current state \parencite{song2021score}. In discrete diffusion, the analogue is
+not a gradient update but a local Markov update on tokens.
 
-\textcite{ho2020ddpm} introduce the Denoising Diffusion Probabilistic Model (DDPM) in a
-discrete-time formulation, which maps cleanly onto the VP-SDE with a specific linear
-noise schedule. Define a sequence of variances $0 < \beta_1 < \cdots < \beta_T \ll 1$
-and set $\abardpm_t \coloneq \prod_{s=1}^{t}(1 - \betanoise_s)$. The forward process is
-\begin{equation}
-  q(x_t \mid x_0) = \mathcal{N}(x_t;\; \sqrt{\abardpm_t}\, x_0,\;
-    (1 - \abardpm_t) I),
-  \label{eq:ddpm-forward}
-\end{equation}
-so $x_t = \sqrt{\abardpm_t}\,x_0 + \sqrt{1-\abardpm_t}\,\varepsilon$,
-$\varepsilon \sim \mathcal{N}(0,I)$, giving a reparametrised forward sample in a single
-step. As $\abardpm_t \to 0$, the signal is fully destroyed and $x_T \approx
-\mathcal{N}(0, I)$.
+\section{Continuous and Discrete Diffusion}
+\label{sec:ch2-continuous-discrete}
 
-The DDPM training objective is equivalent to DSM: the network $\etheta(x_t, t)$
-predicts the noise $\varepsilon$ added to $x_0$, and training minimises
-\begin{equation}
-  \mathcal{L}_{\mathrm{DDPM}}(\theta)
-  = \E_{t, x_0, \varepsilon}\!\left[
-      \norm{\etheta(\sqrt{\abardpm_t}\,x_0 + \sqrt{1-\abardpm_t}\,\varepsilon,\; t)
-            - \varepsilon}^2
-    \right].
-  \label{eq:ddpm-loss}
-\end{equation}
-The score can be recovered from the noise prediction via
-$\stheta(x_t, t) = -\etheta(x_t, t) / \sqrt{1 - \abardpm_t}$. An equivalent
-parameterisation predicts $\xhat_\theta(x_t, t) \approx x_0$ directly, which will be the
-natural analogue in the masked discrete setting.
+The continuous setting is mathematically convenient because the state space is
+Euclidean. Small perturbations are meaningful, gradients exist, and Gaussian
+transition kernels are tractable. Text is different. A token sequence lies in
+the finite product space $\mathcal{V}^L$, where $\mathcal{V}$ is the
+vocabulary and $L$ is the sequence length. There is no infinitesimal move from
+one word to another.
 
-\subsection{The reverse SDE}
-\label{ssec:reverse-sde}
+Discrete diffusion models therefore replace Gaussian noising with categorical
+corruption. Some models substitute tokens according to a rate matrix; masked
+diffusion models use a special absorbing mask token $\Mask$. A clean token is
+either preserved or replaced by $\Mask$, and the reverse model predicts the
+missing content. This connects diffusion language models to masked language
+modelling, but with an explicit generative trajectory rather than a single
+training-time corruption.
 
-The key theoretical result enabling score-based generation is
-\textcite{anderson1982reverse}: a diffusion process run forward according
-to~\eqref{eq:forward-sde} has a time-reversed counterpart that satisfies
-\begin{equation}
-  \dif x_t = \left[f(x_t, t) - g(t)^2 \nabla_{x_t} \log p_t(x_t)\right]\dif t
-             + g(t)\,\dif \bar{W}_t,
-  \label{eq:reverse-sde}
-\end{equation}
-where $\bar{W}_t$ is a Brownian motion running backward in time. Replacing the
-intractable score $\nabla_{x_t} \log p_t(x_t)$ with the learned $\stheta(x_t, t)$ and
-discretising yields the reverse sampling chain. The generation procedure is therefore:
-(i)~sample $x_T \sim p_T \approx \mathcal{N}(0, I)$; (ii)~integrate the reverse
-SDE~\eqref{eq:reverse-sde} from $t = T$ to $t = 0$.
+The move to discrete states changes the inference problem. In continuous
+models, a denoising network can define a vector field. In masked language
+models, the denoiser returns categorical probabilities over the vocabulary at
+masked or revisable positions. Sampling requires committing to tokens. Once a
+token is committed, later mechanisms may or may not be allowed to revise it,
+depending on the sampler.
 
-%% ---------------------------------------------------------------
-\section{Sampling from Diffusion Models}
-\label{sec:diffusion-sampling}
+\section{Inference-Time Budgets}
+\label{sec:ch2-budgets}
 
-\subsection{Euler--Maruyama discretisation}
-\label{ssec:euler-maruyama}
+Diffusion generation is expensive because it uses repeated model evaluations.
+The usual accounting unit is the number of function evaluations, or NFE. A
+shorter denoising trajectory uses fewer NFEs but may produce lower-quality
+samples. Deterministic samplers such as DDIM were introduced partly to improve
+this tradeoff in continuous diffusion \parencite{song2020ddim}.
 
-The straightforward approach is to discretise the reverse SDE via the Euler--Maruyama
-scheme with stepsize $\Delta t$:
-\begin{equation}
-  x_{t - \Delta t} = x_t
-    - \left[f(x_t, t) - g(t)^2 \stheta(x_t, t)\right]\Delta t
-    + g(t)\sqrt{\Delta t}\,z_t,
-  \quad z_t \sim \mathcal{N}(0,I).
-  \label{eq:euler-maruyama}
-\end{equation}
-This yields the ancestral sampling procedure of \textcite{ho2020ddpm}. The discretisation
-error decreases with $\Delta t$, so reducing the step count (to save model evaluations)
-increases the gap between the generated distribution and the true reverse process.
+The thesis uses a more specific budget. The base predictor trajectory is fixed,
+so its cost is treated as given. The variable cost is the number of corrector
+placements. If a corrector placement costs $c_{\mathrm{corr}}$ extra model
+forward passes, then a placement budget $B$ corresponds to extra compute
+$B_{\mathrm{NFE}} = c_{\mathrm{corr}}B$. The mathematical problem is therefore
+not generic NFE allocation; it is placement of a fixed number of correction
+calls along an existing denoising trajectory.
 
-\subsection{Deterministic ODE samplers and DDIM}
-\label{ssec:ddim}
+\section{Quality Functionals and Paired Evaluation}
+\label{sec:ch2-quality}
 
-Every diffusion model also admits a deterministic sampling trajectory via a probability
-flow ODE \parencite{song2021score}: the ODE whose marginals match those of the forward
-SDE is
-\begin{equation}
-  \frac{\dif x_t}{\dif t}
-  = f(x_t, t) - \tfrac{1}{2}g(t)^2 \nabla_{x_t}\log p_t(x_t).
-  \label{eq:probability-flow-ode}
-\end{equation}
-\textcite{song2020ddim} derive \emph{Denoising Diffusion Implicit Models} (DDIM) by
-directly constructing a non-Markovian inference process whose marginals agree with
-DDPM's but whose reverse step is deterministic. This allows high-quality generation in
-far fewer function evaluations (e.g.\ 50 steps instead of 1000) at the cost of slightly
-reduced sample diversity. The practical tradeoff between step count, sample quality, and
-diversity motivates the \emph{number of function evaluations} (NFE) budget framework
-that will be central in Chapter~\ref{ch:masked-diffusion}.
+To compare two generation procedures one needs a quality functional. In this
+thesis a quality functional is any fixed map $F$ from a completed sequence to a
+real number, with larger values treated as better. Examples include negative
+language-model loss under a reference model, learned reward scores, or other
+automatic metrics. The theory in Chapter~\ref{ch:contribution} is agnostic to
+the choice of $F$; the empirical conclusions are always conditional on the
+chosen $F$.
 
-\subsection{Predictor-corrector samplers}
-\label{ssec:predictor-corrector}
+Because generation is random, schedule comparisons should be paired whenever
+possible. A paired comparison holds the seed and baseline trajectory fixed and
+changes only the intervention being tested. This common-random-number
+principle reduces variance and is central to the schedule-gain definition used
+later.
 
-\textcite{song2021score} propose \emph{predictor-corrector} (PC) samplers, which
-interleave:
-\begin{enumerate}[nosep]
-  \item a \textbf{predictor} step: a discretised reverse SDE or ODE step that advances
-        $x_t$ to $x_{t-\Delta t}$;
-  \item a \textbf{corrector} step: a Markov chain Monte Carlo (MCMC) step that leaves
-        the current marginal $p_{t-\Delta t}$ invariant and uses additional model
-        evaluations to improve the sample.
-\end{enumerate}
-In the continuous setting the corrector is typically a \emph{Langevin dynamics} step,
-\begin{equation}
-  x \leftarrow x + \epsilon\,\stheta(x, t) + \sqrt{2\epsilon}\,z,
-  \quad z \sim \mathcal{N}(0,I),
-  \label{eq:langevin}
-\end{equation}
-which is the Euler--Maruyama discretisation of the Langevin SDE and is reversible with
-respect to $p_t$.
-
-\paragraph{The corrector idea, and its discrete analogue.}
-The function of a corrector is to \emph{refine} a sample after the predictor has
-committed to an approximate location, spending additional NFEs to reduce the gap between
-the current sample distribution and the target marginal. In the continuous case the
-refining kernel is Langevin dynamics; in the discrete masked case, where the state space
-is a finite vocabulary and there is no gradient to follow, the natural analogue is a
-Gibbs-style resampling step --- the targeted equivalent of Langevin dynamics on a
-discrete space. This is precisely the setting of Chapters~\ref{ch:masked-diffusion}
-and~\ref{ch:informed-correctors}: what is the best Gibbs-style corrector for a masked
-diffusion model, and can its design be formally justified?
-
-%% ---------------------------------------------------------------
-\section{Conditional Generation and Classifier-Free Guidance}
-\label{sec:cfg}
-
-Conditioning a diffusion model on a label or prompt $y$ requires approximating the
-conditional score $\nabla_{x_t}\log p_t(x_t \mid y)$, which by Bayes' rule equals
-$\nabla_{x_t}\log p_t(x_t) + \nabla_{x_t}\log p_t(y \mid x_t)$. The second term is the
-score of a classifier trained on noisy data, which \textcite{dhariwal2021diffusionbeats}
-use to guide an unconditional model.
-
-\textcite{ho2022cfg} observe that training two models --- one conditional, one
-unconditional --- and linearly interpolating their scores avoids the noisy classifier
-entirely:
-\begin{equation}
-  \nabla_{x_t}\log p_t^{\mathrm{guided}}(x_t \mid y)
-  = \nabla_{x_t}\log p_t(x_t)
-    + \omega\!\left[\nabla_{x_t}\log p_t(x_t \mid y)
-                  - \nabla_{x_t}\log p_t(x_t)\right],
-  \label{eq:cfg}
-\end{equation}
-where $\omega \geq 1$ is the guidance scale. Classifier-free guidance (CFG) is the
-standard approach for text-to-image and, increasingly, for language generation.
-We note it here for completeness; the informed corrector framework studied in this thesis
-does not rely on CFG.
-
-%% ---------------------------------------------------------------
-\section{Summary: Continuous Concepts and Their Discrete Counterparts}
+\section{Summary}
 \label{sec:ch2-summary}
 
-The continuous diffusion framework rests on four pillars, each of which has a discrete
-analogue in the masked diffusion setting:
-
-\begin{center}
-\begin{tabular}{@{}lll@{}}
-  \toprule
-  Concept & Continuous diffusion & Masked diffusion \\
-  \midrule
-  Noising process & Gaussian SDE & Position-wise Bernoulli masking \\
-  Score / denoiser & $\stheta(x_t,t) \approx \nabla \log p_t$ &
-    $p_\theta(x_0 \mid z_t)$, token probabilities \\
-  Training objective & Denoising score matching & Masked language modelling loss \\
-  Corrector & Langevin dynamics & Gibbs resampling of masked positions \\
-  \bottomrule
-\end{tabular}
-\end{center}
-
-\noindent The critical structural difference is the \emph{factorisation approximation}:
-in the discrete case, the joint reverse conditional $p(z_{t-1} \mid z_t)$ is intractable,
-and one approximates it by a product over positions. This approximation has no continuous
-analogue (the Gaussian case is exact), and it is the primary source of sample-quality
-degradation in masked diffusion. The error it introduces --- the \emph{factorisation
-error} $\Efact$ --- and the question of whether informed correctors can reduce it below
-the best unmasking-only bound are the central concerns of this thesis.
+Diffusion models generate by iterative denoising. The details differ between
+continuous and discrete state spaces, but the common structure is a noisy
+starting state, a learned reverse process, a finite denoising horizon, and an
+inference-time budget. For text, the natural diffusion state is a partially
+masked token sequence. The next chapter develops this discrete masked setting
+in detail.

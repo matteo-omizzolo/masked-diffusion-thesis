@@ -1,57 +1,152 @@
-\chapter{Discrete Diffusion Models}
+\chapter{Discrete and Masked Diffusion Language Models}
 \label{ch:discrete-diffusion}
 
-%% Status: WRITE AFTER ch2 draft. Material covered by MDLM + ReMDM reading.
-%%
-%% Audience: reader who has read ch2; first contact with discrete state spaces.
-%% Format: ~1200 words + equations.
+This chapter moves from the continuous denoising picture to the discrete
+language setting. The state is a token sequence, corruption is categorical, and
+the reverse model predicts tokens rather than vectors. The purpose of the
+chapter is to define the base masked diffusion mechanics used throughout the
+thesis. Corrector timing is deferred to Chapters~\ref{ch:informed-correctors}
+and~\ref{ch:contribution}.
 
-%% ---------------------------------------------------------------
-\section{Continuous-Time Markov Chains on Token Spaces}
-\label{sec:ctmc}
+\section{Discrete State Spaces}
+\label{sec:ch3-discrete-state}
 
-%% Cover:
-%%   - CTMC formulation: state space \calV^L, rate matrix Q
-%%   - Absorbing (masked) vs. uniform rate matrices
-%%   - Kolmogorov forward equation: \partial_t p(x,t) = p Q
-%%   - Stationary distribution and convergence
+Let $\mathcal{V}$ be a finite vocabulary and let $L$ be the sequence length.
+A clean text sequence is
+\[
+  x = (x^1,\ldots,x^L) \in \mathcal{V}^L .
+\]
+A discrete diffusion process defines a corruption process on this finite state
+space or on an enlarged state space. Unlike the Gaussian case, corruption
+cannot be expressed as adding a small real-valued perturbation. Instead, tokens
+are replaced, masked, or moved through a continuous-time Markov chain on
+categorical states \parencite{lou2024sedd}.
 
-%% ---------------------------------------------------------------
-\section{Absorbing Diffusion: Masking as a Forward Process}
-\label{sec:absorbing-diffusion}
+One general formulation uses a rate matrix on the vocabulary. If $p_t$ denotes
+the row vector of probabilities at time $t$, then a continuous-time Markov
+chain evolves according to the Kolmogorov forward equation
+\[
+  \frac{\dif}{\dif t}p_t = p_t Q,
+\]
+where $Q$ is a rate matrix. Different choices of $Q$ produce different
+corruption processes. The absorbing-mask process used in masked diffusion is a
+particularly simple and useful case.
 
-%% Cover:
-%%   - Absorbing state \Mask; each position independently absorbed at rate 1
-%%   - Forward process: q(z_t | x) = product over positions of Bernoulli masking
-%%   - Closed-form marginal q_t and posterior q(x | z_t) = p_theta(x | z_t) under assumption
-%%   - Connection to BERT-style masking (not the same, but related)
+\section{Absorbing-Mask Corruption}
+\label{sec:ch3-absorbing-mask}
 
-%% ---------------------------------------------------------------
-\section{Score Entropy and Ratio Estimation}
-\label{sec:score-entropy}
+Masked diffusion introduces a special token $\Mask$ and extends the state
+space to $\mathcal{V}\cup\{\Mask\}$. In the forward process, each clean token
+is independently replaced by $\Mask$ with a time-dependent probability. If
+$z_t$ is the corrupted sequence at time $t$, then a typical absorbing-mask
+transition has the form
+\[
+  q(z_t \mid x)
+  = \prod_{\ell=1}^L q(z_t^\ell \mid x^\ell),
+\]
+where $z_t^\ell$ is either the original token $x^\ell$ or the absorbing mask
+token. Once a position has been masked in the forward process, it remains
+masked as the noising time increases.
 
-%% Cover:
-%%   - SEDD (Lou et al. 2024, \cite{lou2024sedd}): score entropy objective
-%%   - Ratio \frac{p(x)}{p(z_t)} and why it appears in the reverse process
-%%   - How SEDD relates to continuous score matching: the discrete analogue
-%%   - Brief: why MDLM takes a different (simpler) approach
+The reverse process starts from a heavily masked sequence and progressively
+fills in tokens. This resembles masked language modelling, but the use is
+different. Masked language modelling trains a denoiser on randomly corrupted
+examples. Masked diffusion uses the denoiser repeatedly as part of a generative
+trajectory.
 
-%% ---------------------------------------------------------------
-\section{The Factorisation Approximation}
-\label{sec:factorisation-approx}
+\section{Reverse Denoising and the Predictor}
+\label{sec:ch3-reverse-predictor}
 
-%% Cover:
-%%   - The exact reverse conditional p(z_{t-1} | z_t) requires summing over all x
-%%   - The factorised approximation: \pfact(z_{t-1} | z_t) = \prod_i p_\theta(z_{t-1}^i | z_t)
-%%   - This approximation is the central source of error in MDM sampling
-%%   - Definition of factorisation error \Efact (will be formalised in ch4)
+The learned reverse model is a predictor. Given a partially masked state
+$z_t$, it outputs token probabilities for positions that may be filled or
+updated. In an MDLM-style model, the network directly parameterises
+$p_\theta(x \mid z_t)$ or a closely related distribution over clean tokens
+\parencite{sahoo2024mdlm}. Generation proceeds by choosing some masked
+positions and sampling or selecting tokens from these probabilities.
 
-%% ---------------------------------------------------------------
+Let $T$ be the denoising horizon. A sample path is a sequence
+\[
+  z_T,z_{T-1},\ldots,z_0,
+\]
+where $z_T$ is highly masked and $z_0$ is a completed token sequence. The
+predictor schedule determines how many positions are unmasked at each step and
+which positions are eligible. A common principle is easy-first decoding:
+positions with high confidence are committed earlier.
+
+This predictor schedule is not the object optimised in the thesis. It is part
+of the fixed backend. The thesis studies extra corrector placements on top of
+this fixed trajectory.
+
+\section{Committed Tokens and Revisable Sets}
+\label{sec:ch3-revisable-sets}
+
+At any step some positions remain masked and some have already been assigned
+tokens. The sampler must specify which positions are revisable. For a pure
+unmasking sampler, committed positions may never be changed. For a
+self-correction backend, committed positions may remain eligible for later
+revision. We denote the revisable or action set at step $t$ by $R_t$.
+
+The set $R_t$ is a backend property. It is not the same as the set of masked
+positions unless the backend defines it that way. This distinction becomes
+important for informed correctors: signals such as entropy, inverse margin, or
+quality mass are only meaningful as timing signals if they are computed on the
+same set of positions the corrector can actually act on.
+
+\section{Factorisation and Approximation Error}
+\label{sec:ch3-factorisation}
+
+The exact reverse conditional of a discrete diffusion model is generally
+intractable because it involves dependencies among many token positions. Scaled
+models therefore use factorised approximations, predicting or sampling
+positions through products of local categorical distributions. This is
+computationally necessary but introduces approximation error.
+
+\textcite{lavenant2025lz} analyse masked diffusions with factorised
+approximations and separate sources of error into learning error and
+factorisation error. The learning error is controlled by the quality of the
+trained denoiser. The factorisation error is tied to the inference procedure:
+how the reverse process commits to tokens, how schedules are chosen, and
+whether additional correction steps can reduce the approximation gap. This
+error-decomposition viewpoint motivates the later focus on inference-time
+correction.
+
+\section{Base Model Context}
+\label{sec:ch3-base-model-context}
+
+Several recent model families instantiate discrete or masked diffusion for
+language. MDLM provides a simple masked diffusion language-model formulation
+with an effective training objective \parencite{sahoo2024mdlm}. SEDD develops
+discrete diffusion through ratio estimation and a score-entropy objective
+\parencite{lou2024sedd}. LLaDA and Dream scale diffusion-style language models
+toward large language-model regimes \parencite{nie2025llada,ye2025dream}.
+
+For this thesis, these models supply background rather than alternative thesis
+objects. The theory in Chapter~\ref{ch:contribution} does not assume a
+particular base model. It assumes only that, after fixing a predictor and
+corrector, one can define and evaluate the gain of applying the corrector at a
+set of time steps.
+
+\section{Common Random Numbers}
+\label{sec:ch3-crn}
+
+Discrete generation involves random choices: initial masks, token sampling,
+tie-breaking, and possibly corrector transitions. When comparing two schedules,
+one should hold all irrelevant randomness fixed. This is the common-random-
+number principle. A baseline trajectory and a corrected trajectory should share
+the same seed and predictor randomness, differing only in the corrector
+intervention being evaluated.
+
+This principle is methodological rather than model-specific. It is what makes
+the schedule gain $G(S)$ in Chapter~\ref{ch:contribution} interpretable as the
+effect of a schedule rather than noise from unrelated sampling variation.
+
 \section{Summary}
-\label{sec:discrete-summary}
+\label{sec:ch3-summary}
 
-%% Key message:
-%%   - Discrete diffusion inherits the predictor-corrector structure from continuous models
-%%   - The factorisation approximation is unavoidable at scale
-%%   - Reducing factorisation error is the central inference-time challenge
-%%   - Masked diffusion (MDLM) is the focus: absorbing rate matrix, simple training objective
+Masked diffusion language models generate by progressively replacing mask
+tokens with vocabulary tokens. The base predictor schedule defines the main
+trajectory, while the revisable set $R_t$ determines which positions can be
+acted on at each step. The next chapter surveys the model families and
+inference-time mechanisms around this base process, with careful separation
+between remasking, informed refinement, trajectory search, and corrector
+timing.

@@ -34,10 +34,11 @@ Theorem stack formalized in `research/candidate_theorems.md` §0–§7:
 Theory-to-experiment map: `research/candidate_theorems.md` §7. Backbone is
 **A → B / B′ → Diagnostic Framework C**.
 
-**Thesis writing gate.** Do not rewrite chapters 1–5 yet. Revisit them only
-after (i) the ch6 theory skeleton is aligned with this active stack, (ii) real
-ProSeCo PF3/PF5/PF7 pass with the staged checkpoint, and (iii) the Phase 0 K=3
-smoke reproduces the old qualitative pattern.
+**Thesis writing status.** ch1–ch6 now have full drafts aligned with the active
+theory stack. Treat empirical claims in those chapters as provisional until
+(i) real ProSeCo PF3/PF5/PF7 pass with the staged checkpoint and (ii) the Phase
+0 K=3 smoke reproduces the old qualitative pattern. Do not write final
+experiment/discussion claims before those gates.
 
 ---
 
@@ -156,49 +157,21 @@ This is a stretch goal, not on the critical path. September deadline takes prior
 
 ---
 
-## Writing tasks (parallel with Gate 1–2, sequential after Gate 3+)
+## Writing tasks
 
-Once the theory scaffold (Gate 1) is stable, writing can proceed in parallel:
+Current status: ch1–ch5 are drafted as background / bridge chapters and ch6 is
+drafted as the self-contained mathematical framework.
 
-1. **ch3 — Discrete Diffusion background** (~15–20 pages)
-   - MDLM forward process, predictor, training objective.
-   - ReMDM corrector kernel (Barker/MPF). Brief.
-   - ProSeCo annealed refinement.
+Remaining writing should wait on the relevant empirical gates:
 
-2. **ch4 — Correctors background** (~10 pages)
-   - Corrector scheduling problem formalization.
-   - L&Z E_fact/E_learn decomposition.
-   - Existing approaches and what they do NOT address.
-
-3. **ch5 — Experiments** (~15–20 pages)
-   - ProSeCo-OWT backbone description.
-   - Phase 0 reproducibility audit result.
-   - Protocol A (signal calibration), Phase 2b (policy comparison + MC-oracle),
-     Phase 3a (combinatorial search baselines).
-   - Results tables and figures. Cross-backbone probe as Section 5.X.
-   - Protocol C (adaptive controller) as Section 5.Y or Appendix F.
-
-4. **ch7 — Discussion / Limitations** (~5–8 pages)
-   - Single-backbone scope caveat.
-   - CD-G as structural existence result.
-   - Theorem A's uniform L∞ bound is empirically vacuous; the operative
-     selected-schedule form is the finite-pool corollary (Theorem A as
-     B′(Q := A)). A′ and A″ are reported as diagnostics, not regret
-     refinements.
-   - Future: interaction-aware scheduling, multi-backbone replication.
-
-5. **Abstract + Introduction** — write last.
-
-6. **Conclusion** (~3–4 pages) — what was answered, what is still open.
-
-### Theory clean-up tasks (run in parallel with writing)
-
-7. Clean LaTeX proof of Theorem A combining step in `thesis/chapters/ch6_contribution.tex`
-   (uniform form), then state the finite-pool corollary as the operative form.
-8. State Theorem B / B′ in ch6 with the no-leakage candidate-pool caveat.
-9. Report A′ and A″ diagnostics in ch5 / ch7 (not as theorems).
-10. Add the Empirical Ranker-Class Limitation (formal time-only part + empirical
-    part on tested rankers) in ch6.
+1. **ch7 / experiments** — write only after Phase 0 re-confirms the ProSeCo-OWT
+   backend path and the old qualitative pattern.
+2. **Discussion / limitations** — write after Phase 1 determines whether
+   ProSeCo-OWT is interaction-driven or higher-order/chaotic under Diagnostic
+   Framework C.
+3. **Abstract and conclusion** — write last, after experiment claims are fixed.
+4. **Final ch6 polish** — update wording and empirical anchors after Phase 0 /
+   Phase 1; do not redesign the theorem stack.
 
 ---
 
@@ -232,4 +205,4 @@ Schedule a Zanella meeting to present:
   uses are not ruled out.
 - Theory-first programme (Theorem B/B′, Diagnostic Framework C, appendix D).
 - Phase 0 reproducibility gate.
-- Writing plan for ch3–ch7.
+- Writing plan for ch7, discussion, abstract, and conclusion.

@@ -79,12 +79,11 @@ not duplicate them. Quick pointers:
 
 ## Remaining theory tasks (LaTeX prose)
 
-LaTeX prose in `thesis/chapters/ch6_contribution.tex` is TODO for:
-1. Theorem A combining-step argument (write directly in the uniform form,
-   then state the finite-pool corollary §2.7 as the operative form).
-2. Theorem B / B′ statements and proofs.
-3. Empirical Ranker-Class Limitation (formal + empirical parts).
-4. Diagnostic Framework C definitions and regime taxonomy.
+`thesis/chapters/ch6_contribution.tex` now has a full self-contained
+mathematical draft covering Theorem A, Diagnostics A′/A″, the finite-pool
+form, the Empirical Ranker-Class Limitation, Theorem B/B′, levels of analysis,
+and Diagnostic Framework C.
 
-Defer ch6 LaTeX prose until after Phase 0 + Phase 1 results are in, so the
-empirical anchors in §1.5, §2 can be cited.
+Remaining work is polish, not theorem redesign: after Phase 0 and Phase 1,
+check empirical anchors, cross-references, and final wording against the
+verified results.

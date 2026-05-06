@@ -1,15 +1,191 @@
 \chapter{Introduction}
 \label{ch:introduction}
 
-%% TODO: Write after the research direction is finalised (after Zanella meeting).
-%%
-%% Structure:
-%%   1. Generative modelling with diffusion — motivation
-%%   2. The discrete / masked diffusion setting
-%%   3. The corrector problem: why sample quality plateaus at the unmasking-only optimum
-%%   4. What informed correctors are and why they matter
-%%   5. Thesis contributions (Gap D / B+C / E — TBD)
-%%   6. Thesis outline
-%%
-%% Key references to introduce here:
-%%   \cite{sahoo2024mdlm}, \cite{lavenant2025lz}, \cite{zhao2024informedcorrectors}
+Language generation is usually presented as a left-to-right problem: a model
+conditions on a prefix and samples the next token. Diffusion language models
+offer a different view. They begin from a corrupted or masked sequence and
+generate by repeatedly denoising it. This makes generation a trajectory rather
+than a single autoregressive pass. At each step the model has a partially
+specified text, a set of uncertain positions, and a choice about how much
+inference-time effort to spend before moving on.
+
+This thesis studies one such inference-time choice. We fix a masked diffusion
+language model, fix its predictor schedule, fix an informed corrector, and ask
+when the corrector should be applied under a fixed budget. The question is not
+whether diffusion language models are better than autoregressive models. It is
+also not whether a new corrector kernel can be designed. The question is more
+specific: given a corrector that can refine a denoising trajectory, where along
+that trajectory should a limited number of corrector placements be spent?
+
+\section{Diffusion Models and Language Generation}
+\label{sec:ch1-diffusion-language}
+
+Diffusion models learn to reverse a gradual corruption process. In image
+generation, the usual corruption adds Gaussian noise and the reverse process
+removes it by estimating a score or denoising direction
+\parencite{ho2020ddpm,song2021score}. In language, the state space is
+discrete. A token is not a point in Euclidean space that can be nudged by a
+small Gaussian vector. Masked and discrete diffusion language models therefore
+replace continuous noise with categorical corruption, most commonly by masking
+tokens and learning to reconstruct them
+\parencite{sahoo2024mdlm,lou2024sedd,nie2025llada,ye2025dream}.
+
+This gives masked diffusion language models a useful structural property:
+generation unfolds through a sequence of partially completed texts. Early in
+the trajectory many positions are masked. Later, more positions have been
+committed to concrete tokens. This trajectory exposes intermediate
+uncertainty, confidence, and quality information that can be used at inference
+time. It also creates several distinct design questions. One may ask how to
+train the base denoiser, how to choose the predictor schedule, how to decide
+which tokens to unmask, whether to remask tokens, how to design a correction
+kernel, or when to apply a fixed correction kernel. This thesis focuses only
+on the last of these questions.
+
+\section{Correction as Inference-Time Effort}
+\label{sec:ch1-correction-effort}
+
+A predictor step advances the masked diffusion trajectory. A corrector step
+spends additional computation at the current state to improve or refine the
+sample. The continuous diffusion literature often expresses this as a
+predictor-corrector sampler, where a numerical reverse step is followed by an
+MCMC-like refinement step \parencite{song2021score}. In discrete diffusion,
+correctors are typically Markov kernels or refinement mechanisms that use
+model-derived information to revise tokens or local states
+\parencite{zhao2024informedcorrectors,gat2024dfm,schiff2026proseco}.
+
+The existence of a corrector does not answer the timing question. If applying
+the corrector after every denoising step is too expensive, then the model has a
+placement budget. With a horizon of $T$ denoising steps and a budget of $B$
+corrector placements, timing becomes a schedule-selection problem: choose
+$B$ steps out of $T$. This problem is combinatorial even before one considers
+adaptive or feature-conditioned policies.
+
+The timing question is under-specified in much of the surrounding literature.
+Remasking methods change the sampler by returning positions to a masked or
+uncertain state \parencite{wang2025remdm}. Token-ordering methods study which
+positions should be committed first \parencite{kim2025tokenordering}. Search
+and test-time scaling methods branch or refine candidate trajectories using
+external scores or rewards \parencite{lee2025iterref,bilal2026s3}. These are
+important adjacent directions, but they do not by themselves define a theory
+of fixed-budget corrector placement for a fixed predictor and corrector.
+
+\section{Main Research Question}
+\label{sec:ch1-research-question}
+
+The central question of the thesis is:
+\begin{quote}
+For a fixed predictor schedule and fixed corrector-placement budget $B$ in a
+masked diffusion language model, when is informed correction timing reducible
+to marginal signal ranking, and when does it require interaction-aware or
+search-based scheduling?
+\end{quote}
+
+Here $B$ is a placement budget, not merely a generic number-of-function-
+evaluations budget. If each placement costs $c_{\mathrm{corr}}$ additional
+forward passes, then the associated extra-NFE budget is
+$B_{\mathrm{NFE}} = c_{\mathrm{corr}}B$. This distinction matters because the
+mathematical object is the set of time steps at which the corrector is placed.
+
+The thesis develops a model- and corrector-agnostic framework. For any fixed
+masked diffusion predictor, informed corrector, quality functional $F$, and
+placement budget $B$, the framework defines the schedule gain $G(S)$, marginal
+gain $\Delta_t$, additive surrogate $A(S)$, pairwise interaction
+$\xi_{t,t'}$, pairwise surrogate $Q(S)$, and diagnostic quantities that
+classify the timing regime. ProSeCo-OWT is the primary empirical case study,
+not an assumption of the theory \parencite{schiff2026proseco}.
+
+\section{What This Thesis Is Not About}
+\label{sec:ch1-non-goals}
+
+The scope is deliberately narrow.
+
+First, this thesis does not optimise the predictor schedule. The predictor
+schedule determines how the base masked diffusion sampler moves from a masked
+sequence to a completed sequence. In this work that schedule is fixed.
+
+Second, the thesis does not study token-selection policy as the primary
+object. A corrector may choose positions inside a revisable set, but the thesis
+asks when the corrector is called, not which token is revised once it is called.
+
+Third, the thesis does not present a new remasking sampler. Remasking can be an
+effective inference-time strategy, but it changes the state dynamics rather
+than allocating a fixed corrector kernel along a fixed trajectory.
+
+Fourth, the thesis does not design a new corrector kernel. Corrector kernels
+are reviewed because they motivate the problem, but the contribution is at the
+trajectory level: fixed kernel, fixed budget, variable timing.
+
+\section{Contributions}
+\label{sec:ch1-contributions}
+
+The thesis makes five contributions.
+
+\begin{enumerate}
+  \item It formulates fixed-budget informed-corrector timing as a schedule-gain
+  problem. The formulation is model- and corrector-agnostic and separates
+  timing from remasking, token selection, predictor scheduling, and kernel
+  design.
+
+  \item It proves Theorem A, a marginal-ranker baseline. The theorem states
+  when a separable proxy score is sufficient: if schedule gains are
+  approximately additive and the proxy is uniformly calibrated to the marginal
+  gains, top-$B$ ranking has bounded regret.
+
+  \item It develops Theorem B and Theorem B$'$, a pairwise-surrogate
+  framework. These results identify when a pairwise approximation to
+  schedule gain is useful, including an experimentally usable finite-pool
+  form with a no-leakage requirement.
+
+  \item It introduces Diagnostic Framework C. This protocol classifies a fixed
+  empirical tuple into no-op, marginal/rankable, interaction-driven,
+  higher-order/chaotic, or online-decision-like regimes.
+
+  \item It uses ProSeCo-OWT as an empirical case study. Prior baseline results
+  suggest that tested separable rankers do not recover the observed MC-oracle
+  headroom, while search procedures using true schedule-gain feedback recover
+  a substantial fraction of that headroom. These empirical claims are treated
+  as pending Phase 0 re-confirmation before being used as final thesis
+  evidence.
+\end{enumerate}
+
+The contribution is therefore not a universal impossibility claim about
+marginal signals or ranking. The negative statement is narrower: for the
+tested separable rankers on ProSeCo-OWT, prior results do not recover the
+MC-oracle headroom. The theory leaves room for feature-conditioned rankers,
+pairwise schedulers, online controllers, non-separable PRISM-style refinement,
+and search procedures.
+
+\section{Scope and Limitations}
+\label{sec:ch1-limitations}
+
+The main empirical risk is external validity. ProSeCo-OWT is a useful and
+audited case study, but it is one backend. A bounded LLaDA-SFT probe did not
+establish transferable MC-oracle headroom at the tested resolution. The thesis
+therefore avoids claiming that the observed ProSeCo-OWT regime is universal.
+
+A second limitation is deployability. Search procedures such as coordinate
+descent with true gain feedback are structural existence results: they show
+that better schedules exist under the measured quality functional, but they do
+not by themselves give an inference-time scheduler. A deployable scheduler
+claim requires a feature-conditioned rule evaluated on held-out seeds, as
+formalised in Chapter~\ref{ch:contribution}.
+
+A third limitation is metric dependence. The quality functional $F$ used in
+the ProSeCo-OWT case study is a relative evaluation metric. The theory accepts
+any fixed $F$, but empirical conclusions are always conclusions about the
+chosen metric.
+
+\section{Thesis Roadmap}
+\label{sec:ch1-roadmap}
+
+Chapter~\ref{ch:background-diffusion} reviews diffusion models as iterative
+denoising procedures and introduces the Markov-chain viewpoint used later.
+Chapter~\ref{ch:discrete-diffusion} moves to discrete and masked diffusion,
+where categorical corruption and absorbing masks replace Gaussian noise.
+Chapter~\ref{ch:masked-diffusion} surveys masked diffusion language-model
+families and inference-time mechanics, carefully separating base models,
+remasking, informed refinement, and trajectory search. Chapter~\ref{ch:informed-correctors}
+defines informed correctors and builds the conceptual bridge from corrector
+kernels to corrector timing. Chapter~\ref{ch:contribution} gives the formal
+schedule-gain framework, theorems, diagnostics, and limitations. The remaining
+chapters report experiments and conclusions.

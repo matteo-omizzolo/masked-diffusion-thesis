@@ -51,7 +51,7 @@ predictor schedules (when to unmask), or corrector kernel design (how to correct
 
 ## Repo layout
 - `START_HERE.md` — 2-minute orientation
-- `thesis/` — LaTeX thesis chapters (ch6 skeleton done; ch3/4/5/7 TODO)
+- `thesis/` — LaTeX thesis chapters (ch1–ch6 drafted; ch7/abstract/conclusion TODO)
 - `research/` — mathematical worklog, candidate theorems, proof ledger
 - `docs/` — compact active docs (see docs/README.md)
 - `docs/archive/` — archived historical docs (do not use for current status)
@@ -167,10 +167,10 @@ Key points:
 - **Reading:** ProSeCo, PRISM, MDLM, ReMDM, L&Z Error Bounds done.
 
 ### Writing status
-- ch2 (Continuous Diffusion): FIRST DRAFT DONE
-- ch6 (Contribution): SKELETON DONE (theorem statements locked, prose TODO)
-- ch3 / ch4 / ch5 / ch7: TODO
-- Abstract / Introduction / Conclusion: TODO
+- ch1–ch5: full PASS 2 drafts done as study-guide chapters leading into ch6.
+- ch6 (Contribution): full self-contained mathematical framework drafted.
+- ch7 / experiments: TODO after Phase 0 re-confirmation.
+- Abstract / Conclusion: TODO.
 
 ## Claude Code tools & plugins
 
@@ -213,8 +213,8 @@ the K=3 smoke matches qualitatively.
 2. Phase 0 reproducibility audit — implement or manually verify PF1–PF8 first, then K=3 smoke, then K=30 replication only if the smoke matches qualitatively.
 3. Interaction diagnostics — only after Phase 0 passes.
 4. Pairwise scheduler — only if interaction diagnostics show structure.
-5. LaTeX writing — ch3, ch4, ch5, ch7, Abstract, Introduction, Conclusion.
-6. Clean Theorem A proof narrative in ch6.
+5. LaTeX writing — ch1–ch6 drafted; ch7 / experiments, Abstract, and Conclusion remain.
+6. Polish ch6 only after Phase 0 / Phase 1 empirical anchors are settled.
 
 Full action plan: `docs/05_next_steps.md`
 Theory-first programme: `docs/06_theory_first_research_plan.md`

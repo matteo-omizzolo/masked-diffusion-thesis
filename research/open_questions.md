@@ -113,9 +113,9 @@ Status: deferred until July; flagged here to avoid forgetting.
 
 | OQ | Item | Status |
 |---|---|---|
-| OQ-W1 | ch6 LaTeX prose for Theorem A combining step | TODO; defer until after Phase 0 results |
-| OQ-W2 | ch6 LaTeX prose for Diagnostics A′, A″ | TODO; diagnostics only, not theorem variants |
-| OQ-W3 | ch6 LaTeX environment for Empirical Ranker-Class Limitation (formal time-only part + scoped empirical part) | TODO |
+| OQ-W1 | ch6 LaTeX prose for Theorem A combining step | Initial full draft written; polish after Phase 0 results |
+| OQ-W2 | ch6 LaTeX prose for Diagnostics A′, A″ | Initial full draft written; diagnostics only, not theorem variants |
+| OQ-W3 | ch6 Empirical Ranker-Class Limitation (formal time-only part + scoped empirical part) | Initial full draft written; verify wording after Phase 0 re-confirmation |
 | OQ-W4 | ch7 single-backbone caveat scoping (regime III vs IV language) | Defer until Phase 1 outcome |
 
 ---
