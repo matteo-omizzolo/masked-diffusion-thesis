@@ -28,7 +28,12 @@ def test_detect_proseco_snapshot_backend(tmp_path: Path) -> None:
 
 def test_protocol_a_script_surrogate_smoke(tmp_path: Path) -> None:
     out_dir = tmp_path / "protocol_a"
-    script = Path(__file__).resolve().parents[1] / "scripts" / "run_protocol_a_proseco_snapshot.py"
+    script = (
+        Path(__file__).resolve().parents[1]
+        / "scripts"
+        / "legacy"
+        / "run_protocol_a_proseco_snapshot.py"
+    )
     cmd = [
         sys.executable,
         str(script),
@@ -52,4 +57,3 @@ def test_protocol_a_script_surrogate_smoke(tmp_path: Path) -> None:
     assert {"t", "delta", "entropy", "inverse_margin", "quality_mass_proxy"} <= set(
         sample["per_t"][0].keys()
     )
-

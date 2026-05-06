@@ -7,20 +7,62 @@ explicit integration blockers rather than pretending the hooks already exist.
 
 from __future__ import annotations
 
+import inspect
+import os
+from pathlib import Path
+
 import numpy as np
 import pytest
 
 from mdm_playground.scheduling.allocation import allocate_budget
+from mdm_playground.scheduling.backends.proseco_owt import ProSeCoOWTGenerator
 from mdm_playground.scheduling.evaluate import estimate_single_step_gain
 from mdm_playground.scheduling.signals import compute_signals
 from mdm_playground.scheduling.surrogate import SurrogateGenerator
+from mdm_playground.scheduling.trace import GenerationTrace
 
 
 def _extra_forward_passes(allocation: dict[int, int], c_corr: int) -> int:
     return c_corr * sum(allocation.values())
 
 
-def test_pf1_deterministic_base_surrogate() -> None:
+def _proseco_generator_or_skip() -> ProSeCoOWTGenerator:
+    checkpoint = os.environ.get("PROSECO_OWT_CHECKPOINT")
+    if not checkpoint:
+        pytest.skip(
+            "Real ProSeCo PF checks require PROSECO_OWT_CHECKPOINT pointing to a "
+            "staged snapshot. Hook: ProSeCoOWTGenerator.run_*("
+            "return_trace=True) in src/mdm_playground/scheduling/backends/"
+            "proseco_owt.py. Manual command: PROSECO_OWT_CHECKPOINT=/path/to/"
+            "proseco_owt pytest tests/test_phase0_preflight.py -q."
+        )
+    if not Path(checkpoint).exists():
+        pytest.skip(
+            f"PROSECO_OWT_CHECKPOINT does not exist: {checkpoint}. Stage it with "
+            "python scripts/stage_proseco_owt.py --dest <path>, then rerun "
+            "pytest tests/test_phase0_preflight.py -q."
+        )
+    return ProSeCoOWTGenerator(
+        checkpoint=checkpoint,
+        T=int(os.environ.get("PROSECO_TEST_T", "4")),
+        device=os.environ.get("PROSECO_TEST_DEVICE", "cpu"),
+    )
+
+
+def _pre_predictor_rng(trace: GenerationTrace) -> list[str]:
+    assert trace.rng_fingerprint_by_step is not None
+    return [x for x in trace.rng_fingerprint_by_step if x.startswith("pre_predictor_")]
+
+
+def test_real_backend_trace_api_is_present() -> None:
+    """Phase 0 hook check: real backend exposes trace-enabled run methods."""
+    for name in ("run_base", "run_branch", "run_with_schedule"):
+        sig = inspect.signature(getattr(ProSeCoOWTGenerator, name))
+        assert "return_trace" in sig.parameters
+    assert isinstance(ProSeCoOWTGenerator.corrector_nfe_per_placement, property)
+
+
+def test_pf1_deterministic_base() -> None:
     """PF1: same seed/config gives same base tokens and F score."""
     gen = SurrogateGenerator(T=16, D=24, seed_base=11)
 
@@ -32,7 +74,7 @@ def test_pf1_deterministic_base_surrogate() -> None:
     assert first["per_step_signals"] == second["per_step_signals"]
 
 
-def test_pf2_empty_schedule_equals_base_surrogate() -> None:
+def test_pf2_empty_schedule_equals_base() -> None:
     """PF2: an empty schedule is exactly the base trajectory in the surrogate."""
     gen = SurrogateGenerator(T=16, D=24, seed_base=13)
 
@@ -44,7 +86,7 @@ def test_pf2_empty_schedule_equals_base_surrogate() -> None:
     assert scheduled["schedule_steps"] == []
 
 
-def test_pf3_singleton_schedule_matches_protocol_a_score_surrogate() -> None:
+def test_pf3_single_correction_equals_protocol_a_surrogate_score() -> None:
     """PF3 partial: singleton schedule score equals the Protocol A branch score."""
     gen = SurrogateGenerator(T=16, D=24, seed_base=17, gamma=0.0)
     t = 6
@@ -56,7 +98,7 @@ def test_pf3_singleton_schedule_matches_protocol_a_score_surrogate() -> None:
     assert scheduled["G_true"] == pytest.approx(branch["delta_true"])
 
 
-def test_pf4_budget_accounting_binary_schedules() -> None:
+def test_pf4_budget_accounting() -> None:
     """PF4: |S| = B and same-cardinality schedules have equal corrector cost."""
     signal = np.linspace(0.0, 1.0, 12)
     budget = 4
@@ -78,7 +120,7 @@ def test_pf4_budget_accounting_binary_schedules() -> None:
     assert _extra_forward_passes(top, c_corr) == _extra_forward_passes(random, c_corr)
 
 
-def test_pf5_crn_surrogate_base_trace_is_shared() -> None:
+def test_pf5_crn_consistency_surrogate_base_trace_is_shared() -> None:
     """PF5 partial: surrogate branches share the base signal trace by seed."""
     gen = SurrogateGenerator(T=16, D=24, seed_base=19)
 
@@ -90,7 +132,7 @@ def test_pf5_crn_surrogate_base_trace_is_shared() -> None:
     assert branch_b["per_step_signals"] == base["per_step_signals"]
 
 
-def test_pf6_f_scoring_consistency_same_tokens_same_score() -> None:
+def test_pf6_f_scoring_consistency() -> None:
     """PF6: deterministic F gives identical scores on identical token sequences."""
     tokens = np.array([4, 1, 7, 7, 2])
     y = {"tokens": tokens.copy()}
@@ -107,7 +149,7 @@ def test_pf6_f_scoring_consistency_same_tokens_same_score() -> None:
     assert second["delta"] == pytest.approx(0.0)
 
 
-def test_pf7_pf8_signals_use_explicit_revisable_action_set() -> None:
+def test_pf7_corrector_action_set_and_pf8_signal_action_set_consistency() -> None:
     """PF7/PF8 local: H, inverse margin, and QM are computed on R_t only."""
     state = {
         "tokens": np.array([10, 11, 12, 13]),
@@ -142,31 +184,43 @@ def test_pf7_pf8_signals_use_explicit_revisable_action_set() -> None:
     )
 
 
-@pytest.mark.skip(
-    reason=(
-        "PF3 real ProSeCo token-level branch equivalence needs a staged checkpoint "
-        "and a public run_branch/run_with_schedule comparison hook."
-    )
-)
-def test_pf3_real_proseco_single_correction_equivalence_pending() -> None:
-    pass
+def test_pf3_single_correction_equals_protocol_a_real_backend() -> None:
+    """PF3 real: singleton schedule and Protocol A branch use the same primitive."""
+    gen = _proseco_generator_or_skip()
+    t = 1
+
+    branch = gen.run_branch(t, seed=123, return_trace=True)
+    scheduled = gen.run_with_schedule({t: 1}, seed=123, return_trace=True)
+
+    np.testing.assert_array_equal(scheduled["tokens"], branch["tokens"])
+    assert scheduled["neg_nll"] == pytest.approx(branch["neg_nll"])
+    assert scheduled["trace"].schedule == branch["trace"].schedule == (t,)
 
 
-@pytest.mark.skip(
-    reason=(
-        "PF5 real CRN trace audit needs backend instrumentation exposing predictor "
-        "and corrector RNG streams."
-    )
-)
-def test_pf5_real_proseco_crn_trace_pending() -> None:
-    pass
+def test_pf5_crn_consistency_real_backend() -> None:
+    """PF5 real: predictor RNG fingerprints stay paired under deterministic corrector."""
+    gen = _proseco_generator_or_skip()
+
+    base = gen.run_base(seed=124, return_trace=True)
+    scheduled = gen.run_with_schedule({1: 1}, seed=124, return_trace=True)
+
+    assert _pre_predictor_rng(base["trace"]) == _pre_predictor_rng(scheduled["trace"])
 
 
-@pytest.mark.skip(
-    reason=(
-        "PF7 real ProSeCo action-set audit needs checkpoint-backed corrector "
-        "instrumentation returning the acted-on R_t positions."
-    )
-)
-def test_pf7_real_proseco_action_set_pending() -> None:
-    pass
+def test_pf7_corrector_action_set_real_backend() -> None:
+    """PF7/PF8 real: corrected positions are in R_t and signal masks match R_t."""
+    gen = _proseco_generator_or_skip()
+
+    scheduled = gen.run_with_schedule({1: 1}, seed=125, return_trace=True)
+    trace: GenerationTrace = scheduled["trace"]
+
+    assert trace.revisable_sets_by_step is not None
+    assert trace.corrected_positions_by_step is not None
+    assert trace.signal_masks_by_step is not None
+    for revisable, corrected, signal_mask in zip(
+        trace.revisable_sets_by_step,
+        trace.corrected_positions_by_step,
+        trace.signal_masks_by_step,
+    ):
+        assert set(corrected.tolist()).issubset(set(revisable.tolist()))
+        np.testing.assert_array_equal(np.flatnonzero(signal_mask), revisable)

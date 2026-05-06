@@ -15,11 +15,14 @@ running the thesis scripts.
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
+
+from mdm_playground.scheduling.trace import GenerationTrace
 
 # PyTorch >= 2.6: force weights_only=False for trusted local checkpoints
 _orig_torch_load = torch.load
@@ -177,6 +180,26 @@ class ProSeCoOWTGenerator:
             f"action_set=unmasked_positions, "
             f"backbone=proseco-owt (co-trained)"
         )
+
+    @property
+    def corrector_nfe_per_placement(self) -> int:
+        """Extra backbone forward calls per scheduled corrector placement."""
+        return self.corrector_steps + 1
+
+    def _rng_fingerprint(self) -> str:
+        """Short fingerprint of the active torch RNG state for CRN audits."""
+        if str(self.device).startswith("cuda") and torch.cuda.is_available():
+            state = torch.cuda.get_rng_state(self.device)
+        else:
+            state = torch.get_rng_state()
+        return hashlib.sha1(state.cpu().numpy().tobytes()).hexdigest()[:16]
+
+    @staticmethod
+    def _np_tokens(x: torch.Tensor) -> np.ndarray:
+        return x[0].detach().cpu().numpy().astype(np.int32).copy()
+
+    def _np_mask(self, x: torch.Tensor) -> np.ndarray:
+        return (x[0] == self.mask_id).detach().cpu().numpy().astype(bool).copy()
 
     # ------------------------------------------------------------------
     # Forward pass wrapper
@@ -364,8 +387,12 @@ class ProSeCoOWTGenerator:
         seed: int,
         corrector_at_t: Optional[int] = None,
         record_signals: bool = True,
+        allocation: Optional[Dict[int, int]] = None,
+        return_trace: bool = False,
     ) -> Dict[str, Any]:
         torch.manual_seed(seed)
+        if str(self.device).startswith("cuda") and torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
         B = 1
         L = self.seq_len
 
@@ -373,66 +400,133 @@ class ProSeCoOWTGenerator:
         timesteps = torch.linspace(1.0, self.eps, self.T + 1, device=self.device)
 
         per_step_signals: List[Dict] = []
+        schedule = set(allocation or {})
+        if corrector_at_t is not None:
+            schedule.add(corrector_at_t)
+
+        tokens_by_step: List[np.ndarray] = []
+        masks_by_step: List[np.ndarray] = []
+        revisable_sets_by_step: List[np.ndarray] = []
+        corrected_positions_by_step: List[np.ndarray] = []
+        signal_masks_by_step: List[np.ndarray] = []
+        rng_fingerprints: List[str] = []
+        signals_by_step: Dict[str, List[float]] = {
+            "entropy": [],
+            "inverse_margin": [],
+            "quality_mass_proxy": [],
+            "unmasked_fraction": [],
+            "n_revisable": [],
+        }
+
+        if return_trace:
+            tokens_by_step.append(self._np_tokens(x))
+            masks_by_step.append(self._np_mask(x))
+            rng_fingerprints.append(f"init:{self._rng_fingerprint()}")
 
         for step_i in range(self.T):
             t = timesteps[step_i] * torch.ones(B, 1, device=self.device)
             s = timesteps[step_i + 1] * torch.ones(B, 1, device=self.device)
 
+            if return_trace:
+                rng_fingerprints.append(f"pre_predictor_{step_i}:{self._rng_fingerprint()}")
             p_x0 = self._forward(x, t)
             x = self._predictor_step(x, t, s)
+
+            revisable_mask = (x[0] != self.mask_id).detach().cpu().numpy().astype(bool)
+            revisable_idx = np.flatnonzero(revisable_mask).astype(np.int32)
 
             if record_signals:
                 signals = self._extract_signals(x, p_x0)
                 per_step_signals.append({"t": step_i, **signals})
+                if return_trace:
+                    for key in signals_by_step:
+                        signals_by_step[key].append(float(signals.get(key, 0.0)))
 
-            if corrector_at_t is not None and step_i == corrector_at_t:
+            if return_trace:
+                revisable_sets_by_step.append(revisable_idx)
+                signal_masks_by_step.append(revisable_mask.copy())
+
+            if step_i in schedule:
+                if return_trace:
+                    corrected_positions_by_step.append(revisable_idx.copy())
                 x = self._apply_corrector(x, s, p_x0=None)
+                if return_trace:
+                    rng_fingerprints.append(
+                        f"post_corrector_{step_i}:{self._rng_fingerprint()}"
+                    )
+            elif return_trace:
+                corrected_positions_by_step.append(np.array([], dtype=np.int32))
 
-        return {
-            "tokens": x[0].cpu().numpy().astype(np.int32),
-            "neg_nll": float(self._compute_neg_nll(x[0])),
+            if return_trace:
+                tokens_by_step.append(self._np_tokens(x))
+                masks_by_step.append(self._np_mask(x))
+                rng_fingerprints.append(f"post_step_{step_i}:{self._rng_fingerprint()}")
+
+        score = float(self._compute_neg_nll(x[0]))
+        final_tokens = self._np_tokens(x)
+
+        result = {
+            "tokens": final_tokens,
+            "neg_nll": score,
             "per_step_signals": per_step_signals,
             "seed": seed,
         }
+        if return_trace:
+            result["trace"] = GenerationTrace(
+                seed=seed,
+                schedule=tuple(sorted(schedule)),
+                tokens_by_step=tokens_by_step,
+                masks_by_step=masks_by_step,
+                revisable_sets_by_step=revisable_sets_by_step,
+                corrected_positions_by_step=corrected_positions_by_step,
+                signal_masks_by_step=signal_masks_by_step,
+                signals_by_step=signals_by_step,
+                forward_pass_count=self.T
+                + len(schedule) * self.corrector_nfe_per_placement,
+                rng_fingerprint_by_step=rng_fingerprints,
+                final_tokens=final_tokens,
+                score=score,
+            )
+        return result
 
     # ------------------------------------------------------------------
     # Generator protocol (backend-agnostic interface)
     # ------------------------------------------------------------------
 
-    def run_base(self, seed: int = 0) -> Dict[str, Any]:
-        return self._run_loop(seed=seed, corrector_at_t=None, record_signals=True)
+    def run_base(self, seed: int = 0, return_trace: bool = False) -> Dict[str, Any]:
+        return self._run_loop(
+            seed=seed,
+            corrector_at_t=None,
+            record_signals=True,
+            allocation={},
+            return_trace=return_trace,
+        )
 
-    def run_branch(self, t_corrected: int, seed: int = 0) -> Dict[str, Any]:
+    def run_branch(
+        self, t_corrected: int, seed: int = 0, return_trace: bool = False
+    ) -> Dict[str, Any]:
         result = self._run_loop(
-            seed=seed, corrector_at_t=t_corrected, record_signals=False
+            seed=seed,
+            corrector_at_t=t_corrected,
+            record_signals=False,
+            allocation={t_corrected: 1},
+            return_trace=return_trace,
         )
         result["t_corrected"] = t_corrected
         return result
 
     @torch.no_grad()
     def run_with_schedule(
-        self, allocation: Dict[int, int], seed: int = 0
+        self, allocation: Dict[int, int], seed: int = 0, return_trace: bool = False
     ) -> Dict[str, Any]:
-        torch.manual_seed(seed)
-        B = 1
-        L = self.seq_len
-        x = self.mask_id * torch.ones(B, L, dtype=torch.long, device=self.device)
-        timesteps = torch.linspace(1.0, self.eps, self.T + 1, device=self.device)
-
-        for step_i in range(self.T):
-            t = timesteps[step_i] * torch.ones(B, 1, device=self.device)
-            s = timesteps[step_i + 1] * torch.ones(B, 1, device=self.device)
-            p_x0 = self._forward(x, t)
-            x = self._predictor_step(x, t, s)
-            if step_i in allocation:
-                x = self._apply_corrector(x, s)
-
-        return {
-            "tokens": x[0].cpu().numpy().astype(np.int32),
-            "neg_nll": float(self._compute_neg_nll(x[0])),
-            "schedule_steps": sorted(allocation.keys()),
-            "seed": seed,
-        }
+        result = self._run_loop(
+            seed=seed,
+            allocation=allocation,
+            record_signals=True,
+            return_trace=return_trace,
+        )
+        result["schedule_steps"] = sorted(allocation.keys())
+        return result
 
     def signal_trace(self, seed: int = 0) -> List[Dict]:
         return self.run_base(seed=seed)["per_step_signals"]
