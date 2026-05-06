@@ -1,396 +1,938 @@
 \chapter{Theoretical Contribution}
 \label{ch:contribution}
 
-%% Status: SKELETON DRAFT (2026-05-06).
-%% Source of truth: research/candidate_theorems.md sections 0--7.
-%% This chapter intentionally contains theorem scaffolding and proof skeletons,
-%% not final thesis prose. The active stack is:
-%% Theorem A baseline -> Theorem B/B' -> Diagnostic Framework C.
-%% Diagnostics A' and A'' are empirical diagnostics only. Theorem D and
-%% Lemma E are appendix-grade unless later empirical gates justify promotion.
+This chapter develops the mathematical framework used in the thesis. The object
+of study is deliberately narrow: given a fixed masked diffusion predictor, a
+fixed informed corrector, a fixed trajectory-level quality functional, and a
+fixed budget of corrector placements, when should the corrector be applied?
 
-\section{Model-Agnostic Setup}
-\label{sec:ch6-setup}
+The chapter is self-contained. It begins with the schedule-selection problem,
+defines the schedule gain function, formalises the marginal baseline, proves
+the baseline regret theorem, and then develops the pairwise surrogate framework
+used to diagnose when marginal ranking is insufficient. The empirical backend
+used elsewhere in the thesis is ProSeCo-OWT \parencite{schiff2026proseco}, but
+the mathematics below is not ProSeCo-specific. It applies to any fixed
+predictor/corrector pair for which the schedule gain function can be defined
+and estimated.
 
-Fix a predictor schedule for a masked diffusion language model, an informed
-corrector, a trajectory-level quality functional $F$, and a placement budget
-$B$. The framework is model- and corrector-agnostic: the theory in this
-chapter is independent of the particular corrector implementation.
-ProSeCo-OWT is the primary empirical case study, not an assumption or scope
-restriction of the theorem statements.
+\section{Motivation and Scope}
+\label{sec:ch6-motivation}
 
-Let the denoising steps be $t \in \{1,\ldots,T\}$. A corrector schedule is a
-set $S \subseteq \{1,\ldots,T\}$ with $|S|=B$, with at most one corrector
-placement per step. The placement budget is $B$; the corresponding extra
-forward-pass budget is
+In a masked diffusion language model, generation proceeds through a denoising
+trajectory. A predictor progressively turns masked positions into tokens.
+An informed corrector is an additional refinement mechanism that can be
+inserted into this trajectory. The corrector may use model probabilities,
+confidence, quality estimates, rewards, verifier information, or other state
+information to decide how to refine the current state. Examples of such
+mechanisms are reviewed in Chapter~\ref{ch:informed-correctors}, including
+informed correctors for discrete diffusion \parencite{zhao2024informedcorrectors}
+and self-correcting masked diffusion models \parencite{schiff2026proseco}.
+
+The question here is not how to design the corrector. The corrector kernel is
+held fixed. The question is when to spend a limited number of applications of
+that fixed corrector. If a corrector can be applied at only $B$ out of $T$
+denoising steps, then a timing rule is a schedule-selection rule: it chooses a
+subset of $B$ time steps. This makes the problem combinatorial even when the
+underlying denoising trajectory is fixed.
+
+This separation is important. Corrector timing is not the same as predictor
+scheduling, which changes when and how many tokens are unmasked. It is not
+token selection, which decides which positions to revise within a corrector
+call. It is not remasking, which changes the sampler by masking already
+committed tokens again. It is not corrector-kernel design, which changes the
+transition kernel itself. This thesis studies the trajectory-level allocation
+of a fixed corrector-placement budget under a fixed predictor schedule.
+
+The framework is model- and corrector-agnostic: for any fixed predictor,
+informed corrector, quality functional $F$, and corrector-placement budget
+$B$, it defines a schedule gain $G(S)$, marginal gains $\Delta_t$, an additive
+surrogate $A(S)$, pairwise interactions $\xi_{t,t'}$, a pairwise surrogate
+$Q(S)$, and regime diagnostics. ProSeCo-OWT is the primary empirical case study,
+not an assumption of the theory.
+
+\section{Formal Setup}
+\label{sec:ch6-formal-setup}
+
+Fix a denoising horizon $T \in \mathbb{N}$. The denoising steps are indexed by
+$t \in \{1,\ldots,T\}$. Throughout the chapter the predictor schedule is fixed:
+the predictor decides how the masked state evolves when no additional corrector
+is inserted. The informed corrector is also fixed: at any step where it is
+applied, it uses its prescribed transition rule and hyperparameters.
+
+Let $\mathcal{Y}$ be the space of final generated sequences. Let
+$F:\mathcal{Y}\to\mathbb{R}$ be a trajectory-level quality functional. Larger
+$F$ is better. In the ProSeCo-OWT experiments, $F$ is the negative GPT-2
+negative log-likelihood on a fixed text window; this is used only as a relative
+within-run score, not as an absolute language-quality claim.
+
+\begin{definition}[Corrector schedule]
+\label{def:ch6-schedule}
+A corrector schedule is a subset
 \[
-  B_{\mathrm{NFE}} = c_{\mathrm{corr}} B,
+  S \subseteq \{1,\ldots,T\}.
 \]
-where $c_{\mathrm{corr}}$ is the number of extra forward passes induced by one
-corrector placement. Thus all schedules with the same $B$ have the same
-placement cost.
+The interpretation is that the corrector is applied exactly at the steps in
+$S$. The placement budget is an integer $B$, and feasible schedules satisfy
+$|S|=B$. This chapter uses binary placement: at most one corrector placement is
+allowed at any step.
+\end{definition}
 
-Let $y^S$ be the final sample produced with corrector schedule $S$, and let
-$y^\emptyset$ be the corrector-free baseline. Define the schedule gain
-\[
-  G(S) := F(y^S) - F(y^\emptyset),
-\]
-the single-step marginal gain
-\[
-  \Delta_t := G(\{t\}),
-\]
-and the additive surrogate
-\[
-  A(S) := \sum_{t \in S} \Delta_t.
-\]
-The exact oracle in theorem statements is
-$S_B^* \in \argmax_{|S|=B} G(S)$. In experiments this is not observed.
-Empirical ``MC-oracle'' headroom means best-of-$N$ sampled schedules under
-paired common random numbers; it is a pool estimate, not the exhaustive
-${T \choose B}$ oracle.
+Let $y^\emptyset$ denote the final sequence produced by the baseline trajectory,
+with no corrector placements. Let $y^S$ denote the final sequence produced when
+the corrector is applied at exactly the steps in $S$. Both $y^\emptyset$ and
+$y^S$ are random objects unless all randomness is fixed. The theory below can
+be read either pathwise, conditioning on common random numbers, or in
+expectation over a paired seed distribution. The level must be stated whenever
+an empirical claim is made.
 
-For $t \ne t'$, define the operational second difference
+\begin{definition}[Schedule gain]
+\label{def:ch6-gain}
+The gain of schedule $S$ is
 \[
-  \xi_{t,t'} := G(\{t,t'\}) - \Delta_t - \Delta_{t'}.
+  G(S) := F(y^S)-F(y^\emptyset).
 \]
-The pairwise surrogate is
+Thus $G(S)>0$ means that applying the corrector at schedule $S$ improves the
+quality functional relative to the no-corrector baseline under the same paired
+conditions.
+\end{definition}
+
+The placement budget $B$ counts corrector calls, not raw forward passes. If one
+placement costs $c_{\mathrm{corr}}$ extra model forward passes, then the
+corresponding extra-NFE budget is
 \[
-  Q(S) := \sum_{t \in S} \Delta_t
-       + \sum_{\substack{t<t'\\t,t'\in S}} \xi_{t,t'}.
+  B_{\mathrm{NFE}} = c_{\mathrm{corr}} B .
 \]
-Here $Q(S)$ is a schedule-level surrogate. It must not be confused with the
-quality-mass trajectory signal, written $QM_t$ in this thesis; historical raw
-files may use the key \texttt{Q\_t} for $QM_t$.
+For ProSeCo annealed refinement, $c_{\mathrm{corr}}=2$. The mathematical budget
+in this chapter is $B$; $B_{\mathrm{NFE}}$ is the corresponding compute cost.
+All schedules with the same $B$ have the same placement cost.
 
-Let $R_t$ be the corrector's action or revisable set at step $t$. Any signal
-used to rank or condition a correction decision, such as entropy, inverse
-margin, or $QM_t$, must be computed over the same $R_t$ on which the corrector
-acts.
+\begin{definition}[Exhaustive oracle]
+\label{def:ch6-exhaustive-oracle}
+An exhaustive budget-$B$ oracle schedule is any maximiser
+\[
+  S_B^* \in \argmax_{\substack{S\subseteq \{1,\ldots,T\}\\ |S|=B}} G(S).
+\]
+This is a theorem-level object. In realistic experiments it is not observable
+because the number of schedules is $\binom{T}{B}$.
+\end{definition}
 
-\section{Theorem A: Marginal Baseline}
+Empirical work uses weaker oracles. A best-of-$N$ MC-oracle is the best
+schedule found among $N$ randomly sampled schedules from a specified sampling
+distribution. A pool oracle is the best schedule inside a fixed candidate pool
+$C_B$. These are not the exhaustive oracle.
+
+\begin{definition}[MC-oracle and pool oracle]
+\label{def:ch6-pool-oracles}
+Let $\mathcal{P}_B$ be a sampling distribution over size-$B$ schedules and let
+$S^{(1)},\ldots,S^{(N)} \sim \mathcal{P}_B$. A best-of-$N$ MC-oracle is
+\[
+  S_B^{\mathrm{MC},N}
+  \in \argmax_{1\le j\le N} G(S^{(j)}).
+\]
+For a fixed candidate pool $C_B \subseteq \{S: |S|=B\}$, the pool oracle is
+\[
+  S_C^* \in \argmax_{S\in C_B} G(S).
+\]
+The exhaustive oracle is $S_B^*$. The MC-oracle and pool oracle are observable
+only relative to their sampled or fixed pools.
+\end{definition}
+
+All empirical comparisons in the thesis are paired. The baseline trajectory
+and all scheduled trajectories use common random numbers: the same seed,
+tokenizer choices, predictor randomness, and evaluation setup are reused, and
+only the corrector schedule is changed. This reduces variance and makes
+$G(S)$ a schedule effect rather than a mixture of schedule and seed effects.
+
+\section{Action Sets and Signals}
+\label{sec:ch6-action-signals}
+
+At each denoising step the corrector has an action set. This is the set of
+positions the corrector is allowed to revise. The exact definition depends on
+the backend. In ProSeCo, the revisable set consists of positions that have
+already been unmasked and are eligible for self-correction.
+
+\begin{definition}[Revisable/action set]
+\label{def:ch6-action-set}
+Let $R_t \subseteq \{1,\ldots,L\}$ be the revisable, or action, set at step
+$t$, where $L$ is the sequence length. If the corrector is applied at step
+$t$, its corrected positions must lie inside $R_t$.
+\end{definition}
+
+Let $C_t \subseteq R_t$ denote the corrected positions at step $t$ when a
+corrector call is made. The condition $C_t\subseteq R_t$ is a backend
+invariant: a corrector must not revise positions outside its declared action
+set.
+
+The timing problem uses trajectory signals computed at each step. The active
+signals in this thesis are:
+\[
+  H_t,\qquad M_t^{-1},\qquad QM_t .
+\]
+Here $H_t$ is aggregate entropy over the revisable set, $M_t^{-1}$ is inverse
+confidence margin over the revisable set, and $QM_t$ is a quality-mass signal,
+inspired by PRISM-style token-quality scoring \parencite{kim2025prism}.
+Historical raw result files may use the key \texttt{Q\_t} for this quality
+mass; the thesis writes $QM_t$ to avoid collision with the pairwise surrogate
+$Q(S)$ defined later.
+
+\begin{definition}[Signal/action-set consistency]
+\label{def:ch6-signal-consistency}
+A step signal is action-set consistent if it is computed over the same
+revisable set $R_t$ on which the corrector acts. In particular, $H_t$,
+$M_t^{-1}$, and $QM_t$ must aggregate only over positions in $R_t$, unless a
+different set is explicitly declared and justified.
+\end{definition}
+
+This consistency condition is not cosmetic. If a signal is computed over a
+different set from the one the corrector can act on, then the signal is not a
+valid proxy for the marginal value of applying that corrector at that step.
+
+\section{The Marginal Baseline}
+\label{sec:ch6-marginal-baseline}
+
+The simplest hypothesis is that the value of a schedule is approximately the
+sum of the values of its individual placements. This leads to a marginal
+ranking rule.
+
+\begin{definition}[Marginal gain and additive surrogate]
+\label{def:ch6-additive}
+The single-step marginal gain at step $t$ is
+\[
+  \Delta_t := G(\{t\}).
+\]
+The additive surrogate of a schedule $S$ is
+\[
+  A(S) := \sum_{t\in S}\Delta_t.
+\]
+\end{definition}
+
+If $G(S)=A(S)$ exactly, then the schedule-selection problem is simple: choose
+the $B$ largest $\Delta_t$. In practice $\Delta_t$ is not known at inference
+time, so one uses a separable score.
+
+\begin{definition}[Separable ranker]
+\label{def:ch6-separable-ranker}
+Let $s_t$ denote the observable features or signals at step $t$. A separable
+ranker is a scoring rule of the form
+\[
+  \psi_t = \psi(s_t),
+\]
+which scores each step independently. The corresponding top-$B$ schedule is
+\[
+  \widehat S_B(\psi)
+  \in \argmax_{\substack{S\subseteq \{1,\ldots,T\}\\ |S|=B}}
+       \sum_{t\in S}\psi_t .
+\]
+Equivalently, $\widehat S_B(\psi)$ is a set of the $B$ largest proxy scores.
+\end{definition}
+
+Theorem~\ref{thm:ch6-a} below formalises when this marginal rule is safe. It is
+the baseline theorem. The later pairwise theory is needed precisely when this
+baseline is empirically inadequate.
+
+\section{Theorem A: Marginal Proxy Regret}
 \label{sec:ch6-theorem-a}
 
+Theorem A states that top-$B$ marginal ranking is near-optimal if two
+conditions hold: schedules are approximately additive, and the proxy score
+calibrates the single-step marginal gains.
+
 \begin{assumption}[Binary placement]
-\label{assum:ch6-a1}
-Schedules use exactly $B$ binary placements: $k_t \in \{0,1\}$ and
-$\sum_t k_t = B$.
+\label{assum:ch6-a-binary}
+Feasible schedules have exactly $B$ binary placements:
+\[
+  S\subseteq \{1,\ldots,T\},\qquad |S|=B.
+\]
 \end{assumption}
 
 \begin{assumption}[Approximate additivity]
-\label{assum:ch6-a2}
-There is $\eta_B \ge 0$ such that
+\label{assum:ch6-a-additivity}
+There exists $\eta_B\ge 0$ such that
 \[
-  |G(S)-A(S)| \le \eta_B
-  \qquad\text{for all } |S|\le B .
+  \abs{G(S)-A(S)} \le \eta_B
+  \qquad\text{for every } S \text{ with } |S|\le B .
 \]
 \end{assumption}
 
 \begin{assumption}[Proxy calibration]
-\label{assum:ch6-a3}
-There is a separable score $\psi_t$ and $\varepsilon \ge 0$ such that
+\label{assum:ch6-a-calibration}
+There exists $\varepsilon\ge 0$ such that
 \[
-  |\Delta_t-\psi_t| \le \varepsilon
-  \qquad\text{for all } t .
+  \abs{\Delta_t-\psi_t}\le \varepsilon
+  \qquad\text{for every } t\in\{1,\ldots,T\}.
 \]
 \end{assumption}
 
-Let $\widehat S_B$ be the set of the $B$ largest proxy scores $\psi_t$.
-
-\begin{theorem}[Theorem A; marginal proxy regret]
-\label{thm:ch6-a}
-Under Assumptions~\ref{assum:ch6-a1}--\ref{assum:ch6-a3},
-\[
-  G(S_B^*) - G(\widehat S_B) \le 2B\varepsilon + 2\eta_B .
-\]
-\end{theorem}
-
 \begin{lemma}[Top-$B$ under exact additivity]
-\label{lem:ch6-a1}
+\label{lem:ch6-topb-additive}
 If $A(S)=\sum_{t\in S}\Delta_t$ and $|S|=B$, then any set of the $B$ largest
-$\Delta_t$ maximizes $A(S)$.
+$\Delta_t$ maximises $A(S)$ among all size-$B$ schedules.
 \end{lemma}
 
 \begin{proof}
-If a selected index $t$ has lower $\Delta_t$ than an unselected index $t'$,
-exchange $t$ for $t'$. The value of $A$ cannot decrease. Repeating this
-exchange leaves only $B$ largest-$\Delta_t$ indices.
+Let $S$ be any size-$B$ schedule. If there exist $t\in S$ and
+$t'\notin S$ with $\Delta_{t'}>\Delta_t$, define
+$S'=(S\setminus\{t\})\cup\{t'\}$. Then
+\[
+  A(S')-A(S)=\Delta_{t'}-\Delta_t>0.
+\]
+Thus replacing a selected lower-gain step by an unselected higher-gain step
+strictly improves the additive objective. Repeating this exchange until no
+such pair remains yields a set containing only $B$ largest marginal gains. At
+that point no single exchange can improve $A$, and the resulting set is
+globally optimal because $A$ is a sum of independent selected terms.
 \end{proof}
 
 \begin{lemma}[Proxy top-$B$ regret]
-\label{lem:ch6-a2}
-If $|\Delta_t-\psi_t|\le\varepsilon$ for all $t$ and $\widehat S_B$ is top-$B$
-by $\psi$, then
+\label{lem:ch6-proxy-regret}
+Suppose $\abs{\Delta_t-\psi_t}\le \varepsilon$ for all $t$. Let
+$S_A^*\in\argmax_{|S|=B}A(S)$ and let $\widehat S_B$ be any top-$B$ set under
+the proxy scores $\psi_t$. Then
 \[
-  A(S_A^*) - A(\widehat S_B) \le 2B\varepsilon ,
+  A(S_A^*)-A(\widehat S_B)\le 2B\varepsilon .
 \]
-where $S_A^* \in \argmax_{|S|=B} A(S)$.
 \end{lemma}
 
 \begin{proof}
-Pair elements of $S_A^*\setminus\widehat S_B$ with elements of
-$\widehat S_B\setminus S_A^*$. For each pair $(o,s)$, top-$B$ optimality gives
-$\psi_s\ge\psi_o$, hence
-$\Delta_o \le \psi_o+\varepsilon \le \psi_s+\varepsilon
-\le \Delta_s+2\varepsilon$. Summing over at most $B$ pairs proves the claim.
-\end{proof}
-
-\begin{proof}[Proof of Theorem~\ref{thm:ch6-a}]
-By Assumption~\ref{assum:ch6-a2},
+The schedules $S_A^*$ and $\widehat S_B$ have the same cardinality. Therefore
+the two difference sets
 \[
-  G(S_B^*) - G(\widehat S_B)
-  \le A(S_B^*) - A(\widehat S_B) + 2\eta_B .
+  O := S_A^*\setminus \widehat S_B,
+  \qquad
+  P := \widehat S_B\setminus S_A^*
 \]
-Since $S_A^*$ maximizes $A$, $A(S_B^*)\le A(S_A^*)$. Lemma~\ref{lem:ch6-a2}
-then gives $A(S_B^*)-A(\widehat S_B)\le 2B\varepsilon$.
+have the same size, at most $B$. Pair the elements of $O$ and $P$ arbitrarily.
+For a pair $(o,p)\in O\times P$, the proxy top-$B$ property implies
+$\psi_p\ge \psi_o$: otherwise $p$ would not be selected ahead of $o$ by a
+top-$B$ proxy rule. By calibration,
+\[
+  \Delta_o \le \psi_o+\varepsilon
+            \le \psi_p+\varepsilon
+            \le \Delta_p+2\varepsilon .
+\]
+Thus $\Delta_o-\Delta_p\le 2\varepsilon$ for every paired swap. Since common
+elements cancel in $A(S_A^*)-A(\widehat S_B)$,
+\[
+  A(S_A^*)-A(\widehat S_B)
+    = \sum_{o\in O}\Delta_o-\sum_{p\in P}\Delta_p
+    \le 2\varepsilon |O|
+    \le 2B\varepsilon .
+\]
 \end{proof}
 
-\paragraph{Role.}
-Theorem~\ref{thm:ch6-a} is the baseline theorem. It says when informed timing
-is reducible to marginal signal ranking. If additivity or proxy calibration
-fails at the selected-schedule level, the theorem becomes a diagnostic
-baseline rather than an operative scheduler guarantee.
+\begin{theorem}[Theorem A: marginal proxy regret]
+\label{thm:ch6-a}
+Under Assumptions~\ref{assum:ch6-a-binary}--\ref{assum:ch6-a-calibration},
+let $S_B^*$ be an exhaustive maximiser of $G$ over size-$B$ schedules, and let
+$\widehat S_B$ be top-$B$ under the proxy scores $\psi_t$. Then
+\[
+  G(S_B^*)-G(\widehat S_B)
+  \le 2B\varepsilon + 2\eta_B .
+\]
+\end{theorem}
+
+\begin{proof}
+By approximate additivity, applied once at $S_B^*$ and once at
+$\widehat S_B$,
+\[
+\begin{aligned}
+  G(S_B^*)-G(\widehat S_B)
+  &\le A(S_B^*)+\eta_B - \bigl(A(\widehat S_B)-\eta_B\bigr)\\
+  &= A(S_B^*)-A(\widehat S_B)+2\eta_B .
+\end{aligned}
+\]
+Let $S_A^*\in\argmax_{|S|=B}A(S)$. Since $S_A^*$ maximises $A$ over the same
+feasible set,
+\[
+  A(S_B^*)\le A(S_A^*).
+\]
+Therefore
+\[
+  G(S_B^*)-G(\widehat S_B)
+  \le A(S_A^*)-A(\widehat S_B)+2\eta_B .
+\]
+Lemma~\ref{lem:ch6-proxy-regret} bounds the additive proxy regret by
+$2B\varepsilon$, giving the result.
+\end{proof}
+
+\paragraph{Interpretation.}
+The bound has two terms. The calibration term $2B\varepsilon$ measures how
+well the separable proxy orders the single-step marginal gains. The additivity
+term $2\eta_B$ measures how much schedule value deviates from the sum of
+single-step effects. If both terms are small relative to the available
+headroom, marginal timing is justified.
+
+The theorem is intentionally conservative. Its uniform $L^\infty$ assumptions
+range over all schedules of size at most $B$ and all time steps. In a noisy
+high-dimensional generation pipeline, these suprema can be too large to give a
+non-vacuous numerical guarantee, even when the theorem is mathematically true.
+For this reason Theorem A is the baseline, not the central empirical claim of
+the thesis. It tells us what must be true for marginal signal ranking to work;
+the experiments test whether this regime actually holds.
 
 \section{Diagnostics A$'$ and A$''$}
 \label{sec:ch6-a-diagnostics}
 
-Diagnostics A$'$ and A$''$ are empirical summaries, not regret theorems.
-They do not control selected-schedule regret unless converted into a uniform
-or finite-pool statement.
+The quantities called A$'$ and A$''$ in this thesis are diagnostics. They are
+not additional regret theorems.
 
 \paragraph{Diagnostic A$'$: additivity scale.}
-For a schedule distribution $D_B$ or a fixed candidate pool $C_B$, report
+Given a schedule distribution $D_B$ or a fixed candidate pool $C_B$, define
 \[
   \eta^{\mathrm{typ}}_{B,D}
-  := \mathbb{E}_{S\sim D_B}|G(S)-A(S)|,
-  \qquad
-  \sigma^{\mathrm{pool}}_{\xi,B}
-  := \operatorname{sd}_{S\in C_B}(G(S)-A(S)).
+  := \E_{S\sim D_B}\abs{G(S)-A(S)}
 \]
-These quantities measure typical additivity error on the sampled schedules.
-They are not upper bounds on the regret of a selected top-$B$ schedule.
+and, for a finite pool,
+\[
+  \sigma^{\mathrm{pool}}_{B}
+  := \operatorname{sd}_{S\in C_B}\bigl(G(S)-A(S)\bigr).
+\]
+These measure the typical size of the additive residual on the sampled
+schedules. They do not imply a uniform bound on
+$\abs{G(S)-A(S)}$ at the selected top schedule.
 
 \paragraph{Diagnostic A$''$: rankability.}
-Report rank correlations such as
+Given a schedule sample or candidate pool, define
 \[
-  R_B := \rho_{\mathrm{Spearman}}(A(S),G(S))
+  R_B := \rho_{\mathrm{Spearman}}\bigl(A(S),G(S)\bigr),
 \]
-over a fixed schedule sample. This indicates whether the additive surrogate
-ranks schedules well on that sample. It is not a theorem constant and does not
-by itself rule out failure on the selected schedule.
+where the correlation is computed over schedules in the sample. This measures
+whether the additive surrogate ranks schedules similarly to the true schedule
+gain on that sample. A high global rank correlation is useful evidence, but it
+does not by itself bound the regret of the optimiser-selected schedule.
+
+The distinction matters because selected-schedule regret is an extremal
+quantity. A diagnostic can be small on average or favourable in correlation
+while still missing the schedules selected by an optimiser. To turn such
+measurements into a theorem one needs a uniform or high-probability statement
+over the relevant candidate pool. That is the role of Theorem~B$'$ below.
 
 \section{Finite-Pool Selected-Schedule Form}
 \label{sec:ch6-finite-pool-a}
 
-The safe selected-schedule form of the marginal baseline is the finite-pool
-special case of Theorem~B$'$ with $Q:=A$. For a fixed no-leakage candidate
-pool $C_B$, define
+The experimentally usable form of the marginal baseline is a finite-pool
+statement. Let $C_B\subseteq \{S:|S|=B\}$ be a fixed candidate pool. Let
+$S_C^*\in\argmax_{S\in C_B}G(S)$ be the pool oracle. Suppose that, on this
+pool,
 \[
-  \eta_{B,C} := \sup_{S\in C_B}|G(S)-A(S)|,
-  \qquad
-  \varepsilon_{B,C,\delta}
-  := \sup_{S\in C_B}|A(S)-\widehat A(S)|
+  \eta_{B,C}:=\sup_{S\in C_B}\abs{G(S)-A(S)}
 \]
-on the event where the estimated additive surrogate $\widehat A$ is uniformly
-accurate over $C_B$. If $\widehat S$ approximately maximizes $\widehat A$ over
-$C_B$ with optimization gap $\omega_B$, then, with the probability attached
-to the estimation event,
+is finite. Suppose also that an estimated additive surrogate $\widehat A$
+satisfies, with probability at least $1-\delta$,
 \[
-  G(S_C^*) - G(\widehat S)
-  \le 2\eta_{B,C} + 2\varepsilon_{B,C,\delta} + \omega_B,
+  \sup_{S\in C_B}\abs{A(S)-\widehat A(S)}
+  \le \varepsilon_{B,C,\delta}.
 \]
-where $S_C^*\in\argmax_{S\in C_B}G(S)$ is the pool oracle. Comparison to the
-full unobservable oracle requires the extra pool-approximation term
-$\kappa_B=G(S_B^*)-G(S_C^*)$.
+If $\widehat S\in C_B$ approximately maximises $\widehat A$ over $C_B$ with
+optimisation gap $\omega_B$, then Theorem~B$'$ with $Q:=A$ gives
+\[
+  G(S_C^*)-G(\widehat S)
+  \le
+  2\eta_{B,C}+2\varepsilon_{B,C,\delta}+\omega_B
+\]
+with probability at least $1-\delta$.
+
+Against the exhaustive oracle $S_B^*$ one must add the pool-approximation term
+\[
+  \kappa_B := G(S_B^*)-G(S_C^*) \ge 0,
+\]
+giving
+\[
+  G(S_B^*)-G(\widehat S)
+  \le
+  \kappa_B+2\eta_{B,C}+2\varepsilon_{B,C,\delta}+\omega_B .
+\]
+The term $\kappa_B$ is not directly observable unless the pool is known to
+contain the exhaustive oracle. In experiments it can only be discussed
+relative to an MC-oracle or another explicit pool.
+
+The candidate pool must be constructed without leakage. It may be sampled
+randomly, generated from training seeds, or generated from a surrogate trained
+without held-out true-$G$ values. It must not be selected using held-out
+evaluation gains and then used to claim held-out regret control.
 
 \section{Empirical Ranker-Class Limitation}
 \label{sec:ch6-ranker-limitation}
 
-\paragraph{Formal scope.}
-In the seed-averaged additive problem with
-$\bar\Delta_t := \mathbb{E}_i[\Delta_{i,t}]$, any time-only separable ranker
-is bounded by the mean-profile top-$B$ envelope, because the best such
-time-only additive schedule is exactly top-$B$ by $\bar\Delta_t$.
+The marginal baseline also yields a scoped limitation on a class of rankers.
+This limitation has a formal part and an empirical part, and neither part is a
+universal impossibility result.
 
-\paragraph{Empirical scope.}
-On the ProSeCo-OWT case study, the tested separable rankers do not recover the
-best-of-$N$ MC-oracle headroom, and the mean-$\bar\Delta_t$ envelope enters the
-no-detectable-gain band by $B=8$ in the existing April 2026 results. This is a
-scoped empirical limitation of the tested ranker class, not a universal theorem
-over all feature-conditioned rankers.
-
-\paragraph{Not ruled out.}
-This limitation does not rule out feature-conditioned separable rankers outside
-the tested class, non-separable uses of quality signals, pairwise schedulers,
-online controllers, or search procedures using true-$G$ feedback. In
-particular, a deployable scheduler claim requires Level~3 held-out evidence,
-not merely population or true-$G$ search evidence.
-
-\section{Theorem B: Pairwise Surrogate Framework}
-\label{sec:ch6-theorem-b}
-
-\begin{assumption}[Pairwise approximation]
-\label{assum:ch6-b2}
-There is $\zeta_B\ge0$ such that
+\begin{proposition}[Time-only mean-profile limitation]
+\label{prop:ch6-ranker-limitation}
+Consider the seed-averaged additive problem
 \[
-  |G(S)-Q(S)|\le \zeta_B
-  \qquad\text{for all } |S|\le B .
+  \bar A(S)=\sum_{t\in S}\bar\Delta_t,
+  \qquad
+  \bar\Delta_t := \E_i[\Delta_{i,t}].
+\]
+Among all time-only separable rankers, the largest achievable additive value is
+obtained by selecting the $B$ largest entries of the mean profile
+$\bar\Delta_t$.
+\end{proposition}
+
+\begin{proof}
+A time-only ranker assigns each step $t$ a score depending only on $t$ (or on a
+deterministic function of $t$, such as phase). It therefore chooses a fixed
+size-$B$ subset of time indices, independent of the seed. The additive
+objective for such a fixed subset is exactly $\bar A(S)$. By
+Lemma~\ref{lem:ch6-topb-additive}, the maximiser of $\bar A(S)$ is any set of
+the $B$ largest $\bar\Delta_t$.
+\end{proof}
+
+The empirical statement used in this thesis is narrower. On the ProSeCo-OWT
+case study, the tested separable rankers do not recover the best-of-$N$
+MC-oracle headroom, and the mean-$\bar\Delta_t$ envelope enters the
+no-detectable-gain band by $B=8$ in the existing April 2026 results. This
+supports a limitation of the tested separable ranker class on that backend.
+
+The proposition and the empirical observation do not rule out
+feature-conditioned separable rankers outside the tested class. They do not
+rule out pairwise schedulers, online controllers, or search procedures using
+true-$G$ feedback. They also do not rule out non-separable uses of PRISM or
+other informed-refinement mechanisms. What is included in the marginal
+baseline is PRISM-style quality mass $QM_t$ when it is reduced to a separable
+per-step score $\psi_t$.
+
+\section{Pairwise Interactions}
+\label{sec:ch6-pairwise-interactions}
+
+If marginal additivity is inadequate, the next structured hypothesis is that
+the dominant non-additivity is pairwise. Define the operational second
+difference
+\[
+  \xi_{t,t'}
+  := G(\{t,t'\})-\Delta_t-\Delta_{t'},
+  \qquad t\ne t' .
+\]
+This is not a mechanistic decomposition of the neural network. It is a
+second-order finite difference of the schedule-value function. It aggregates
+all ways in which applying the corrector at one step changes the value of
+applying it at another step: direct interactions, altered downstream states,
+stochastic sensitivity, and metric effects.
+
+The pairwise surrogate is
+\[
+  Q(S)
+  :=
+  A(S)
+  +
+  \sum_{\substack{t<t'\\ t,t'\in S}}
+  \xi_{t,t'} .
+\]
+This $Q(S)$ is a schedule-level surrogate. It is unrelated to the historical
+raw key \texttt{Q\_t}, which denotes the quality-mass signal $QM_t$.
+
+For schedules of size two, $Q(S)=G(S)$ by construction. For larger schedules,
+$Q(S)$ ignores triple and higher-order residuals. For example, for
+$S=\{t_1,t_2,t_3\}$ the residual
+\[
+  G(S)-Q(S)
+\]
+contains all effects that cannot be represented by singleton and pair terms.
+Theorem B is useful only when these higher-order residuals are small on the
+schedules being considered.
+
+\section{Theorem B: Exact Pairwise Surrogate}
+\label{sec:ch6-theorem-b-exact}
+
+Theorem B is a generic surrogate-regret theorem. Its value in the thesis comes
+from using it as a falsifiable diagnostic: if $Q$ approximates $G$ better than
+$A$ on actual size-$B$ schedules, then interaction-aware scheduling is
+justified.
+
+\begin{assumption}[Pairwise surrogate approximation]
+\label{assum:ch6-b-zeta}
+There exists $\zeta_B\ge 0$ such that
+\[
+  \abs{G(S)-Q(S)}\le \zeta_B
+  \qquad\text{for every } S \text{ with } |S|=B .
 \]
 \end{assumption}
 
-\begin{theorem}[Theorem B; exact surrogate]
+\begin{theorem}[Theorem B: exact surrogate regret]
 \label{thm:ch6-b-exact}
-Let $S_Q^*\in\argmax_{|S|=B}Q(S)$, and suppose $\widehat S$ has surrogate
-optimization gap
+Let
+\[
+  S_Q^* \in \argmax_{|S|=B}Q(S).
+\]
+Suppose $\widehat S$ has surrogate optimisation gap $\omega_B$, meaning
 \[
   Q(S_Q^*)-Q(\widehat S)\le \omega_B .
 \]
-Under Assumption~\ref{assum:ch6-b2},
+Under Assumption~\ref{assum:ch6-b-zeta},
 \[
-  G(S_B^*) - G(\widehat S) \le 2\zeta_B+\omega_B .
+  G(S_B^*)-G(\widehat S)
+  \le 2\zeta_B+\omega_B .
 \]
 \end{theorem}
 
 \begin{proof}
-Use $G(S_B^*)\le Q(S_B^*)+\zeta_B\le Q(S_Q^*)+\zeta_B$ and
-$G(\widehat S)\ge Q(\widehat S)-\zeta_B
-\ge Q(S_Q^*)-\omega_B-\zeta_B$.
+By the surrogate approximation assumption,
+\[
+  G(S_B^*) \le Q(S_B^*)+\zeta_B .
+\]
+Since $S_Q^*$ maximises $Q$ over size-$B$ schedules,
+\[
+  Q(S_B^*)\le Q(S_Q^*).
+\]
+Thus
+\[
+  G(S_B^*)\le Q(S_Q^*)+\zeta_B .
+\]
+For the selected schedule $\widehat S$, the same approximation gives
+\[
+  G(\widehat S)\ge Q(\widehat S)-\zeta_B .
+\]
+The optimisation gap gives $Q(\widehat S)\ge Q(S_Q^*)-\omega_B$. Therefore
+\[
+  G(\widehat S)
+  \ge Q(S_Q^*)-\omega_B-\zeta_B .
+\]
+Subtracting the lower bound on $G(\widehat S)$ from the upper bound on
+$G(S_B^*)$ yields
+\[
+  G(S_B^*)-G(\widehat S)
+  \le 2\zeta_B+\omega_B .
+\]
 \end{proof}
 
-\begin{assumption}[Estimated surrogate]
-\label{assum:ch6-b3}
-There is $\alpha_B\ge0$ such that
+\section{Theorem B with an Estimated Surrogate}
+\label{sec:ch6-theorem-b-estimated}
+
+In experiments $Q$ is not usually known. The pairwise interactions must be
+estimated, giving an estimated surrogate $\widehat Q$.
+
+\begin{assumption}[Estimated surrogate accuracy]
+\label{assum:ch6-b-alpha}
+There exists $\alpha_B\ge 0$ such that
 \[
-  |Q(S)-\widehat Q(S)|\le \alpha_B
-  \qquad\text{for all } |S|\le B .
+  \abs{Q(S)-\widehat Q(S)}
+  \le \alpha_B
+  \qquad\text{for every } S \text{ with } |S|=B .
 \]
 \end{assumption}
 
-\begin{theorem}[Theorem B; estimated surrogate]
+\begin{theorem}[Theorem B: estimated surrogate regret]
 \label{thm:ch6-b-estimated}
-If Assumptions~\ref{assum:ch6-b2} and~\ref{assum:ch6-b3} hold and
-$\widehat S$ approximately maximizes $\widehat Q$ with optimization gap
-$\omega_B$, then
+Assume Assumptions~\ref{assum:ch6-b-zeta} and~\ref{assum:ch6-b-alpha}. Let
+$\widehat S$ approximately maximise $\widehat Q$ with gap $\omega_B$:
 \[
-  G(S_B^*) - G(\widehat S)
-  \le 2\zeta_B + 2\alpha_B + \omega_B .
+  \widehat Q(S_{\widehat Q}^*)-\widehat Q(\widehat S)\le \omega_B,
+  \qquad
+  S_{\widehat Q}^*\in\argmax_{|S|=B}\widehat Q(S).
+\]
+Then
+\[
+  G(S_B^*)-G(\widehat S)
+  \le 2\zeta_B+2\alpha_B+\omega_B .
 \]
 \end{theorem}
 
 \begin{proof}
-The uniform two-sided error converts the $\widehat Q$ optimization gap into a
-$Q$ optimization gap of at most $\omega_B+2\alpha_B$. Apply
-Theorem~\ref{thm:ch6-b-exact}.
+It is enough to show that $\widehat S$ has $Q$-optimisation gap at most
+$\omega_B+2\alpha_B$. Let $S_Q^*\in\argmax_{|S|=B}Q(S)$. Since
+$S_{\widehat Q}^*$ maximises $\widehat Q$,
+\[
+  \widehat Q(S_{\widehat Q}^*)\ge \widehat Q(S_Q^*).
+\]
+Using the assumed optimisation gap,
+\[
+  \widehat Q(\widehat S)
+  \ge \widehat Q(S_{\widehat Q}^*)-\omega_B
+  \ge \widehat Q(S_Q^*)-\omega_B .
+\]
+By the uniform estimation bound,
+\[
+  Q(\widehat S)
+  \ge \widehat Q(\widehat S)-\alpha_B
+  \ge \widehat Q(S_Q^*)-\omega_B-\alpha_B
+  \ge Q(S_Q^*)-\omega_B-2\alpha_B .
+\]
+Hence
+\[
+  Q(S_Q^*)-Q(\widehat S)\le \omega_B+2\alpha_B .
+\]
+Applying Theorem~\ref{thm:ch6-b-exact} with this optimisation gap gives
+\[
+  G(S_B^*)-G(\widehat S)
+  \le 2\zeta_B+\omega_B+2\alpha_B .
+\]
 \end{proof}
 
-\begin{theorem}[Theorem B$'$; finite pool and high probability]
+The constant in front of $\alpha_B$ is $2$. One $\alpha_B$ is paid when
+translating the estimated value of the selected schedule back to $Q$, and one
+$\alpha_B$ is paid when comparing the estimated value of the $Q$-optimal
+schedule to its true surrogate value.
+
+\section{Theorem B$'$: Finite-Pool High-Probability Form}
+\label{sec:ch6-theorem-b-prime}
+
+Uniform control over all $\binom{T}{B}$ schedules is usually unrealistic.
+The experimentally usable theorem is therefore a finite-pool,
+high-probability statement.
+
+\begin{theorem}[Theorem B$'$: finite-pool surrogate regret]
 \label{thm:ch6-b-prime}
-Fix a no-leakage candidate pool $C_B\subseteq\{S:|S|=B\}$. Suppose that
+Fix a candidate pool
 \[
-  \zeta_{B,C}:=\sup_{S\in C_B}|G(S)-Q(S)|
+  C_B\subseteq \{S\subseteq\{1,\ldots,T\}: |S|=B\}.
 \]
-is finite, and with probability at least $1-\delta$,
+Define the pool oracle
 \[
-  \sup_{S\in C_B}|Q(S)-\widehat Q(S)|\le \alpha_{B,\delta}.
+  S_C^* \in \argmax_{S\in C_B}G(S),
 \]
-Let $S_C^*\in\argmax_{S\in C_B}G(S)$ and let $\widehat S\in C_B$
-approximately maximize $\widehat Q$ over $C_B$ with gap $\omega_B$. Then,
-with probability at least $1-\delta$,
+the pairwise approximation error on the pool
+\[
+  \zeta_{B,C}:=\sup_{S\in C_B}\abs{G(S)-Q(S)},
+\]
+and suppose that with probability at least $1-\delta$,
+\[
+  \sup_{S\in C_B}\abs{Q(S)-\widehat Q(S)}
+  \le \alpha_{B,\delta}.
+\]
+Let $\widehat S\in C_B$ approximately maximise $\widehat Q$ over $C_B$ with
+gap $\omega_B$. Then, with probability at least $1-\delta$,
 \[
   G(S_C^*)-G(\widehat S)
   \le 2\zeta_{B,C}+2\alpha_{B,\delta}+\omega_B .
 \]
-Against the unobservable full oracle,
+If $S_B^*$ denotes the exhaustive oracle and
+\[
+  \kappa_B:=G(S_B^*)-G(S_C^*),
+\]
+then, on the same event,
 \[
   G(S_B^*)-G(\widehat S)
-  \le \kappa_B+2\zeta_{B,C}+2\alpha_{B,\delta}+\omega_B ,
+  \le
+  \kappa_B
+  +2\zeta_{B,C}
+  +2\alpha_{B,\delta}
+  +\omega_B .
 \]
-where $\kappa_B:=G(S_B^*)-G(S_C^*)$.
 \end{theorem}
 
 \begin{proof}
-Restrict the estimated-surrogate proof to $C_B$. The term $\kappa_B$ is the
-definition of the gap between the full oracle and the pool oracle.
+The proof of Theorem~\ref{thm:ch6-b-estimated} applies verbatim after
+restricting every maximisation and supremum to $C_B$. This gives the first
+inequality against $S_C^*$. The second follows by adding and subtracting
+$G(S_C^*)$:
+\[
+  G(S_B^*)-G(\widehat S)
+  =
+  \bigl(G(S_B^*)-G(S_C^*)\bigr)
+  +
+  \bigl(G(S_C^*)-G(\widehat S)\bigr).
+\]
+The first term is $\kappa_B$ by definition.
 \end{proof}
 
-\paragraph{No-leakage caveat.}
+The no-leakage requirement is part of the theorem's use, not a technicality.
 The candidate pool $C_B$ must be fixed independently of held-out evaluation
-$G$. Random MC pools, training-seed beams, and training-seed $\widehat Q$
-candidates are admissible. A pool selected with held-out true-$G$ feedback is
-not admissible for a held-out regret claim.
+values of $G$. A random MC pool is admissible. A pool generated by a surrogate
+trained on training seeds is admissible when evaluated on held-out seeds. A
+pool chosen because its schedules have high held-out true-$G$ values is not
+admissible for a held-out regret claim.
 
-\paragraph{Level of claim.}
-Theorem~B can be instantiated at three levels: seed-wise diagnostic,
-population schedule, and feature-conditioned held-out scheduling. Only the
-feature-conditioned Level~3 form can support a deployable scheduler claim.
+For Phase 1 schedule-level validation, $Q(S)$ must be computable for the
+schedules in $C_B$. This means either every pair inside each schedule has a
+measured $\xi_{t,t'}$, or $\xi_{t,t'}$ is supplied by a pre-registered
+estimator fitted only on training pairs and training seeds. Missing
+interactions must not be silently filled using held-out $G$ values. If neither
+measured pairs nor a no-leakage estimator covers a schedule, that schedule is
+not eligible for the $Q(S)\approx G(S)$ validation pool.
+
+\section{Levels of Analysis}
+\label{sec:ch6-levels}
+
+The same symbols can be instantiated at three different levels. The level
+determines what can be claimed.
+
+\paragraph{Level 1: seed-wise diagnostic.}
+For a fixed seed $i$, common random numbers define a seed-wise gain
+$G_i(S)$, marginals $\Delta_{i,t}$, interactions $\xi_{i,t,t'}$, and
+surrogate $Q_i(S)$. These quantities are diagnostic. They require
+counterfactual evaluations on the same trajectory and are not by themselves
+deployable.
+
+\paragraph{Level 2: population or global schedule.}
+Averaging over paired seeds gives
+\[
+  \bar G(S)=\E_i[G_i(S)],
+  \qquad
+  \bar\Delta_t=\E_i[\Delta_{i,t}],
+  \qquad
+  \bar\xi_{t,t'}=\E_i[\xi_{i,t,t'}].
+\]
+Optimising a population surrogate produces one global schedule that is good on
+average. It does not adapt to features of an individual trajectory.
+
+\paragraph{Level 3: feature-conditioned scheduler.}
+A deployable scheduler must construct $\widehat Q_i(S)$, or an equivalent
+decision rule, from observable features of the current trajectory, trained on
+other seeds and evaluated on held-out seeds. It cannot use true
+counterfactual $G_i(S)$ at inference time. Only Level 3 supports a deployable
+scheduler claim.
+
+This hierarchy prevents overclaiming. Level 1 can show that pairwise structure
+exists. Level 2 can show that a global schedule or population pairwise
+surrogate is useful. Level 3 is required to claim that the framework yields a
+practical trajectory-conditioned scheduler.
 
 \section{Diagnostic Framework C}
 \label{sec:ch6-framework-c}
 
-Diagnostic Framework C is a protocol, not a theorem. For a fixed
-$(\mathrm{model},\mathrm{corrector},F,B)$ triple and a pre-specified schedule
-pool, report:
+Diagnostic Framework C is a protocol, not a theorem. It classifies a fixed
+$(\mathrm{model},\mathrm{corrector},F,B)$ triple into regimes by measuring
+headroom, marginal rankability, interaction strength, pairwise predictability,
+and closure of the available headroom.
+
+Fix a paired seed set and a pre-specified schedule pool. Define
 \[
-\begin{aligned}
-  U_B^{MC,N} &:= G(S_B^{MC,N}) - G(S_B^{\mathrm{uniform}}),\\
-  U_B^{pool} &:= G(S_C^*) - G(S_B^{\mathrm{uniform}}),\\
-  R_B &:= \rho_{\mathrm{Spearman}}(A(S),G(S)),\\
-  I_B &:= \operatorname{sd}(G(S)-A(S))/(\operatorname{sd}(A(S))+\delta_0),\\
-  P_B &:= \rho_{\mathrm{Spearman}}(Q(S),G(S)).
-\end{aligned}
+  U_B^{\mathrm{MC},N}
+  :=
+  G(S_B^{\mathrm{MC},N})-G(S_B^{\mathrm{uniform}}),
 \]
-$U_B^{MC,N}$ is best-of-$N$ MC-oracle headroom; $U_B^{pool}$ is the oracle on
-the fixed candidate pool; $U_B^*$ is reserved for the unobservable exhaustive
-oracle and is not reported as an empirical quantity.
+the best-of-$N$ MC-oracle headroom over a uniform-placement baseline. Define
+\[
+  U_B^{\mathrm{pool}}
+  :=
+  G(S_C^*)-G(S_B^{\mathrm{uniform}}),
+\]
+the pool-oracle headroom on $C_B$. The unobservable exhaustive-oracle headroom
+may be denoted $U_B^*$ in theory, but it is not reported as an empirical
+quantity.
 
-The intended regime map is:
-\begin{itemize}
-  \item no-op: no positive MC/pool headroom;
-  \item marginal/rankable: $R_B$ high and tested rankers recover headroom;
-  \item interaction-driven: pairwise predictability improves over additive
-    predictability, e.g. $P_B>R_B$ and $\zeta_{B,C}<\eta_{B,C}$;
-  \item higher-order or chaotic: headroom exists, but neither $A$ nor $Q$
-    predicts schedules well;
-  \item online-decision-like: offline structure exists and a compact online
-    state supports a held-out budget-aware policy.
-\end{itemize}
+The marginal rankability diagnostic is
+\[
+  R_B := \rho_{\mathrm{Spearman}}\bigl(A(S),G(S)\bigr).
+\]
+An interaction-strength diagnostic is
+\[
+  I_B :=
+  \frac{
+    \operatorname{sd}\bigl(G(S)-A(S)\bigr)
+  }{
+    \operatorname{sd}\bigl(A(S)\bigr)+\delta_0
+  },
+\]
+where $\delta_0>0$ is a small stabilising constant. The pairwise
+predictability diagnostic is
+\[
+  P_B := \rho_{\mathrm{Spearman}}\bigl(Q(S),G(S)\bigr).
+\]
+For a method producing a schedule $\widehat S$, define a closure ratio against
+an MC pool by
+\[
+  C_B^{\mathrm{MC},N}(\widehat S)
+  :=
+  \frac{G(\widehat S)-G(S_B^{\mathrm{uniform}})}
+       {G(S_B^{\mathrm{MC},N})-G(S_B^{\mathrm{uniform}})}
+\]
+whenever the denominator is statistically distinguishable from zero.
 
-All classifications are statistical decisions with uncertainty over seeds and,
-when relevant, over pair or schedule sampling. Pair heatmaps are diagnostics;
-they do not by themselves validate Theorem~B. Schedule-level validation of
-$Q(S)\approx G(S)$ on actual size-$B$ schedules is required.
+The intended regimes are:
+\begin{description}[leftmargin=2.5cm,style=nextline]
+  \item[No-op.]
+  The corrector-placement budget has no detectable positive headroom:
+  $U_B^{\mathrm{MC},N}$ and $U_B^{\mathrm{pool}}$ are indistinguishable from
+  zero. Timing is not meaningful at this budget.
 
-\section{Appendix-Grade Objects}
+  \item[Marginal/rankable.]
+  Headroom exists, $R_B$ is high, interaction strength is low, and tested
+  separable rankers recover most of the available pool or MC headroom. This is
+  the regime where Theorem A is the right explanation.
+
+  \item[Interaction-driven.]
+  Headroom exists, additive rankability is weak or moderate, pairwise
+  predictability improves over additive predictability, and
+  $\zeta_{B,C}<\eta_{B,C}$ and/or $P_B>R_B$ with uncertainty accounted for.
+  This is the regime where Theorem B and B$'$ justify pairwise scheduling.
+
+  \item[Higher-order/chaotic.]
+  Headroom exists, but neither $A(S)$ nor $Q(S)$ predicts $G(S)$ well on
+  actual size-$B$ schedules. True-$G$ search may still find good schedules, but
+  no compact additive or pairwise surrogate has been validated.
+
+  \item[Online-decision-like.]
+  Offline structure exists and a compact observable state supports a
+  held-out, budget-aware policy that beats non-budget-aware baselines. This
+  regime requires Level 3 evidence.
+\end{description}
+
+Classification is statistical. Statements such as $P_B>R_B$ or
+$U_B^{\mathrm{MC},N}>0$ mean that the corresponding paired confidence interval
+supports the comparison. Pair heatmaps and phase-pair summaries are useful
+diagnostics, but they do not by themselves validate Theorem B. The validation
+must occur at the schedule level: compare $A(S)$, $Q(S)$, and $G(S)$ on actual
+size-$B$ schedules in a no-leakage candidate pool.
+
+\section{Appendix-Grade Directions}
 \label{sec:ch6-appendix-grade}
 
-\paragraph{Theorem D.}
-The online budgeted controller abstraction is a standard finite-horizon
-approximate dynamic programming statement. If an approximate value function is
-uniformly within $\delta$ of the true value function over reachable states,
-the greedy policy has loss at most $2T\delta$. This is appendix-grade unless a
-compact observed state yields a statistically positive held-out scheduler.
+Two mathematical objects are useful for orientation but are not load-bearing in
+the current thesis.
 
-\paragraph{Lemma E.}
-The burn-in lemma is valid only for a clipped or bounded-Lipschitz surrogate
-$F_C$. The experimental $F=-$GPT-2 NLL is not assumed to be Lipschitz in
-Hamming distance. In the main text, burn-in exclusion should be justified by
-measured $R_t$ and measured $\Delta_t$, not by an unconditional Lipschitz
-claim.
+\paragraph{Theorem D: online controller abstraction.}
+One can formulate corrector timing as a finite-horizon budgeted control
+problem. Let $z_t$ be an observable state, $b_t$ the remaining placement
+budget, and $a_t\in\{0,1\}$ the decision to apply the corrector. The value
+function satisfies a Bellman recursion
+\[
+  V_t(z,b)
+  =
+  \max_{a\in\{0,1\},\,a\le b}
+  \E\!\left[
+    V_{t+1}(z_{t+1},b-a)
+    \mid z_t=z, a_t=a
+  \right],
+\]
+with terminal reward given by the final quality. If an approximate value
+function $\widehat V_t$ is uniformly within $\delta$ of $V_t$ on all reachable
+states, the standard approximate dynamic programming argument gives a
+$2T\delta$ performance-loss bound for the greedy policy. This is generic. It
+becomes thesis-central only if a compact observed state yields a positive
+held-out scheduler, which has not yet been shown.
 
-\section{Claim Boundaries}
-\label{sec:ch6-claim-boundaries}
+\paragraph{Lemma E: burn-in under clipped quality.}
+Early denoising steps may have small or empty revisable sets, suggesting that
+corrector placements there have little value. A clean deterministic lemma can
+be stated for a clipped or bounded-Lipschitz surrogate $F_C$: if
+\[
+  \abs{F_C(y)-F_C(y')}\le L_F d_H(y,y'),
+\]
+then the gain from a correction acting on a small revisable set is bounded by a
+constant proportional to $\abs{R_t}$. This does not apply unconditionally to
+the experimental score $F=-$GPT-2 NLL, which need not be Lipschitz in Hamming
+distance without clipping. In the main empirical pipeline, burn-in exclusions
+should therefore be justified by measured $R_t$ and measured $\Delta_t$, not by
+an unconditional Lipschitz claim.
 
-\begin{itemize}
-  \item Theorem~A is a marginal/ranker baseline under explicit assumptions.
-  \item Diagnostics A$'$ and A$''$ report additivity scale and rankability;
-    they are not unconditional regret refinements.
-  \item Theorem~B/B$'$ is the central surrogate-regret framework, conditional
-    on measured pairwise approximation and estimation assumptions.
-  \item Diagnostic Framework C classifies regimes; it does not assert
-    universality.
-  \item MC-oracle headroom is best-of-$N$ pool headroom, not the exhaustive
-    oracle.
-  \item A deployable scheduler claim requires Level~3 feature-conditioned
-    held-out evidence.
-  \item Theorem~D and Lemma~E remain appendix-grade unless later empirical
-    gates justify promotion.
-\end{itemize}
+\section{Conclusion}
+\label{sec:ch6-conclusion}
+
+The chapter gives a linear framework for fixed-budget corrector timing.
+Theorem~\ref{thm:ch6-a} says when marginal ranking should work: the schedule
+gain must be approximately additive, and observable signals must calibrate the
+single-step marginal gains. Diagnostics A$'$ and A$''$ measure additivity scale
+and rankability, but they are not regret refinements. The finite-pool form,
+obtained as Theorem~B$'$ with $Q:=A$, is the safe selected-schedule statement
+used in experiments.
+
+When marginal ranking is insufficient, the pairwise framework takes over.
+The interaction term $\xi_{t,t'}$ defines a second-order schedule surrogate
+$Q(S)$. Theorem~\ref{thm:ch6-b-exact} proves the exact surrogate regret bound,
+Theorem~\ref{thm:ch6-b-estimated} adds estimated-surrogate error with the
+constant $2\alpha_B$, and Theorem~\ref{thm:ch6-b-prime} gives the finite-pool,
+high-probability, no-leakage form that can be tested experimentally.
+
+Diagnostic Framework C then classifies the observed regime: no-op,
+marginal/rankable, interaction-driven, higher-order/chaotic, or
+online-decision-like. The experiments in the rest of the thesis ask which of
+these regimes ProSeCo-OWT occupies. If the marginal assumptions hold, Theorem A
+explains why simple rankers work. If pairwise schedule-level validation holds,
+Theorem B/B$'$ explains why interaction-aware scheduling is justified. If both
+fail while true-$G$ search still finds headroom, the framework still provides a
+mathematically precise negative result: the tested backend lies outside the
+validated marginal and pairwise regimes, and the contribution becomes a
+diagnostic classification rather than a deployable scheduler.
