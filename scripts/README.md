@@ -8,14 +8,25 @@
 ## Phase 0 entry point
 
 ```bash
+export PROSECO_OWT_CHECKPOINT=~/mdm/checkpoints/proseco_owt
 pytest tests/test_phase0_preflight.py -q
 ```
 
-This is the blocking local pre-flight suite. Checkpoint-backed ProSeCo
-equivalence checks use `ProSeCoOWTGenerator.run_*(return_trace=True)` and are
-skipped only when `PROSECO_OWT_CHECKPOINT` is unavailable. After PF1–PF8 are
-implemented or manually verified, run the K=3 smoke, then the K=30 critical
-replication only if the smoke matches qualitatively.
+Status (2026-05-06): **11 passed, 0 skipped** with real backend. ✅
+All PF1–PF8 pass including real-backend PF3 (single-correction equivalence),
+PF5 (CRN consistency), PF7/PF8 (corrector action set / signal mask). K=3
+smoke gate is now open but not yet run.
+
+Debug command (CPU, T=4):
+```bash
+python scripts/legacy/debug_proseco_owt_load.py \
+  --checkpoint "$PROSECO_OWT_CHECKPOINT" --device cpu --T 4
+```
+
+Stage checkpoint (once; HPC or local):
+```bash
+python scripts/stage_proseco_owt.py --dest ~/mdm/checkpoints/proseco_owt
+```
 
 ## Phase 0 smoke entry point
 

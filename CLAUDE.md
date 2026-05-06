@@ -166,6 +166,12 @@ Key points:
 - **Backbone:** ProSeCo-OWT only (LLaDA-SFT probe inconclusive).
 - **Reading:** ProSeCo, PRISM, MDLM, ReMDM, L&Z Error Bounds done.
 
+### Phase 0 status (2026-05-06)
+- Checkpoint staged locally at `~/mdm/checkpoints/proseco_owt` (647 MB, model.safetensors).
+- `PROSECO_OWT_CHECKPOINT=~/mdm/checkpoints/proseco_owt pytest tests/test_phase0_preflight.py -q` → **11 passed, 0 skipped**. All PF1–PF8 pass with real backend.
+- K=3 smoke gate is now open. Do not run smoke until deliberately started.
+- Debug: `python scripts/legacy/debug_proseco_owt_load.py --checkpoint ~/mdm/checkpoints/proseco_owt --device cpu --T 4`
+
 ### Writing status (2026-05-06)
 - ch1–ch5: full PASS 2 drafts done as study-guide chapters leading into ch6.
 - ch6 (Contribution): full self-contained mathematical framework drafted.

@@ -48,32 +48,36 @@ Before launching any new experiment, reproduce the existing ProSeCo-OWT baseline
 
 **Step 2a — code path audit.**
 - [x] Local package import check: `python -c "import mdm_playground"` passes. ✅ (2026-05-06)
-- [ ] Stage ProSeCo-OWT checkpoint: `python scripts/stage_proseco_owt.py`.
+- [x] Stage ProSeCo-OWT checkpoint. ✅ (2026-05-06)
+  Staged at: `~/mdm/checkpoints/proseco_owt` (local Mac).
+  HPC path: `~/mdm/checkpoints/proseco_owt` (must re-stage on HPC if not present).
+  Command: `python scripts/stage_proseco_owt.py --dest ~/mdm/checkpoints/proseco_owt`
 
-**Step 2b — pre-flight assertions (BLOCKING; no smoke until these pass).**
-The following invariants must be implemented as tests under `tests/` (or
-manually verified) before any HPC submission, including K=3 smoke:
+**Step 2b — pre-flight assertions. ✅ ALL PASS (2026-05-06, real backend).**
 
-- [ ] **PF1 deterministic base** — same seed + config ⇒ same base tokens and F.
-- [ ] **PF2 empty schedule = base** — `run_with_schedule({}) == run_base`.
-- [ ] **PF3 single-correction = Protocol A branch** — `run_with_schedule({t})`
-      equals the Protocol A single-corrector branch at step t.
-- [ ] **PF4 budget accounting** — |S| = B; total extra forward passes = c_corr · B;
+- [x] **PF1 deterministic base** — same seed + config ⇒ same base tokens and F.
+- [x] **PF2 empty schedule = base** — `run_with_schedule({}) == run_base`.
+- [x] **PF3 single-correction = Protocol A branch** — `run_with_schedule({t})`
+      equals the Protocol A single-corrector branch at step t. (real backend ✅)
+- [x] **PF4 budget accounting** — |S| = B; total extra forward passes = c_corr · B;
       schedules with same |S| have same compute cost.
-- [ ] **PF5 CRN consistency** — base and any branch share random numbers
-      everywhere except the corrector path.
-- [ ] **PF6 F-scoring consistency** — same token sequence ⇒ same F score.
-- [ ] **PF7 corrector action set** — ProSeCo corrects only positions in R_t.
-- [ ] **PF8 signal/action-set consistency** — H_t, M_t^{-1}, QM_t are computed
-      over the same R_t the corrector acts on (avoid historical Bug #1).
+- [x] **PF5 CRN consistency** — base and any branch share random numbers
+      everywhere except the corrector path. (real backend ✅)
+- [x] **PF6 F-scoring consistency** — same token sequence ⇒ same F score.
+- [x] **PF7 corrector action set** — ProSeCo corrects only positions in R_t. (real backend ✅)
+- [x] **PF8 signal/action-set consistency** — H_t, M_t^{-1}, QM_t are computed
+      over the same R_t the corrector acts on (avoid historical Bug #1). (real backend ✅)
 
-Current local entry point: `pytest tests/test_phase0_preflight.py -q`.
-Status (2026-05-06): 8 passed, 3 skipped. Skipped = PF3/PF5/PF7 real-backend
-checks. `PROSECO_OWT_CHECKPOINT` is unset; K=3 smoke remains blocked.
-When checkpoint is staged, run:
-`PROSECO_OWT_CHECKPOINT=/path/to/proseco_owt pytest tests/test_phase0_preflight.py -q`.
+Current local entry point:
+```
+export PROSECO_OWT_CHECKPOINT=~/mdm/checkpoints/proseco_owt
+pytest tests/test_phase0_preflight.py -q
+```
+Status (2026-05-06): **11 passed, 0 skipped** with real backend. ✅
+All PF1–PF8 pass including real-backend PF3/PF5/PF7.
+Debug command: `python scripts/legacy/debug_proseco_owt_load.py --checkpoint "$PROSECO_OWT_CHECKPOINT" --device cpu --T 4`
 
-**Step 2c — K=3 smoke (only after Step 2b passes).**
+**Step 2c — K=3 smoke. ✅ GATE OPEN (PF1–PF8 passed 2026-05-06; not yet run).**
 - [ ] K=3 seeds, T=64, B ∈ {2,4}; uniform + mean_delta_oracle + CD-G + BS-AG.
 - [ ] Compare against existing `results/phase2b/` and
       `results/phase3a_proseco_owt/oracle_gap_closure.json` keys.
