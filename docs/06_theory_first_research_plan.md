@@ -571,11 +571,12 @@ Avoid overclaiming from one backbone. Determine whether different corrector mech
 ### Research questions
 
 - RQ3.1: Is ProSeCo-OWT uniquely interaction-driven?
-- RQ3.2: Do heuristic or remasking-style correctors fall into no-op/rankable regimes?
+- RQ3.2: Do heuristic corrector wrappers or remasking-sampler baselines fall
+  into no-op/rankable regimes?
 - RQ3.3: Does the corrector mechanism determine whether timing is useful?
 - RQ3.4: Are results stable across quality metrics?
 
-### Candidate model/corrector pairs
+### Candidate model/corrector or comparison backends
 
 #### M1 — ProSeCo-OWT
 
