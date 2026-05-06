@@ -12,10 +12,55 @@ pytest tests/test_phase0_preflight.py -q
 ```
 
 This is the blocking local pre-flight suite. Checkpoint-backed ProSeCo
-equivalence checks are marked as explicit integration skips until the backend
-exposes the needed comparison hooks. After PF1–PF8 are implemented or manually
-verified, run the K=3 smoke, then the K=30 critical replication only if the
-smoke matches qualitatively.
+equivalence checks use `ProSeCoOWTGenerator.run_*(return_trace=True)` and are
+skipped only when `PROSECO_OWT_CHECKPOINT` is unavailable. After PF1–PF8 are
+implemented or manually verified, run the K=3 smoke, then the K=30 critical
+replication only if the smoke matches qualitatively.
+
+## Phase 0 smoke entry point
+
+No standalone smoke wrapper is active yet because the checkpoint-backed PF
+checks must pass first. When they do, use the existing reproduction scripts
+with a non-canonical output root:
+
+```bash
+SHA=$(git rev-parse --short HEAD)
+ROOT=results/phase0_smoke_${SHA}
+
+python scripts/run_phase2b_proseco_owt.py \
+  --checkpoint "$PROSECO_OWT_CHECKPOINT" \
+  --protocol_a_dir results/phase1_proseco_owt_full/protocol_a \
+  --out_dir "$ROOT/phase2b_raw" \
+  --K 3 --T 64 --B_values 2,4 --mc_B_values 2,4
+
+python scripts/run_phase3a_combinatorial.py \
+  --checkpoint "$PROSECO_OWT_CHECKPOINT" \
+  --protocol_a_dir results/phase1_proseco_owt_full/protocol_a \
+  --out_dir "$ROOT/phase3a_raw" \
+  --K 3 --T 64 --B_values 2,4
+
+cp "$ROOT/phase2b_raw/policy_raw.shard0-of-1.json" "$ROOT/phase2b_raw/policy_raw.json"
+cp "$ROOT/phase2b_raw/mc_raw.shard0-of-1.json" "$ROOT/phase2b_raw/mc_raw.json"
+cp "$ROOT/phase3a_raw/cd_raw.shard0-of-1.json" "$ROOT/phase3a_raw/cd_raw.json"
+cp "$ROOT/phase3a_raw/bs_raw.shard0-of-1.json" "$ROOT/phase3a_raw/bs_raw.json"
+
+python scripts/analyze_phase2b.py \
+  --results_dir "$ROOT/phase2b_raw" \
+  --out_dir "$ROOT/phase2b" \
+  --figures_dir "$ROOT/figures/phase2b"
+
+python scripts/analyze_phase3a.py \
+  --results_dir "$ROOT/phase3a_raw" \
+  --phase2b_dir "$ROOT/phase2b_raw" \
+  --phase2b_aggr "$ROOT/phase2b" \
+  --out_dir "$ROOT/phase3a" \
+  --figures_dir "$ROOT/figures/phase3a"
+```
+
+The smoke output must include the git SHA, preflight status, exact commands,
+per-seed raw rows, aggregate summaries, and a short interpretation. Do not
+write Phase 0 smoke outputs into canonical `results/phase2b*` or
+`results/phase3a*` folders.
 
 ## Reproducibility workflow
 

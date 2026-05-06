@@ -13,6 +13,9 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-user=3316152@studbocconi.it
 
+# LEGACY / PROVENANCE — DO NOT SUBMIT FOR CURRENT STATUS.
+# Closed LLaDA-SFT resume job. Preserved only to explain historical outputs.
+#
 # Phase 2b ONLY, LLaDA-SFT backbone, 4 parallel shards inside one job.
 #
 # QOS constraints (sacctmgr show qos stud):

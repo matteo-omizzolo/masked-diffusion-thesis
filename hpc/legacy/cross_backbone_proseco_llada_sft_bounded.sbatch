@@ -13,6 +13,10 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-user=3316152@studbocconi.it
 
+# LEGACY / PROVENANCE — DO NOT SUBMIT FOR CURRENT STATUS.
+# Closed LLaDA-SFT bounded probe. This script references historical script paths
+# and may overwrite old cross-backbone outputs if re-run.
+#
 # Bounded cross-backbone replication on ProSeCo-LLaDA-SFT:
 #   Stage 0: preflight load check
 #   Stage 1: Protocol A (K=8)
@@ -163,4 +167,3 @@ echo "Done: $(date)"
 echo "Run root: $RUN_ROOT"
 echo "Figures:  $FIG_ROOT"
 echo "=========================================="
-

@@ -10,8 +10,8 @@ matches qualitatively. The current known entry points are:
 | `push.sh` | CURRENT_PHASE0 | Sync code to HPC. |
 | `pull.sh` | CURRENT_PHASE0 | Pull generated summaries from HPC when needed. |
 | `setup_env.sh` | CURRENT_PHASE0 | Prepare the HPC environment. |
-| `cross_backbone_proseco_llada_sft_bounded.sbatch` | LEGACY_PROVENANCE | Closed LLaDA-SFT bounded probe; do not use for current status. |
-| `cross_backbone_proseco_llada_sft_resume_phase2b.sbatch` | LEGACY_PROVENANCE | Closed LLaDA-SFT resume job; do not use for current status. |
+| `legacy/cross_backbone_proseco_llada_sft_bounded.sbatch` | LEGACY_PROVENANCE | Closed LLaDA-SFT bounded probe; do not use for current status. |
+| `legacy/cross_backbone_proseco_llada_sft_resume_phase2b.sbatch` | LEGACY_PROVENANCE | Closed LLaDA-SFT resume job; do not use for current status. |
 
 The older `phase1_*` and `submit.sh` flows are legacy and live in `archive/`.
 
