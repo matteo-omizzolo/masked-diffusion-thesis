@@ -48,6 +48,11 @@ The key shift is from a purely empirical conclusion to a theory-first program:
 4. Run experiments specifically to test those diagnostics.
 5. Only then develop or evaluate new schedulers.
 
+The framework is **model- and corrector-agnostic**: for any fixed predictor,
+informed corrector, quality functional F, and corrector-placement budget B, it
+defines G(S), Δ_t, A(S), ξ_{t,t′}, Q(S), and regime diagnostics. ProSeCo-OWT is
+the primary empirical case study, not an assumption of the theory.
+
 ---
 
 ## 1. Non-negotiable research principles

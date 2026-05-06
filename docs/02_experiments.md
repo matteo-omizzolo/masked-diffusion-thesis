@@ -21,7 +21,8 @@ All Phase 2b / Phase 3a results are T1 (K = 30, BCa CI). Cross-backbone is T3 (K
 
 **ProSeCo-OWT** (ProSeCo annealed-refinement corrector, MDLM backbone, OpenWebText, T = 64).
 Quality functional F = −GPT-2 NLL on a 512-token reference window.
-Checkpoint: `~/mdm/checkpoints/mdlm.ckpt` on HPC. Staged on HPC via `scripts/stage_proseco_owt.py`.
+Checkpoint snapshot: `~/mdm/checkpoints/proseco_owt` on HPC. Staged on HPC via
+`scripts/stage_proseco_owt.py`.
 
 ---
 

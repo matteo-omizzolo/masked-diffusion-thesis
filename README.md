@@ -25,7 +25,7 @@ MSc thesis by Matteo Omizzolo, supervised by Prof. Giacomo Zanella (Bocconi Univ
 | `scripts/` | Analysis scripts; `scripts/legacy/` for superseded |
 | `results/` | Raw experiment outputs — never deleted |
 | `hpc/` | Bocconi HPC sbatch scripts and push/pull helpers |
-| `external/` | Upstream repos (ProSeCo, MDLM, ReMDM, PRISM, sedd) |
+| `external/` | Clean upstream submodules (MDLM, ReMDM, PRISM, RemeDi, SEDD); ProSeCo-OWT is staged as a checkpoint snapshot |
 | `archive/` | Legacy code and notes from before April 2026 |
 
 ## Raw results

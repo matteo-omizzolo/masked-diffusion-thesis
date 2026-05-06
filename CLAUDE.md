@@ -69,7 +69,7 @@ predictor schedules (when to unmask), or corrector kernel design (how to correct
 - **Host:** `slogin.hpc.unibocconi.it` | **User:** `3316152`
 - **Partition/QOS:** `stud` | Max 4× NVIDIA A100 80GB
 - **Repo on HPC:** `~/mdm/masked-diffusion-thesis`
-- **Checkpoint on HPC:** `~/mdm/checkpoints/mdlm.ckpt` (~2.5 GB, uploaded once via scp)
+- **Primary ProSeCo-OWT snapshot on HPC:** `~/mdm/checkpoints/proseco_owt`
 - **Python env:** conda env `remdm311` (Python 3.11) — load with:
   ```bash
   module load miniconda3
@@ -100,9 +100,9 @@ ssh 3316152@slogin.hpc.unibocconi.it "python3 -c 'import json; print(...)'"
 
 ### 3. `flash_attn` — cannot build on this cluster
 System CUDA is 13.0 but PyTorch compiled with 12.8 → nvcc mismatch.
-**Fix:** Patched `external/remdm/models/dit.py` and `autoregressive.py` to make
-`flash_attn` optional with PyTorch SDPA fallback. Also made `dimamba` optional in
-`external/remdm/models/__init__.py` (requires `causal_conv1d`, also uninstallable).
+**Current rule:** external repos stay clean upstream. The active ProSeCo-OWT path
+uses `scripts/stage_proseco_owt.py`, which applies the documented fallback patch
+to the staged HuggingFace snapshot, not to `external/`.
 
 ### 4. cuda-nvcc conda package breaks sbatch
 Installing `cuda-nvcc` via conda adds an activation script that references
@@ -110,12 +110,9 @@ Installing `cuda-nvcc` via conda adds an activation script that references
 **Fix:** `conda remove cuda-nvcc cuda-toolkit` — not needed since flash_attn fallback used.
 
 ### 5. PyTorch ≥2.6 `weights_only=True` default
-Old checkpoints (saved with numpy scalars) fail to load.
-**Fix:** Added to `external/remdm/main.py`:
-```python
-import numpy
-torch.serialization.add_safe_globals([numpy.core.multiarray.scalar])
-```
+Old checkpoints can fail to load under the new default. Active backend wrappers
+force `weights_only=False` only for trusted local checkpoints; do not patch
+external repos silently.
 
 ### 6. git submodule update fails on HPC
 Repo is rsync'd (not cloned), so no `.git` directory.
@@ -130,11 +127,9 @@ Added to `requirements.txt`: `transformers==4.38.2`, `hydra-core==1.3.2`, `omega
 Checkpoint was saved with `transformers==4.38.2`. Newer versions moved
 `tokenization_gpt2_fast` path. **Fix:** `pip install 'transformers==4.38.2'` — pin exactly.
 
-### 9. flash_attn SDPA fallback — rotary embedding shape error
-`apply_rotary_pos_emb` slices cos/sin to half-dim for flash_attn interface.
-Torch SDPA fallback needs full-dim. Also `qkv.unbind` uses dim=1 (not dim=2)
-after `rearrange(qkv, 'b s ... -> (b s) ...')` gives shape `(b*s, 3, h, d)`.
-**Fix:** Patched `external/remdm/models/dit.py` — see file for details.
+### 9. ProSeCo snapshot fallback — rotary embedding shape
+The staged `modeling_proseco.py` patch must keep flash-attn and pure-PyTorch
+rotary shapes distinct. This is handled in `scripts/stage_proseco_owt.py`.
 
 ### 10. NumPy 2.0 `np.array(copy=False)` behavior change in datasets 2.18
 `datasets==2.18` uses `np.array(array, copy=False)` which raises ValueError in NumPy 2.x
@@ -143,10 +138,8 @@ when a copy is needed.
 
 ### 11. OpenWebText reference — use owt-reference streaming solution
 Downloading openwebtext (38GB) for MAUVE reference exceeds HPC user quota.
-**Fix:** `scripts/stage_owt_reference.py` streams 1000 OWT samples to
-`/home/3316152/mdm/data/owt_reference_1000.json` on the login node.
-`external/remdm/configs/data/openwebtext-split.yaml` → `valid: owt-reference`.
-`external/remdm/dataloader.py` adds `owt-reference` branch.
+Do not patch `external/remdm` silently for this. Keep any future data-staging
+logic in project scripts or documented config patches.
 
 ---
 

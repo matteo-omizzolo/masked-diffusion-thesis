@@ -62,14 +62,17 @@ manually verified) before any HPC submission, including K=3 smoke:
       over the same R_t the corrector acts on (avoid historical Bug #1).
 
 Current local entry point: `pytest tests/test_phase0_preflight.py -q`.
-Checkpoint-backed ProSeCo equivalence checks may remain skipped only with
-explicit reasons until the backend exposes branch/schedule comparison, RNG
-trace, and acted-on R_t hooks.
+The real ProSeCo backend exposes `return_trace=True` hooks for branch/schedule
+comparison, RNG fingerprints, and acted-on R_t positions. Checkpoint-backed
+checks may remain skipped only when the staged snapshot is unavailable; run
+them with `PROSECO_OWT_CHECKPOINT=/path/to/proseco_owt pytest tests/test_phase0_preflight.py -q`.
 
 **Step 2c — K=3 smoke (only after Step 2b passes).**
 - [ ] K=3 seeds, T=64, B ∈ {2,4}; uniform + mean_delta_oracle + CD-G + BS-AG.
 - [ ] Compare against existing `results/phase2b/` and
       `results/phase3a_proseco_owt/oracle_gap_closure.json` keys.
+- [ ] Write only to `results/phase0_smoke_<git-short-sha>/` with config,
+      preflight status, per-seed rows, aggregate summaries, and exact commands.
 
 **Step 2d — K=30 critical replication (only after Step 2c matches qualitatively).**
 

@@ -32,6 +32,11 @@ go and **what regime** the (model, corrector, F, B) triple lies in.
 
 The thesis formalizes this through a layered framework:
 
+The framework is **model- and corrector-agnostic**: for any fixed predictor,
+informed corrector, quality functional F, and corrector-placement budget B, it
+defines G(S), Δ_t, A(S), ξ_{t,t′}, Q(S), and regime diagnostics. ProSeCo-OWT is
+the primary empirical case study, not an assumption of the theory.
+
 - **Theorem A (baseline).** Proxy-regret bound for separable-ranker scheduling:
   G(S_B^*) − G(Ŝ_B) ≤ 2Bε + 2η_B under uniform calibration / additivity.
 - **Theorem B / B′.** Pairwise surrogate regret framework: when |G − Q| is

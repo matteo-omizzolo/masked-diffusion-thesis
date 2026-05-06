@@ -12,6 +12,11 @@ The stack has been reframed for the theory-first phase. Detailed statements,
 proofs, and theory-to-experiment map are in `research/candidate_theorems.md`
 §0–§7; this file is a one-page summary.
 
+The framework is **model- and corrector-agnostic**: fix a predictor, informed
+corrector, quality functional F, and placement budget B, then define G(S),
+Δ_t, A(S), ξ_{t,t′}, Q(S), and the regime diagnostics. ProSeCo-OWT is the
+primary empirical case study, not a theory assumption.
+
 | § | Object | Status | Role |
 |---|---|---|---|
 | §1.1–§1.2 | **Theorem A** — marginal proxy regret 2Bε + 2η_B (uniform form) | Proved | Baseline; tested by (A2)/(A3) on candidate pool C_B |
