@@ -1,46 +1,73 @@
 # External Repos Manifest — Signal-Adaptive Corrector Scheduling Thesis
 # Machine-readable manifest for reproducibility.
-# Updated: April 2026
+# Updated: 2026-05-06
+#
+# Rule: external/ must contain clean upstream checkouts only. Do not make
+# silent local edits inside external/. Project-specific patches belong in
+# src/, scripts/, or documented patch files.
 
 tier_a:
   mdlm:
     repo: https://github.com/kuleshov-group/mdlm
-    status: cloned
+    status: clean_upstream_submodule
     location: external/mdlm/
+    pinned_commit: c112c526d193436838c98d81455ee51f90309470
+    branch: master
+    required_for_phase0: false
     checkpoint: kuleshov-group/mdlm-owt
     checkpoint_status: on_hpc
     params: ~130M
     license: Apache-2.0
-    notes: Base masked diffusion LM; experimental backbone
+    notes: Base masked diffusion LM; provenance / legacy backend reference
 
   remdm:
     repo: https://github.com/kuleshov-group/remdm
-    status: cloned_and_patched
+    status: clean_upstream_submodule
     location: external/remdm/
+    pinned_commit: 813d7565fb8e7fb9ab03c19fbd3fb0641c36bab2
+    branch: main
+    required_for_phase0: false
     checkpoint: kuleshov-group/mdlm-owt  # shares MDLM checkpoint
     checkpoint_status: on_hpc
     notes: >
-      Remasking framework; patched for flash_attn SDPA fallback.
-      Primary platform for trajectory diagnostics and corrector scheduling.
+      Remasking framework retained for provenance and legacy backend reference.
+      Current checkout is clean upstream; do not rely on uncommitted local patches.
 
   proseco_owt:
     source: huggingface
     repo: kuleshov-group/proseco-owt
     status: staged_via_script
     location: ~/mdm/checkpoints/proseco_owt/
+    required_for_phase0: true
     checkpoint_status: local_snapshot_required
     params: ~130M
     notes: >
       Co-trained ProSeCo checkpoint used by the thesis mainline. Stage it with
       scripts/stage_proseco_owt.py; the active backend loads the local snapshot,
-      not a hidden repo checkout.
+      not an external/ repo checkout. The staging script documents the local
+      flash_attn fallback patch applied to the snapshot file.
     action_required: stage snapshot, verify config.json/modeling_proseco.py/model.safetensors
+
+  proseco_local_checkout:
+    repo: https://github.com/kuleshov-group/proseco
+    status: archived_local_modified_not_needed
+    old_location: external/proseco/
+    old_commit: 69fe45d101d8367b0d1807466b409f71449a7c58
+    required_for_phase0: false
+    notes: >
+      Ignored local checkout found with an uncommitted modeling_proseco.py
+      flash_attn fallback patch. It is not used by the active backend.
+      Compact provenance is recorded in
+      docs/archive/external_modified_20260506/proseco_manifest.md.
 
 tier_b:
   prism:
     repo: https://github.com/SeunggeunKimkr/PRISM
-    status: submodule_not_tested
+    status: clean_upstream_submodule_not_current
     location: external/PRISM/
+    pinned_commit: 266d51e886b28ac8bfb416eb8715394aa08a4e0f
+    branch: main
+    required_for_phase0: false
     notes: Quality-signal platform; Phase 3 experiments
 
   dllm:
@@ -62,6 +89,24 @@ tier_c:
     notes: Optional late-stage validation
 
 analysis_codebases:
+  remedi:
+    repo: https://github.com/maple-research-lab/RemeDi.git
+    status: clean_upstream_submodule_not_current
+    location: external/remedi/
+    pinned_commit: 2e1b19d34db09e345898f6c5b6ed60418659821a
+    branch: main
+    required_for_phase0: false
+    notes: RemeDi codebase retained for literature/provenance; not current Phase 0 path.
+
+  sedd:
+    repo: https://github.com/louaaron/Score-Entropy-Discrete-Diffusion
+    status: clean_upstream_submodule_not_current
+    location: external/sedd/
+    pinned_commit: 0605786da5ccb5747545e26d66fdf477187598b6
+    branch: main
+    required_for_phase0: false
+    notes: SEDD codebase retained for literature/provenance; not current Phase 0 path.
+
   denoising_entropy:
     repo: https://github.com/LINs-lab/DenoisingEntropy
     status: confirmed_public
