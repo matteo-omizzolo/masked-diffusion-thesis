@@ -1,12 +1,17 @@
 # HPC workflow
 
-This directory only documents the thesis mainline:
+No full-scale HPC job should be submitted until PF1–PF8 pass and the K=3 smoke
+matches qualitatively. The current known entry points are:
 
-- `hpc/phase2b_proseco_owt.sbatch`
-- `hpc/phase3a_combinatorial.sbatch`
-- `hpc/push.sh`
-- `hpc/pull.sh`
-- `hpc/setup_env.sh`
+| File | Classification | Use |
+|---|---|---|
+| `phase2b_proseco_owt.sbatch` | CURRENT_REPRODUCE_COMPLETED | Phase 2b reproduction after Phase 0 gates. |
+| `phase3a_combinatorial.sbatch` | CURRENT_REPRODUCE_COMPLETED | Phase 3a reproduction after Phase 2b replication gate. |
+| `push.sh` | CURRENT_PHASE0 | Sync code to HPC. |
+| `pull.sh` | CURRENT_PHASE0 | Pull generated summaries from HPC when needed. |
+| `setup_env.sh` | CURRENT_PHASE0 | Prepare the HPC environment. |
+| `cross_backbone_proseco_llada_sft_bounded.sbatch` | LEGACY_PROVENANCE | Closed LLaDA-SFT bounded probe; do not use for current status. |
+| `cross_backbone_proseco_llada_sft_resume_phase2b.sbatch` | LEGACY_PROVENANCE | Closed LLaDA-SFT resume job; do not use for current status. |
 
 The older `phase1_*` and `submit.sh` flows are legacy and live in `archive/`.
 
@@ -38,6 +43,7 @@ The active backend expects a staged ProSeCo-OWT snapshot at
 once to stage it. See `scripts/README.md` for the full reproducibility workflow.
 
 > Current phase: theory-first reassessment. No full-scale HPC runs until the theory
-> scaffold (Theorem B/C/D) and Phase 0 reproducibility audit are complete.
+> scaffold (Theorem A/B/B′ + Diagnostic Framework C; D/E optional) is stable,
+> PF1–PF8 pass, and the K=3 smoke matches qualitatively.
 > Phase 0 checklist is in `docs/05_next_steps.md`.
 > Existing scripts are preserved for reproducibility of ProSeCo-OWT results.
