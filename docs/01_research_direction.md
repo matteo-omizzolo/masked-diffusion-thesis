@@ -23,10 +23,10 @@ interaction-driven vs higher-order/chaotic vs online-decision-like timing
 ## Problem formalization
 
 Modern masked/discrete diffusion work separates base models (MDLM, SEDD,
-LLaDA, Dream), remasking samplers (ReMDM), learned token-quality/self-correction
-signals (PRISM), and informed corrector kernels (ProSeCo). This thesis fixes a
-predictor/corrector/backend and asks when to spend a corrector placement. With a
-fixed predictor schedule and a fixed
+LLaDA, Dream), remasking samplers (ReMDM), informed-refinement mechanisms and
+quality signals (PRISM), and informed corrector kernels (ProSeCo). This thesis
+fixes a predictor/corrector/backend and asks when to spend a corrector placement.
+With a fixed predictor schedule and a fixed
 **corrector-placement budget** B (corresponding extra-NFE budget
 B_NFE = c_corr · B; c_corr = 2 for ProSeCo annealed refinement), the open
 question is **where along the trajectory** those B corrector placements should

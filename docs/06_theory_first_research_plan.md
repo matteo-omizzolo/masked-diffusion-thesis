@@ -732,7 +732,9 @@ If within-state variance is high, the state abstraction is too poor and online c
 
 ## 7.1 Is PRISM worth using?
 
-PRISM is relevant because it provides learned per-token quality scores for self-correction/remasking. However, it is not automatically central to this thesis.
+PRISM is relevant because it provides learned quality scores for informed
+refinement / self-correction. However, it is not automatically central to this
+thesis.
 
 ### Pros
 
@@ -744,7 +746,11 @@ PRISM is relevant because it provides learned per-token quality scores for self-
 
 - No reliable pretrained weights are assumed available.
 - Fine-tuning may consume significant time.
-- PRISM is primarily about token quality / which tokens to revise, whereas this thesis is about when to spend correction budget.
+- PRISM is primarily about token quality / which tokens to revise, whereas this
+  thesis is about when to spend correction budget. PRISM-style quality mass
+  `QM_t`, when used as a separable per-step score, is part of Theorem A's
+  marginal ranker baseline; a non-separable PRISM corrector or scheduler is
+  not ruled out but is not currently tested.
 - If used only as a separable per-step quality signal, it may remain inside the ranker class already shown to be limited.
 
 ## 7.2 Recommended PRISM policy

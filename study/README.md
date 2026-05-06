@@ -16,6 +16,7 @@ This taxonomy supports PASS 2 chapter rewriting. It is not a status document.
 
 Terminology discipline:
 - **Informed corrector / correction kernel:** corrects or refines within a fixed denoising trajectory or revisable/action set using model-derived, learned, reward, verifier, or state information.
+- **Informed-corrector-adjacent / informed refinement:** uses learned quality, reward, verifier, or state information to guide refinement, but is not necessarily a fixed-placement timing backend in this thesis.
 - **Remasking / iterative refinement sampler:** changes the masking/remasking sampler or revisits tokens through a remasking process. Do not call it an informed corrector unless it explicitly supplies a fixed-trajectory correction kernel.
 - **Trajectory search / test-time scaling:** searches or branches over denoising trajectories, often using rewards/verifiers/true feedback.
 - **Base masked/discrete diffusion LM:** model family or training objective.
@@ -33,7 +34,7 @@ Terminology discipline:
 | PLM-Based Discrete Diffusion LMs with Entropy-Adaptive Gibbs Sampling | `koh2024eags` | Informed corrector / Gibbs-style sampler | Entropy-adaptive correction context | Supporting | Unknown |
 | The Diffusion Duality, Chapter II: Psi-Samplers and Efficient Curriculum | `deschenaux2026psisamplers` | Informed corrector / sampler theory | Optional appendix/background for corrector kernels | Supporting | Code available |
 | Discrete Feynman-Kac Correctors | `hasan2026fkc` | Informed corrector / SMC | Future related corrector family | Future/related | Code available |
-| Fine-Tuning Masked Diffusion for Provable Self-Correction (PRISM) | `kim2025prism` | Learned quality signal / remasking self-correction | Quality-score motivation; not a thesis pillar | Candidate citation | Code available; no current backend switch |
+| Fine-Tuning Masked Diffusion for Provable Self-Correction (PRISM) | `kim2025prism` | Informed-corrector-adjacent / informed refinement | Quality/reward-guided refinement mechanism; PRISM-style `QM_t` as a separable per-step signal belongs to the Theorem A marginal baseline | Candidate citation | Code available; no current backend switch; non-separable PRISM not tested |
 | Remasking Discrete Diffusion Models with Inference-Time Scaling | `wang2025remdm` | Remasking sampler | Adjacent inference-time scaling; classify separately from corrector timing | Remasking-only | Apache-2.0 code; MDLM weights via upstream |
 | Optimizing Decoding Paths in Masked Diffusion Models by Quantifying Uncertainty | `chen2025denoisingentropy` | Remasking / path heuristic | Uncertainty signal context | Supporting | Code available |
 | Accelerated Sampling from Masked Diffusion Models via Entropy Bounded Unmasking | `benhamu2025ebsampler` | Remasking / token policy | Entropy-bound scheduling context | Supporting | Unknown |
@@ -57,7 +58,7 @@ Recommendation for Phase 0: keep **ProSeCo-OWT**. It is the only audited backend
 | ProSeCo-OWT | Yes | HF weights; Apache-style upstream dependencies | Current target; PF hooks exist, real PF3/PF5/PF7 need checkpoint | Low | Keep for Phase 0 |
 | ProSeCo-LLaDA-SFT | Yes | HF 8B weights | Likely traceable, but heavier and not current pipeline | Medium/high compute | Post-Phase-0 only |
 | Zhao et al. informed correctors | Yes conceptually | No obvious pretrained LM backend | Would require implementation/backend work | High | Theory citation, not backend |
-| PRISM | Quality-score/remasking self-correction, not fixed timing by default | Code available; pretrained module status unclear | Could supply a signal, but not a clean Phase 0 backend | Medium/high | Literature/candidate signal only |
+| PRISM | Informed-refinement adjacent; not fixed timing by default | Code available; pretrained module status unclear | `QM_t` can be a separable signal; non-separable PRISM would need a new backend/protocol | Medium/high | Literature/candidate signal only; not Phase 0 |
 | ReMDM | No: remasking sampler | Apache-2.0 code; MDLM weights via upstream | Changes sampler, not fixed corrector placement | Medium | Comparison baseline later |
 | IterRef | No: reward-guided trajectory refinement | Unknown | Search-style, not fixed-B corrector timing | High | Related work only |
 | S^3 | No: verifier-guided trajectory search | Unknown | Search-style, not fixed-B corrector timing | High | Related work only |
@@ -67,9 +68,9 @@ Recommendation for Phase 0: keep **ProSeCo-OWT**. It is the only audited backend
 
 | Chapter | Citation role |
 |---|---|
-| ch1 Introduction | Motivate DLMs and the gap: MDLM, SEDD, LLaDA, Dream, ProSeCo, Zhao informed correctors, ReMDM/PRISM/S^3/IterRef as adjacent but not the thesis question. |
+| ch1 Introduction | Motivate DLMs and the gap: MDLM, SEDD, LLaDA, Dream, ProSeCo, Zhao informed correctors, PRISM as informed-refinement adjacent, ReMDM/S^3/IterRef as adjacent but not the thesis question. |
 | ch2 Background diffusion | DDPM, score/SDE diffusion, DDIM, CFG, score matching/denoising autoencoders, Markov-chain basics. |
 | ch3 Discrete/masked diffusion | SEDD, MDLM, LLaDA, Dream, token ordering, likelihood/error decomposition. |
-| ch4 Model families and inference-time mechanics | ReMDM, entropy/uncertainty remasking, EB sampler, PRISM, IterRef, S^3, particle Gibbs; keep categories explicit. |
+| ch4 Model families and inference-time mechanics | ReMDM, entropy/uncertainty remasking, EB sampler, PRISM as informed refinement / quality-guided self-correction, IterRef, S^3, particle Gibbs; keep categories explicit. |
 | ch5 Informed correctors and timing | Zhao informed correctors, ProSeCo, DFM, EAGS, Psi samplers, Feynman-Kac correctors, L&Z; culminate in the fixed-placement timing gap. |
 | ch6 Theory | No literature survey dump; cite only enough to contextualize definitions, assumptions, and the model/corrector-agnostic setup. |
