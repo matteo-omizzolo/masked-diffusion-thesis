@@ -34,6 +34,11 @@ Theorem stack formalized in `research/candidate_theorems.md` §0–§7:
 Theory-to-experiment map: `research/candidate_theorems.md` §7. Backbone is
 **A → B / B′ → Diagnostic Framework C**.
 
+**Thesis writing gate.** Do not rewrite chapters 1–5 yet. Revisit them only
+after (i) the ch6 theory skeleton is aligned with this active stack, (ii) real
+ProSeCo PF3/PF5/PF7 pass with the staged checkpoint, and (iii) the Phase 0 K=3
+smoke reproduces the old qualitative pattern.
+
 ---
 
 ### Gate 2 — Phase 0 reproducibility audit (prerequisite for any new HPC)
