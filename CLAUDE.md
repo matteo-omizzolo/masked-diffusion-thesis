@@ -23,11 +23,11 @@ ProSeCo-OWT; the mean-Δ̄ envelope enters the no-detectable-gain band by B = 8.
 A′/A″ are diagnostics; the Empirical Ranker-Class Limitation (formal time-only part + empirical
 part on tested rankers) replaces the previous "Negative-Result Corollary".
 
-**Current phase (May 2026):** K=30 critical replication. Phase 0 is complete
-(PF1–PF8 ✅ on HPC CPU slnode01; K=3 smoke ✅ on A100 gnode01 job 489457,
-2026-05-07). K=30 replication is the current blocking gate: submit
-`hpc/phase2b_proseco_owt.sbatch` then `hpc/phase3a_combinatorial.sbatch`.
-Phase 1 interaction diagnostics remain blocked until K=30 passes.
+**Current phase (May 2026):** Phase 1 interaction diagnostics. Phase 0 is
+complete (PF1–PF8 ✅ on HPC CPU slnode01; K=3 smoke ✅ on A100 gnode01 job
+489457, 2026-05-07), and the K=30 critical replication gate is closed
+(Phase 2b job 490106 ✅, Phase 3a canonical job 479941 ✅). Next empirical
+work: Gate 3a sparse pair diagnostics, then Gate 3b schedule-level validation.
 
 **Key distinction:** This thesis targets corrector *scheduling* (when to spend corrective
 effort across the trajectory), not token-selection policies (which tokens to correct),
@@ -44,7 +44,7 @@ predictor schedules (when to unmask), or corrector kernel design (how to correct
 | `docs/02_experiments.md` | Phases, protocols, results |
 | `docs/03_theory.md` | Theorem stack, proof status, open gaps |
 | `docs/04_results_index.md` | Raw results index |
-| `docs/05_next_steps.md` | Sequential action plan — K=30 replication → interaction diagnostics → writing |
+| `docs/05_next_steps.md` | Sequential action plan — Phase 1 diagnostics → pairwise scheduler decision → writing |
 | `docs/06_theory_first_research_plan.md` | Active planning doc — theory-first programme (not final status) |
 | `research/candidate_theorems.md` | Full theorem + proof record (keep active) |
 | `research/proof_worklog.md` | Derivation entries (keep active) |
@@ -81,9 +81,8 @@ predictor schedules (when to unmask), or corrector kernel design (how to correct
 ## HPC workflow
 ```bash
 bash hpc/push.sh       # rsync code (excludes checkpoints, .venv, results)
-# Phase 0 complete. K=30 is open — run Codex pre-submit review before each sbatch.
-sbatch hpc/phase2b_proseco_owt.sbatch      # K=30 Phase 2b replication (submit now)
-sbatch hpc/phase3a_combinatorial.sbatch    # K=30 Phase 3a replication (after Phase 2b)
+# K=30 replication is closed. Do not resubmit phase2b/phase3a for that gate.
+# Run a Codex pre-submit review before any approved Phase 1 diagnostics sbatch.
 # NOTE: pull.sh uses GNU rsync flags, broken on macOS. Use SSH instead:
 ssh 3316152@slogin.hpc.unibocconi.it "python3 -c 'import json; print(...)'"
 ```
@@ -104,7 +103,7 @@ This rule applies even if the sbatch script has been previously reviewed in anot
 
 ---
 
-## Known HPC environment issues (all fixed as of 2026-03-06)
+## Known HPC environment issues / rules
 
 ### 1. setuptools 82 removed `pkg_resources`
 `lightning` 2.2.1 calls `pkg_resources` at import time.
@@ -156,6 +155,12 @@ Downloading openwebtext (38GB) for MAUVE reference exceeds HPC user quota.
 Do not patch `external/remdm` silently for this. Keep any future data-staging
 logic in project scripts or documented config patches.
 
+### 12. Compute nodes have no outbound internet
+Job 490469 failed harmlessly because `pip install -e .` in the Phase 3a sbatch
+preamble attempted PyPI access from gnode02. It died before any shard launched
+and wrote no files. Future sbatches must use the pre-provisioned `remdm311`
+environment or offline-safe install steps; do not assume PyPI access on `gnode*`.
+
 ---
 
 ## Current status (May 2026)
@@ -168,34 +173,43 @@ Key points:
   LLaDA-SFT probe, and Protocol C (adaptive controller CPU pilot) are all done.
 - **Primary result.** CD-G recovers 74–84 % and BS-AG 49–64 % of +0.45 MC-oracle headroom
   over uniform at B ∈ {2,3,4} on ProSeCo-OWT. Both pass at B = 8.
+- **K=30 replication.** Phase 2b replication job 490106 completed 2026-05-07
+  with headroom +0.385/+0.355/+0.380 at B=2/3/4 (avg ≈ +0.37), versus the
+  canonical +0.451/+0.441/+0.450 (avg ≈ +0.45). Qualitative conclusions are
+  unchanged. `mean_delta_oracle` is a cheating marginal / time-profile oracle
+  ranker, not a non-separable policy, and recovers only 13–29 % of replicated
+  headroom.
 - **Theory (May 2026 correction).** Theorem A is the proved marginal baseline;
   A′/A″ are diagnostics only; the former Negative-Result Corollary is replaced
   by the Empirical Ranker-Class Limitation; Theorem B/B′ + Diagnostic Framework C
   are the active interaction framework. Theorem A-ad is appendix/provenance only.
-- **Current phase:** K=30 critical replication. Theory stack formalized
+- **Current phase:** Phase 1 interaction diagnostics. Theory stack formalized
   (Theorem A baseline; Theorem B + B′ central; Diagnostic Framework C;
-  Theorem D + Lemma E optional/appendix). Phase 0 complete (PF1–PF8 ✅ CPU
-  slnode01; K=3 smoke ✅ A100 gnode01 job 489457, 2026-05-07). K=30 replication
-  is the current blocking gate. Phase 1 interaction diagnostics blocked until
-  K=30 passes.
-- **No HPC beyond K=30 replication** until Phase 1 interaction diagnostics
-  authorize new experiments.
+  Theorem D + Lemma E optional/appendix). Phase 0 and K=30 replication are
+  complete; Gate 3 is open.
+- **HPC caution.** Failed duplicate Phase 3a job 490469 is harmless: it died
+  in the sbatch preamble before shard launch because compute-node `pip install -e .`
+  tried to reach PyPI. No files were written. Before reusing Phase 2b/3a sbatches,
+  remove or make offline-safe the compute-node pip install preamble.
 - **Backbone:** ProSeCo-OWT only (LLaDA-SFT probe inconclusive).
 - **Reading:** ProSeCo, PRISM, MDLM, ReMDM, L&Z Error Bounds done.
 
-### Phase 0 status (2026-05-07) — COMPLETE ✅
+### Phase 0 / K=30 status (2026-05-08) — COMPLETE ✅
 - Checkpoint staged at `~/mdm/checkpoints/proseco_owt` (647 MB, model.safetensors).
 - PF1–PF8: **11 passed, 0 skipped** on HPC CPU (slnode01). All assertions pass.
 - K=3 smoke: job 489457 on gnode01 A100. Qualitative pattern matches prior K=30 results.
-- K=30 gate is now open. Submit `hpc/phase2b_proseco_owt.sbatch` then `hpc/phase3a_combinatorial.sbatch` (after Codex pre-submit review).
+- K=30 Phase 2b replication: job 490106 on gnode01, completed 2026-05-07.
+- K=30 Phase 3a canonical: job 479941 on gnode02, complete and intact.
+- K=30 gate is closed. Do not resubmit `hpc/phase2b_proseco_owt.sbatch` or
+  `hpc/phase3a_combinatorial.sbatch` for the closed gate.
 - Debug: `python scripts/legacy/debug_proseco_owt_load.py --checkpoint ~/mdm/checkpoints/proseco_owt --device cpu --T 4`
 
 ### Writing status (2026-05-06)
 - ch1–ch5: full PASS 2 drafts done as study-guide chapters leading into ch6.
 - ch6 (Contribution): full self-contained mathematical framework drafted.
-- ch7 / experiments: honest scaffold. Update after K=30 replication passes. No empirical claims.
-- Abstract: conservative draft written. Update after K=30 replication / Phase 1.
-- Conclusion: conservative draft written. Update after K=30 replication / Phase 1.
+- ch7 / experiments: honest scaffold. May now be updated with K=30 evidence.
+- Abstract: conservative draft written. Update after Phase 1 / final empirical framing.
+- Conclusion: conservative draft written. Update after Phase 1 / final empirical framing.
 
 ### LaTeX build
 Run from inside the `thesis/` directory:
@@ -236,19 +250,19 @@ Do not create new active docs unless strictly necessary.
 Prefer editing existing active docs.
 Current entry points: `START_HERE.md` and `docs/README.md`.
 Archived files are historical only (`docs/archive/`, `archive/`).
-Current research phase: K=30 critical replication. Phase 0 complete (2026-05-07).
-No HPC experiments beyond K=30 replication until Phase 1 interaction diagnostics
-authorize new work.
+Current research phase: Phase 1 interaction diagnostics. Phase 0 and K=30
+replication are complete; Gate 3 is open. No pairwise scheduler or broader HPC
+experiments until Gate 3b validates the schedule-level interaction framework.
 
 ## Next steps (current — May 2026)
 
 1. Opus theory pass ✅ — Theorem A/B/B′ + Diagnostic Framework C; D/E optional.
 2. Phase 0 reproducibility audit ✅ — PF1–PF8: 11/11 on HPC CPU (slnode01, 2026-05-06). K=3 smoke on A100 (gnode01, job 489457) qualitatively matches prior results.
-3. K=30 critical replication ← **current blocking gate.** Run Codex pre-submit review (see "HPC pre-submit rule" above), then submit `hpc/phase2b_proseco_owt.sbatch` and `hpc/phase3a_combinatorial.sbatch`.
-4. Interaction diagnostics — only after K=30 replication passes.
+3. K=30 critical replication ✅ — Phase 2b job 490106 complete; Phase 3a job 479941 complete; duplicate job 490469 harmless.
+4. Interaction diagnostics ← **current gate.** Gate 3a sparse pair diagnostics, then Gate 3b schedule-level validation.
 5. Pairwise scheduler — only if interaction diagnostics show structure.
 6. LaTeX writing — ch1–ch6 drafted; ch7 / experiments, Abstract, and Conclusion remain.
-7. Polish ch6 only after K=30 / Phase 1 empirical anchors are settled.
+7. Polish ch6 after Phase 1 empirical anchors are settled.
 
 Full action plan: `docs/05_next_steps.md`
 Theory-first programme: `docs/06_theory_first_research_plan.md`

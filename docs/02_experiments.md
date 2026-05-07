@@ -1,6 +1,6 @@
 # Experiments — Summary
 
-> **Current source of truth.** Updated 2026-05-07.
+> **Current source of truth.** Updated 2026-05-08.
 
 ---
 
@@ -8,13 +8,13 @@
 
 | Phase / protocol | Status / tier | Core result | Raw output folder | Gate / next action |
 |---|---|---|---|---|
-| **Phase 0 — reproducibility gate** | ✅ Gate passed (2026-05-07) | PF1–PF8: 11/11 on HPC CPU (slnode01). K=3 smoke on A100 (gnode01, job 489457) matches prior qualitative pattern. Not thesis evidence. | `results/phase0_smoke_d4edc92/` | K=30 replication now open. |
+| **Phase 0 — reproducibility gate** | ✅ Gate passed (2026-05-07) | PF1–PF8: 11/11 on HPC CPU (slnode01). K=3 smoke on A100 (gnode01, job 489457) matches prior qualitative pattern. Not thesis evidence. | `results/phase0_smoke_d4edc92/` | Closed provenance. |
 | **Phase 1 — Protocol A** | T1 (K=50) | MC-oracle headroom +0.45; signal ρ≈0.10–0.15 | `results/phase1_proseco_owt_full/` | Baseline for all downstream phases. |
-| **Phase 2b — policy comparison** | T1 (K=30) | All 10 separable rankers fail to recover MC headroom; cheating oracle saturates by B=8. | `results/phase2b_proseco_owt/`, `results/phase2b/` | Empirical Ranker-Class Limitation confirmed. |
-| **Phase 3a — combinatorial search** | T1 (K=30) | CD-G 74–84 %, BS-AG 49–64 % recovery at B∈{2,3,4}. Primary positive result. | `results/phase3a_proseco_owt/` | Thesis primary result. |
+| **Phase 2b — policy comparison** | T1 (K=30) | Canonical headroom +0.451/+0.441/+0.450; K=30 replication job 490106 headroom +0.385/+0.355/+0.380. Separable rankers fail in both. | `results/phase2b_proseco_owt/`, `results/phase2b/`; replication `results/phase2b_k30_rep_cf89e00/` | Empirical Ranker-Class Limitation confirmed; K=30 gate closed. |
+| **Phase 3a — combinatorial search** | T1 (K=30) | CD-G 74–84 %, BS-AG 49–64 % recovery vs canonical +0.45 at B∈{2,3,4}; p<0.001. Primary positive result. | `results/phase3a_proseco_owt/` | Thesis primary result; K=30 gate closed. |
 | **Cross-backbone (LLaDA-SFT)** | T3 (K=8) | Uniform-not-beaten transfers; MC headroom does NOT transfer. | `results/cross_backbone/` | Phase 3a pre-registered no-go. |
 | **Protocol C — adaptive controller** | Honest negative | ε̃/ε ∈ [0.983, 0.986]; < 1.7 % improvement. | `results/protocol_c_owt/` | Appendix F only; no further work. |
-| **Phase 1 (interaction, future)** | ⛔ Blocked | Pending K=30 replication (Step 2d). | — | Open only after K=30 passes. |
+| **Phase 1 (interaction diagnostics)** | ✅ Open | Sparse pair diagnostics (Gate 3a) followed by schedule-level validation (Gate 3b). | — | Next empirical gate. |
 
 ---
 
@@ -62,11 +62,18 @@ MC-oracle (best-of-100 random schedules) at B ∈ {2, 3, 4}.
   excludes 0. Note: this is the best-of-100 random schedule pool oracle; the
   exhaustive (T choose B) oracle is unobservable.
 - All 10 tested separable rankers do not recover MC-oracle headroom. The
-  cheating `mean_delta_oracle` (time-only) ranker saturates and enters the
-  no-detectable-gain band by B = 8.
+  cheating `mean_delta_oracle` (marginal / time-profile oracle ranker, not a
+  non-separable policy) saturates and enters the no-detectable-gain band by B = 8.
 - Top-10 MC ∩ oracle Jaccard ≈ 1.2–1.3× random baseline (schedules do not concentrate
   on a small corner of the space).
 - Top-10 MC internal Jaccard ≈ bottom-10 Jaccard (no coherent "best schedule" cluster).
+
+**K=30 replication (job 490106, gnode01, completed 2026-05-07):**
+Output `results/phase2b_k30_rep_cf89e00/` has 4/4 shards, seeds 42–71,
+`policy_raw.json` with 1500 rows, and `mc_raw.json` with 9000 rows. Replicated
+headroom is +0.385/+0.355/+0.380 at B = 2/3/4 (avg ≈ +0.37), below the
+canonical +0.451/+0.441/+0.450 (avg ≈ +0.45) but with the same qualitative
+conclusion. `mean_delta_oracle` recovers only 13–29 % of replicated headroom.
 
 **Theorem A diagnostics (measured on 9000 MC rows, 30 seeds; A′/A″ are
 diagnostics, *not* regret-bound constants — see `research/candidate_theorems.md`
@@ -91,6 +98,10 @@ Key files: `policy_comparison_paired.json`, `mc_oracle.json`, `combinatorial_dia
 ## Phase 3a — Combinatorial search baselines
 
 **What:** Non-greedy search procedures tested at K = 30 seeds, B ∈ {2, 3, 4, 8}.
+Canonical run: job 479941 on gnode02, complete 2026-04-20, 30 seeds × 4 budgets
+× CD-G + BS-AG, with 60 per-seed files plus `cd_raw.json` and `bs_raw.json`.
+Failed duplicate job 490469 is harmless: it died in the sbatch preamble before
+launching shards and wrote no files.
 
 ### CD-G — Coordinate descent, true-G feedback
 - Each iteration: sample one (in, out) position swap; accept iff G improves.
@@ -103,14 +114,22 @@ Key files: `policy_comparison_paired.json`, `mc_oracle.json`, `combinatorial_dia
 - Per-cell budget: 8 × B true-G rollouts.
 - Result: more practical (O(B) G-calls); uses true G only for rollout scoring.
 
-**Recovery rates (oracle_gap_closure.json):**
+**Recovery rates vs canonical +0.45 MC-oracle headroom:**
 
 | B | CD-G recovery | BS-AG recovery | Oracle CI |
 |---|---|---|---|
-| 2 | **0.79** | 0.64 | [0.383, 0.528] |
-| 3 | **0.74** | 0.57 | [0.366, 0.519] |
-| 4 | **0.84** | 0.49 | [0.386, 0.520] |
+| 2 | **78.9 %** | 64.1 % | [0.383, 0.528] |
+| 3 | **74.1 %** | 57.1 % | [0.366, 0.519] |
+| 4 | **84.3 %** | 48.8 % | [0.386, 0.520] |
 | 8 | PASS (still > uniform) | PASS | oracle in NULL band |
+
+**Recovery rates vs Phase 2b K=30 replication headroom (~+0.37):**
+
+| B | CD-G recovery | BS-AG recovery |
+|---|---|---|
+| 2 | **93.1 %** | 75.8 % |
+| 3 | **85.5 %** | 64.3 % |
+| 4 | **98.2 %** | 56.2 % |
 
 **Verdict:** Combinatorial search with G feedback is the right policy class on
 this triple. The tested separable rankers are limited by the
@@ -119,7 +138,9 @@ formal part for time-only / seed-averaged separable ψ; empirical part on
 tested rankers). PRISM-as-separable-score is in this class; non-separable
 PRISM uses are not ruled out and not pursued in this thesis.
 
-**Raw results:** `results/phase3a_proseco_owt/per_seed/`, `oracle_gap_closure.json`
+**Raw results:** `results/phase3a_proseco_owt/per_seed/`, `cd_raw.json`,
+`bs_raw.json`. The K=30 gate does not depend on a separate
+`oracle_gap_closure.json` artifact.
 
 ---
 

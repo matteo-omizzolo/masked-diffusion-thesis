@@ -1,6 +1,6 @@
 # Current Status — MSc Thesis
 
-> **Current source of truth.** Updated 2026-05-07.
+> **Current source of truth.** Updated 2026-05-08.
 > Compact summary of what is established, what failed, what is open, and risks.
 
 ---
@@ -17,16 +17,30 @@ quality mass QM_t; raw key: `Q_t`) measured for every (seed, step). Spearman ρ(
 K = 30 paired seeds. 10 greedy signal-ranker policies × B ∈ {2, 3, 4, 8, 16}.
 MC-oracle (best-of-100 random schedules) at B ∈ {2, 3, 4}.
 **Three diagnostics supporting the scoped ranker-class limitation:**
-1. `mean_delta_oracle` (cheating oracle ranker) saturates at B = 8 — enters NULL band.
+1. `mean_delta_oracle` (cheating marginal / time-profile oracle ranker) saturates at B = 8 — enters NULL band.
 2. Top-10 MC ∩ oracle Jaccard ≈ 1.2–1.3× random baseline across B ∈ {2,3,4}.
 3. Top-10 MC internal Jaccard ≈ bottom-10 (schedules differ just as much within top vs across top/bottom).
 Additivity constants: σ_ξ = 0.174/0.240/0.309 at B = 2/3/4. Spearman ρ(A,G) = 0.60/0.54/0.46.
 
+K=30 replication job 490106 completed on gnode01 at 14:18 CEST 2026-05-07.
+Output: `results/phase2b_k30_rep_cf89e00/` (4/4 shards, seeds 42–71,
+`policy_raw.json` 1500 rows, `mc_raw.json` 9000 rows). Replicated MC-oracle
+headroom is +0.385/+0.355/+0.380 at B = 2/3/4 (avg ≈ +0.37), versus canonical
++0.451/+0.441/+0.450 (avg ≈ +0.45). The qualitative story is unchanged:
+tested separable rankers still fail, and `mean_delta_oracle` recovers only
+13–29 % of the replicated headroom.
+
 ### Phase 3a — Combinatorial search baselines
 CD-G (coordinate descent, true-G feedback) and BS-AG (beam search, cheap-A pruning + true-G rollouts).
-Both PASS at every B ∈ {2, 3, 4, 8}. Recovery:
+Canonical job 479941 completed on gnode02 with 30 seeds × B ∈ {2,3,4,8} for
+both methods. Raw output: `results/phase3a_proseco_owt/` (60 per-seed files,
+`cd_raw.json`, `bs_raw.json`). Both PASS at every B ∈ {2, 3, 4, 8}. Recovery:
 - CD-G: 74–84 % of +0.45 MC-oracle headroom at B ∈ {2, 3, 4}.
 - BS-AG: 49–64 % of +0.45 headroom at B ∈ {2, 3, 4}.
+Against the Phase 2b K=30 replication headroom (~+0.37), recovery is
+85.5–98.2 % for CD-G and 56.2–75.8 % for BS-AG at B ∈ {2,3,4}. The canonical
++0.45 baseline remains the primary thesis denominator; the replication is a
+robustness check showing the same qualitative ordering.
 **Primary positive result.** PRISM, used as a separable per-step score, falls in
 the ranker class limited by the Empirical Ranker-Class Limitation (`candidate_theorems.md` §1.5); a non-separable PRISM
 use is not pursued for this thesis but is not ruled out.
@@ -49,16 +63,16 @@ Best after-uncertainty close ratio = +0.015 (entropy, B=2); negative at B ≥ 3.
 
 | Result | Tier | Anchor |
 |---|---|---|
-| MC-oracle headroom over uniform = +0.45 at B ∈ {2,3,4} | T1 | `oracle_gap_closure.json` |
+| MC-oracle headroom over uniform = canonical +0.45 at B ∈ {2,3,4}; K=30 replication avg ≈ +0.37 with same qualitative conclusion | T1 | `results/phase2b/mc_oracle.json`; `results/phase2b_k30_rep_cf89e00/{policy_raw,mc_raw}.json` |
 | Tested separable rankers do not recover MC-oracle headroom; mean-Δ̄ envelope enters no-detectable-gain band by B = 8 | T1 | `policy_comparison_paired.json` |
-| CD-G recovers 74–84 % at B ∈ {2,3,4} | T1 | `oracle_gap_closure.json` |
-| BS-AG recovers 49–64 % at B ∈ {2,3,4} | T1 | `oracle_gap_closure.json` |
+| CD-G recovers 74–84 % of canonical +0.45 headroom at B ∈ {2,3,4} | T1 | `results/phase3a_proseco_owt/cd_raw.json` |
+| BS-AG recovers 49–64 % of canonical +0.45 headroom at B ∈ {2,3,4} | T1 | `results/phase3a_proseco_owt/bs_raw.json` |
 | Theorem A (uniform proxy regret) proved; A′/A″ are diagnostics; Empirical Ranker-Class Limitation has formal + empirical parts | — | `research/candidate_theorems.md` §1, §1.5 |
 | Uniform-not-beaten transfers to LLaDA-SFT at tested resolution | T3 | `cross_backbone/` |
 
 ---
 
-## What failed or is deprecated
+## What failed, is deprecated, or changed status
 
 | Item | Verdict |
 |---|---|
@@ -70,7 +84,8 @@ Best after-uncertainty close ratio = +0.015 (entropy, B=2); negative at B ≥ 3.
 | Refinement A′ | **Demoted to additivity-scale diagnostic.** No longer presented as a regret refinement. |
 | Refinement A″ | **Demoted to rankability diagnostic.** ε_R is not a theorem constant. |
 | ReMDM-loop, MDLM Phase 1 | Archived. Backend issues and near-zero Δ_t. See abandoned-backend lessons table below. |
-| Phase 1 interaction diagnostics | Gated — pending K=30 critical replication (Step 2d). Phase 0 complete. |
+| Phase 1 interaction diagnostics | Open — K=30 critical replication gate closed on 2026-05-08. |
+| Job 490469 Phase 3a resubmission | Harmless failed duplicate. Died in sbatch preamble before any shard launched because compute-node `pip install -e .` attempted outbound PyPI access. No files written; canonical Phase 3a data from job 479941 remains intact. |
 
 ---
 
@@ -112,22 +127,23 @@ vacuous; the operative selected-schedule statement is the finite-pool form
 
 ## Current phase
 
-**K=30 critical replication. Phase 0 complete (2026-05-07); K=30 gate open.**
+**Phase 1 interaction diagnostics. Phase 0 and K=30 critical replication complete; Gate 3 open.**
 
-The previous ProSeCo-OWT result remains the baseline: tested separable rankers
-do not recover MC-oracle headroom, while true-G schedule search recovers much
-of it. The current aim is to reframe and extend this into a cleaner theory-first
-study of marginal, interaction-aware, and online corrector timing.
+The ProSeCo-OWT baseline is confirmed: tested separable rankers do not recover
+MC-oracle headroom, while true-G schedule search recovers much of it. The current
+aim is to test whether the remaining structure is explainable by pairwise
+interactions or requires a higher-order / search-based regime classification.
 
 Sequential gates:
 1. Opus theory pass ✅ — Theorem A baseline, Theorem B/B′ central, Diagnostic Framework C, A′/A″ as diagnostics, Empirical Ranker-Class Limitation; D/E optional.
-2. Phase 0 reproducibility audit ✅ — PF1–PF8: 11/11 on HPC login node (CPU, slnode01, 2026-05-06). K=3 smoke on A100 (gnode01, job 489457) qualitatively matches prior results. K=30 critical replication gate is now open.
-3. Interaction diagnostics — ⛔ blocked until K=30 replication passes.
-4. Pairwise scheduler — only if diagnostics show structure.
-5. LaTeX writing — running in parallel once the theory scaffold is stable.
+2. Phase 0 reproducibility audit ✅ — PF1–PF8: 11/11 on HPC login node (CPU, slnode01, 2026-05-06). K=3 smoke on A100 (gnode01, job 489457) qualitatively matches prior results; smoke numbers are gate-only, not thesis evidence.
+3. K=30 critical replication ✅ — Phase 2b job 490106 completed 2026-05-07; Phase 3a canonical job 479941 complete and intact. Gate closed 2026-05-08.
+4. Interaction diagnostics — ✅ Gate 3 now open: run sparse pair diagnostics (Gate 3a) then schedule-level validation (Gate 3b).
+5. Pairwise scheduler — only if diagnostics show structure.
+6. LaTeX writing — ch7 / experiments, Abstract, and Conclusion may now be updated with K=30 evidence.
 
-K=30 replication is the immediate next HPC action: submit
-`hpc/phase2b_proseco_owt.sbatch` then `hpc/phase3a_combinatorial.sbatch`.
-Phase 1 interaction diagnostics remain blocked until K=30 passes. See
-`docs/05_next_steps.md` for the sequential action plan and
-`docs/06_theory_first_research_plan.md` for the full theory-first programme.
+Do not resubmit the K=30 Phase 3a job: canonical data from job 479941 is complete,
+and failed duplicate job 490469 was harmless. Before any future reuse of
+`hpc/phase3a_combinatorial.sbatch`, remove or make offline-safe its compute-node
+`pip install` preamble. See `docs/05_next_steps.md` for the sequential action
+plan and `docs/06_theory_first_research_plan.md` for the full theory-first programme.
