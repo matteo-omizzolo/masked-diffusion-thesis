@@ -93,6 +93,11 @@ Debug command: `python scripts/legacy/debug_proseco_owt_load.py --checkpoint "$P
 Do not launch Phase 1 until Step 2d passes. K=30 may now be submitted via
 `hpc/phase2b_proseco_owt.sbatch` + `hpc/phase3a_combinatorial.sbatch`.
 
+**Pre-submit requirement:** Before each sbatch submission, run a Codex pre-submit
+review (see `hpc/README.md` "Pre-submit rule"). Address BLOCKING/WARNING findings
+before submitting. Codex review must cover: sbatch script, changed files, git status,
+validation commands, expected result folder, gate being opened/closed.
+
 ---
 
 ### Gate 3 — Interaction diagnostics + schedule-level validation (only after Gate 2 passes)
@@ -178,15 +183,15 @@ Remaining writing should wait on the relevant empirical gates:
    ProSeCo-OWT is interaction-driven or higher-order/chaotic under Diagnostic
    Framework C.
 3. **Abstract and conclusion** — conservative drafts written (2026-05-06); update
-   after experiment claims are settled from Phase 0 / Phase 1.
-4. **Final ch6 polish** — update wording and empirical anchors after Phase 0 /
+   after experiment claims are settled from K=30 replication / Phase 1.
+4. **Final ch6 polish** — update wording and empirical anchors after K=30 /
    Phase 1; do not redesign the theorem stack.
 
 ---
 
 ## What is NOT on the critical path
 
-- Full-scale HPC runs before Phase 0 passes.
+- Full-scale HPC runs beyond K=30 replication before Phase 1 diagnostics authorize new work.
 - LLaDA-SFT Phase 3a (pre-registered no-go).
 - Online controller experiments until Gate 3–4 are complete.
 - PRISM pivot — not pursued as a thesis pillar (separable PRISM falls in

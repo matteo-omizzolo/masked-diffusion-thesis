@@ -1,7 +1,8 @@
 # HPC workflow
 
-Phase 0 complete (PF1–PF8 ✅, K=3 smoke ✅, 2026-05-06). K=30 replication is
-now open: submit `phase2b_proseco_owt.sbatch` then `phase3a_combinatorial.sbatch`.
+Phase 0 complete (PF1–PF8 ✅ slnode01 2026-05-06; K=3 smoke ✅ gnode01 A100
+job 489457 2026-05-06; gate declared 2026-05-07). K=30 replication is now open:
+submit `phase2b_proseco_owt.sbatch` then `phase3a_combinatorial.sbatch`.
 Phase 1 interaction diagnostics remain blocked until K=30 passes.
 
 | File | Classification | Use |
@@ -16,6 +17,19 @@ Phase 1 interaction diagnostics remain blocked until K=30 passes.
 | `legacy/cross_backbone_proseco_llada_sft_resume_phase2b.sbatch` | LEGACY_PROVENANCE | Closed LLaDA-SFT resume job; do not use for current status. |
 
 The older `phase1_*` and `submit.sh` flows are legacy and live in `archive/`.
+
+## Pre-submit rule (mandatory)
+
+Before submitting **any** sbatch job, run a Codex pre-submit review via
+`/codex:rescue` in the Claude Code session. The review must cover:
+- The exact sbatch script and any files changed since the last push.
+- `git status` and `git diff --check`.
+- Validation commands (e.g., `pytest tests/test_phase0_preflight.py -q`).
+- Expected output folder and which gate is being opened or closed.
+- Confirmation no K=3 smoke numbers are being elevated to thesis evidence.
+
+Address BLOCKING and WARNING findings before submitting. Document the Codex
+finding summary in the commit message. This rule applies each session.
 
 ## Quick start
 

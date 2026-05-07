@@ -23,11 +23,11 @@ ProSeCo-OWT; the mean-Δ̄ envelope enters the no-detectable-gain band by B = 8.
 A′/A″ are diagnostics; the Empirical Ranker-Class Limitation (formal time-only part + empirical
 part on tested rankers) replaces the previous "Negative-Result Corollary".
 
-**Current phase (May 2026):** Theory-first reassessment and Phase 0 reproducibility
-planning. Goal: reframe the baseline into a cleaner theory-first study of marginal,
-interaction-aware, and online corrector timing. No full-scale HPC runs until the theory
-scaffold (Theorem A/B/B′ + Diagnostic Framework C; D/E optional) is stable and
-Phase 0 pre-flight checks PF1–PF8 pass.
+**Current phase (May 2026):** K=30 critical replication. Phase 0 is complete
+(PF1–PF8 ✅ on HPC CPU slnode01; K=3 smoke ✅ on A100 gnode01 job 489457,
+2026-05-07). K=30 replication is the current blocking gate: submit
+`hpc/phase2b_proseco_owt.sbatch` then `hpc/phase3a_combinatorial.sbatch`.
+Phase 1 interaction diagnostics remain blocked until K=30 passes.
 
 **Key distinction:** This thesis targets corrector *scheduling* (when to spend corrective
 effort across the trajectory), not token-selection policies (which tokens to correct),
@@ -44,7 +44,7 @@ predictor schedules (when to unmask), or corrector kernel design (how to correct
 | `docs/02_experiments.md` | Phases, protocols, results |
 | `docs/03_theory.md` | Theorem stack, proof status, open gaps |
 | `docs/04_results_index.md` | Raw results index |
-| `docs/05_next_steps.md` | Sequential action plan — theory gates → Phase 0 → writing |
+| `docs/05_next_steps.md` | Sequential action plan — K=30 replication → interaction diagnostics → writing |
 | `docs/06_theory_first_research_plan.md` | Active planning doc — theory-first programme (not final status) |
 | `research/candidate_theorems.md` | Full theorem + proof record (keep active) |
 | `research/proof_worklog.md` | Derivation entries (keep active) |
@@ -81,11 +81,26 @@ predictor schedules (when to unmask), or corrector kernel design (how to correct
 ## HPC workflow
 ```bash
 bash hpc/push.sh       # rsync code (excludes checkpoints, .venv, results)
-sbatch hpc/phase2b_proseco_owt.sbatch      # only after PF1–PF8 and K=3 smoke
-sbatch hpc/phase3a_combinatorial.sbatch    # only after Phase 2b replication gate
+# Phase 0 complete. K=30 is open — run Codex pre-submit review before each sbatch.
+sbatch hpc/phase2b_proseco_owt.sbatch      # K=30 Phase 2b replication (submit now)
+sbatch hpc/phase3a_combinatorial.sbatch    # K=30 Phase 3a replication (after Phase 2b)
 # NOTE: pull.sh uses GNU rsync flags, broken on macOS. Use SSH instead:
 ssh 3316152@slogin.hpc.unibocconi.it "python3 -c 'import json; print(...)'"
 ```
+
+## HPC pre-submit rule (mandatory)
+
+Before submitting **any** sbatch job, Claude must:
+1. Invoke Codex (via `/codex:rescue`) to review the proposed work, including:
+   - The exact sbatch script content and any changed files since last push.
+   - `git status` and `git diff --check` output.
+   - Validation commands that will be run (e.g., `pytest tests/test_phase0_preflight.py -q`).
+   - Expected output folder and which gate is being opened or closed.
+   - Confirmation that no K=3 smoke numbers are being elevated to thesis evidence.
+2. Address any BLOCKING or WARNING findings before submitting.
+3. Document the Codex review finding summary in the commit message.
+
+This rule applies even if the sbatch script has been previously reviewed in another session.
 
 ---
 
@@ -157,27 +172,30 @@ Key points:
   A′/A″ are diagnostics only; the former Negative-Result Corollary is replaced
   by the Empirical Ranker-Class Limitation; Theorem B/B′ + Diagnostic Framework C
   are the active interaction framework. Theorem A-ad is appendix/provenance only.
-- **Current phase:** Theory-first reassessment. Theorem stack formalized
+- **Current phase:** K=30 critical replication. Theory stack formalized
   (Theorem A baseline; Theorem B + B′ central; Diagnostic Framework C;
-  Theorem D + Lemma E optional/appendix). Next: Phase 0 pre-flight assertions
-  PF1–PF8 (blocking) → K=3 smoke → K=30 replication → Phase 1 interaction
-  diagnostics → writing.
-- **No full-scale HPC** until PF1–PF8 pass and the K=3 smoke matches qualitatively.
+  Theorem D + Lemma E optional/appendix). Phase 0 complete (PF1–PF8 ✅ CPU
+  slnode01; K=3 smoke ✅ A100 gnode01 job 489457, 2026-05-07). K=30 replication
+  is the current blocking gate. Phase 1 interaction diagnostics blocked until
+  K=30 passes.
+- **No HPC beyond K=30 replication** until Phase 1 interaction diagnostics
+  authorize new experiments.
 - **Backbone:** ProSeCo-OWT only (LLaDA-SFT probe inconclusive).
 - **Reading:** ProSeCo, PRISM, MDLM, ReMDM, L&Z Error Bounds done.
 
-### Phase 0 status (2026-05-06)
-- Checkpoint staged locally at `~/mdm/checkpoints/proseco_owt` (647 MB, model.safetensors).
-- `PROSECO_OWT_CHECKPOINT=~/mdm/checkpoints/proseco_owt pytest tests/test_phase0_preflight.py -q` → **11 passed, 0 skipped**. All PF1–PF8 pass with real backend.
-- K=3 smoke gate is now open. Do not run smoke until deliberately started.
+### Phase 0 status (2026-05-07) — COMPLETE ✅
+- Checkpoint staged at `~/mdm/checkpoints/proseco_owt` (647 MB, model.safetensors).
+- PF1–PF8: **11 passed, 0 skipped** on HPC CPU (slnode01). All assertions pass.
+- K=3 smoke: job 489457 on gnode01 A100. Qualitative pattern matches prior K=30 results.
+- K=30 gate is now open. Submit `hpc/phase2b_proseco_owt.sbatch` then `hpc/phase3a_combinatorial.sbatch` (after Codex pre-submit review).
 - Debug: `python scripts/legacy/debug_proseco_owt_load.py --checkpoint ~/mdm/checkpoints/proseco_owt --device cpu --T 4`
 
 ### Writing status (2026-05-06)
 - ch1–ch5: full PASS 2 drafts done as study-guide chapters leading into ch6.
 - ch6 (Contribution): full self-contained mathematical framework drafted.
-- ch7 / experiments: honest scaffold (Phase 0 gate language). No empirical claims.
-- Abstract: conservative draft written. Update after Phase 0 / Phase 1.
-- Conclusion: conservative draft written. Update after Phase 0 / Phase 1.
+- ch7 / experiments: honest scaffold. Update after K=30 replication passes. No empirical claims.
+- Abstract: conservative draft written. Update after K=30 replication / Phase 1.
+- Conclusion: conservative draft written. Update after K=30 replication / Phase 1.
 
 ### LaTeX build
 Run from inside the `thesis/` directory:
@@ -218,18 +236,19 @@ Do not create new active docs unless strictly necessary.
 Prefer editing existing active docs.
 Current entry points: `START_HERE.md` and `docs/README.md`.
 Archived files are historical only (`docs/archive/`, `archive/`).
-Current research phase: theory-first reassessment and Phase 0 reproducibility planning.
-No full-scale HPC runs until the theory scaffold is stable, PF1–PF8 pass, and
-the K=3 smoke matches qualitatively.
+Current research phase: K=30 critical replication. Phase 0 complete (2026-05-07).
+No HPC experiments beyond K=30 replication until Phase 1 interaction diagnostics
+authorize new work.
 
 ## Next steps (current — May 2026)
 
 1. Opus theory pass ✅ — Theorem A/B/B′ + Diagnostic Framework C; D/E optional.
-2. Phase 0 reproducibility audit — implement or manually verify PF1–PF8 first, then K=3 smoke, then K=30 replication only if the smoke matches qualitatively.
-3. Interaction diagnostics — only after Phase 0 passes.
-4. Pairwise scheduler — only if interaction diagnostics show structure.
-5. LaTeX writing — ch1–ch6 drafted; ch7 / experiments, Abstract, and Conclusion remain.
-6. Polish ch6 only after Phase 0 / Phase 1 empirical anchors are settled.
+2. Phase 0 reproducibility audit ✅ — PF1–PF8: 11/11 on HPC CPU (slnode01, 2026-05-06). K=3 smoke on A100 (gnode01, job 489457) qualitatively matches prior results.
+3. K=30 critical replication ← **current blocking gate.** Run Codex pre-submit review (see "HPC pre-submit rule" above), then submit `hpc/phase2b_proseco_owt.sbatch` and `hpc/phase3a_combinatorial.sbatch`.
+4. Interaction diagnostics — only after K=30 replication passes.
+5. Pairwise scheduler — only if interaction diagnostics show structure.
+6. LaTeX writing — ch1–ch6 drafted; ch7 / experiments, Abstract, and Conclusion remain.
+7. Polish ch6 only after K=30 / Phase 1 empirical anchors are settled.
 
 Full action plan: `docs/05_next_steps.md`
 Theory-first programme: `docs/06_theory_first_research_plan.md`

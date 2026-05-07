@@ -1,6 +1,6 @@
 # START HERE — Thesis Orientation (2-minute read)
 
-> **Current source of truth.** Updated 2026-05-05.
+> **Current source of truth.** Updated 2026-05-07.
 > All detailed docs are reachable via `docs/README.md`.
 > Files under `docs/archive/` are historical and must not be used to infer
 > current status unless explicitly requested.
@@ -84,7 +84,7 @@ headroom.
 
 ## Current phase
 
-We are no longer in "writing only" mode. The current phase is **theory-first reassessment**:
+We are no longer in "writing only" mode. The current phase is **K=30 critical replication**:
 
 1. **Opus theory pass ✅ (2026-05).** Theorem stack formalized in
    `research/candidate_theorems.md` §0–§7: Theorem A (marginal baseline),

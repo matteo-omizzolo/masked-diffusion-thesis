@@ -112,7 +112,7 @@ vacuous; the operative selected-schedule statement is the finite-pool form
 
 ## Current phase
 
-**Theory-first reassessment. Phase 0 complete; K=30 replication open.**
+**K=30 critical replication. Phase 0 complete (2026-05-07); K=30 gate open.**
 
 The previous ProSeCo-OWT result remains the baseline: tested separable rankers
 do not recover MC-oracle headroom, while true-G schedule search recovers much
