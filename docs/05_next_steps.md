@@ -1,9 +1,8 @@
 # Next Steps — Action Plan
 
-> **Current source of truth.** Updated 2026-05-05.
-> Phase: theory-first reassessment and Phase 0 reproducibility planning.
-> No full-scale HPC experiments until the theory scaffold is stable, PF1–PF8
-> pass, and the K=3 smoke matches qualitatively.
+> **Current source of truth.** Updated 2026-05-07.
+> Phase: Phase 0 complete. K=3 smoke qualitatively matches prior results (2026-05-07).
+> K=30 gate is now OPEN. Phase 1 interaction diagnostics blocked until K=30 passes.
 
 ---
 
@@ -35,10 +34,10 @@ Theory-to-experiment map: `research/candidate_theorems.md` §7. Backbone is
 **A → B / B′ → Diagnostic Framework C**.
 
 **Thesis writing status.** ch1–ch6 now have full drafts aligned with the active
-theory stack. Treat empirical claims in those chapters as provisional until
-(i) real ProSeCo PF3/PF5/PF7 pass with the staged checkpoint and (ii) the Phase
-0 K=3 smoke reproduces the old qualitative pattern. Do not write final
-experiment/discussion claims before those gates.
+theory stack. Empirical claims in those chapters remain provisional until K=30
+replication (Step 2d) is complete. Phase 0 gates (PF1–PF8 ✅, K=3 smoke ✅) are
+passed as of 2026-05-07. Do not write final experiment/discussion claims before
+K=30 passes.
 
 ---
 
@@ -77,17 +76,22 @@ Status (2026-05-06): **11 passed, 0 skipped** with real backend. ✅
 All PF1–PF8 pass including real-backend PF3/PF5/PF7.
 Debug command: `python scripts/legacy/debug_proseco_owt_load.py --checkpoint "$PROSECO_OWT_CHECKPOINT" --device cpu --T 4`
 
-**Step 2c — K=3 smoke. ✅ GATE OPEN (PF1–PF8 passed 2026-05-06; not yet run).**
-- [ ] K=3 seeds, T=64, B ∈ {2,4}; uniform + mean_delta_oracle + CD-G + BS-AG.
-- [ ] Compare against existing `results/phase2b/` and
-      `results/phase3a_proseco_owt/oracle_gap_closure.json` keys.
-- [ ] Write only to `results/phase0_smoke_<git-short-sha>/` with config,
-      preflight status, per-seed rows, aggregate summaries, and exact commands.
+**Step 2c — K=3 smoke. ✅ QUALITATIVE MATCH (2026-05-06/07, HPC gnode01 A100).**
+- [x] K=3 seeds (42–44), T=64, B ∈ {2,4}; uniform + signal rankers + mean_delta_oracle + CD-G + BS-AG.
+- [x] Output: `results/phase0_smoke_d4edc92/` (sbatch: `hpc/phase0_smoke_k3.sbatch`, job 489457).
+- [x] Qualitative pattern matches prior K=30 findings:
+      (1) MC oracle headroom > 0 at B∈{2,4} ✅ (B=2: +0.207, B=4: +0.194 over uniform);
+      (2) separable rankers do not recover headroom ✅ (all ≤3% at B=4; top-signal rankers = 0% at B=2);
+      (3) CD-G and BS-AG recover/exceed headroom ✅ (CD-G ~132–166%, BS-AG ~104–163% vs P=8 MC oracle).
+      Note: >100% fractions are expected because CD-G/BS-AG use 16–54 true-G evals vs P=8 for MC oracle.
+- [x] Zero-G finding confirmed: top-signal rankers select schedule [0,1] at B=2 (corrector acts on
+      nearly-empty committed set at early predictor steps → G≈0). Inverted-signal phenomenon reproduced.
+- [x] HPC real-backend PF1–PF8: 11 passed, 0 skipped on slnode01 (cpu, T=4). ✅
 
-**Step 2d — K=30 critical replication (only after Step 2c matches qualitatively).**
+**Step 2d — K=30 critical replication. ✅ GATE OPEN (Step 2c passed 2026-05-07).**
 
-Do not launch Phase 1 until Step 2c passes. Do not launch K=30 until Step 2c
-matches qualitatively.
+Do not launch Phase 1 until Step 2d passes. K=30 may now be submitted via
+`hpc/phase2b_proseco_owt.sbatch` + `hpc/phase3a_combinatorial.sbatch`.
 
 ---
 
@@ -168,8 +172,8 @@ drafted as the self-contained mathematical framework.
 
 Remaining writing should wait on the relevant empirical gates:
 
-1. **ch7 / experiments** — write only after Phase 0 re-confirms the ProSeCo-OWT
-   backend path and the old qualitative pattern.
+1. **ch7 / experiments** — write only after K=30 replication (Step 2d) passes.
+   Phase 0 is complete (2026-05-07); K=30 gate is now open.
 2. **Discussion / limitations** — write after Phase 1 determines whether
    ProSeCo-OWT is interaction-driven or higher-order/chaotic under Diagnostic
    Framework C.

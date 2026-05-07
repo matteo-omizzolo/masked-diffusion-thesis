@@ -5,6 +5,7 @@ matches qualitatively. The current known entry points are:
 
 | File | Classification | Use |
 |---|---|---|
+| `phase0_smoke_k3.sbatch` | CURRENT_PHASE0 | K=3 smoke (Phase 0 gate); writes to `results/phase0_smoke_<sha>/`. |
 | `phase2b_proseco_owt.sbatch` | CURRENT_REPRODUCE_COMPLETED | Phase 2b reproduction after Phase 0 gates. |
 | `phase3a_combinatorial.sbatch` | CURRENT_REPRODUCE_COMPLETED | Phase 3a reproduction after Phase 2b replication gate. |
 | `push.sh` | CURRENT_PHASE0 | Sync code to HPC. |
