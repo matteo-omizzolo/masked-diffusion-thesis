@@ -1,16 +1,17 @@
 # HPC workflow
 
-No full-scale HPC job should be submitted until PF1–PF8 pass and the K=3 smoke
-matches qualitatively. The current known entry points are:
+Phase 0 complete (PF1–PF8 ✅, K=3 smoke ✅, 2026-05-06). K=30 replication is
+now open: submit `phase2b_proseco_owt.sbatch` then `phase3a_combinatorial.sbatch`.
+Phase 1 interaction diagnostics remain blocked until K=30 passes.
 
 | File | Classification | Use |
 |---|---|---|
-| `phase0_smoke_k3.sbatch` | CURRENT_PHASE0 | K=3 smoke (Phase 0 gate); writes to `results/phase0_smoke_<sha>/`. |
-| `phase2b_proseco_owt.sbatch` | CURRENT_REPRODUCE_COMPLETED | Phase 2b reproduction after Phase 0 gates. |
-| `phase3a_combinatorial.sbatch` | CURRENT_REPRODUCE_COMPLETED | Phase 3a reproduction after Phase 2b replication gate. |
-| `push.sh` | CURRENT_PHASE0 | Sync code to HPC. |
-| `pull.sh` | CURRENT_PHASE0 | Pull generated summaries from HPC when needed. |
-| `setup_env.sh` | CURRENT_PHASE0 | Prepare the HPC environment. |
+| `phase0_smoke_k3.sbatch` | CLOSED_PROVENANCE | K=3 smoke provenance record (job 489457, 2026-05-06); gate passed. Do not resubmit. |
+| `phase2b_proseco_owt.sbatch` | CURRENT_K30 | K=30 Phase 2b replication — submit now. |
+| `phase3a_combinatorial.sbatch` | CURRENT_K30 | K=30 Phase 3a replication — submit after Phase 2b. |
+| `push.sh` | CURRENT_UTILITY | Sync code to HPC. |
+| `pull.sh` | CURRENT_UTILITY | Pull generated summaries from HPC when needed. |
+| `setup_env.sh` | CURRENT_UTILITY | Prepare the HPC environment. |
 | `legacy/cross_backbone_proseco_llada_sft_bounded.sbatch` | LEGACY_PROVENANCE | Closed LLaDA-SFT bounded probe; do not use for current status. |
 | `legacy/cross_backbone_proseco_llada_sft_resume_phase2b.sbatch` | LEGACY_PROVENANCE | Closed LLaDA-SFT resume job; do not use for current status. |
 
@@ -43,8 +44,7 @@ The active backend expects a staged ProSeCo-OWT snapshot at
 `~/mdm/checkpoints/proseco_owt/`. Run `python scripts/stage_proseco_owt.py`
 once to stage it. See `scripts/README.md` for the full reproducibility workflow.
 
-> Current phase: theory-first reassessment. No full-scale HPC runs until the theory
-> scaffold (Theorem A/B/B′ + Diagnostic Framework C; D/E optional) is stable,
-> PF1–PF8 pass, and the K=3 smoke matches qualitatively.
-> Phase 0 checklist is in `docs/05_next_steps.md`.
+> Current phase: K=30 replication. Phase 0 complete (PF1–PF8 ✅, K=3 smoke ✅).
+> Submit phase2b then phase3a sbatches. Phase 1 interaction diagnostics blocked
+> until K=30 passes. See `docs/05_next_steps.md` for the full sequential gate plan.
 > Existing scripts are preserved for reproducibility of ProSeCo-OWT results.

@@ -1,7 +1,22 @@
 # Results Index
 
-> **Current source of truth.** Updated 2026-05-05.
+> **Current source of truth.** Updated 2026-05-07.
 > Maps result folders to experiment phases. Raw data preserved in-place.
+
+---
+
+## Reproducibility gate outputs
+
+> These folders are **not canonical thesis evidence**. They confirm the backend
+> pipeline is reproducible before K=30 replication is launched.
+
+| Folder | Gate | Status | Key files |
+|---|---|---|---|
+| `results/phase0_smoke_d4edc92/` | Phase 0 K=3 smoke (git d4edc92, 2026-05-06, job 489457 gnode01 A100) | **Reproducibility gate only — not thesis evidence** | `smoke_config.json`, `preflight_status.txt`, `phase2b_raw/`, `phase3a_raw/` |
+
+Qualitative match confirmed: MC headroom > 0 at B∈{2,4}; separable rankers fail;
+CD-G / BS-AG recover headroom. K=30 gate is now open. Do not cite K=3 smoke
+numbers as thesis evidence.
 
 ---
 

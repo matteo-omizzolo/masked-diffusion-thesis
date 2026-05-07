@@ -1,6 +1,20 @@
 # Experiments — Summary
 
-> **Current source of truth.** Updated 2026-05-05.
+> **Current source of truth.** Updated 2026-05-07.
+
+---
+
+## Phase Results Ledger
+
+| Phase / protocol | Status / tier | Core result | Raw output folder | Gate / next action |
+|---|---|---|---|---|
+| **Phase 0 — reproducibility gate** | ✅ Gate passed (2026-05-07) | PF1–PF8: 11/11 on HPC CPU (slnode01). K=3 smoke on A100 (gnode01, job 489457) matches prior qualitative pattern. Not thesis evidence. | `results/phase0_smoke_d4edc92/` | K=30 replication now open. |
+| **Phase 1 — Protocol A** | T1 (K=50) | MC-oracle headroom +0.45; signal ρ≈0.10–0.15 | `results/phase1_proseco_owt_full/` | Baseline for all downstream phases. |
+| **Phase 2b — policy comparison** | T1 (K=30) | All 10 separable rankers fail to recover MC headroom; cheating oracle saturates by B=8. | `results/phase2b_proseco_owt/`, `results/phase2b/` | Empirical Ranker-Class Limitation confirmed. |
+| **Phase 3a — combinatorial search** | T1 (K=30) | CD-G 74–84 %, BS-AG 49–64 % recovery at B∈{2,3,4}. Primary positive result. | `results/phase3a_proseco_owt/` | Thesis primary result. |
+| **Cross-backbone (LLaDA-SFT)** | T3 (K=8) | Uniform-not-beaten transfers; MC headroom does NOT transfer. | `results/cross_backbone/` | Phase 3a pre-registered no-go. |
+| **Protocol C — adaptive controller** | Honest negative | ε̃/ε ∈ [0.983, 0.986]; < 1.7 % improvement. | `results/protocol_c_owt/` | Appendix F only; no further work. |
+| **Phase 1 (interaction, future)** | ⛔ Blocked | Pending K=30 replication (Step 2d). | — | Open only after K=30 passes. |
 
 ---
 

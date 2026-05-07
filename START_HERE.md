@@ -60,10 +60,11 @@ headroom.
 
 - **LaTeX ch1–ch6.** Introduction, background, informed-corrector bridge, and
   ch6 mathematical framework now have full drafts. They still need supervisor
-  review and final polish after Phase 0.
+  review and final polish after K=30 replication.
 - **LaTeX ch7 / experiments, abstract, conclusion.** Not written.
-- **Empirical anchors.** Prior ProSeCo-OWT results remain pending Phase 0
-  re-confirmation before final thesis claims.
+- **Empirical anchors.** Prior ProSeCo-OWT results remain pending K=30 critical
+  replication before final thesis claims. Phase 0 gate passed; K=30 is the
+  current blocking gate.
 
 ---
 
@@ -90,10 +91,10 @@ We are no longer in "writing only" mode. The current phase is **theory-first rea
    Theorem B exact / estimated / **B′ finite-pool high-probability**,
    **Diagnostic Framework C** (regime classification; renamed from Proposition C),
    Theorem D (optional/appendix), Lemma E (optional/conditional).
-2. **Phase 0 reproducibility audit** — code-path audit + **pre-flight assertions
-   PF1–PF8 (blocking)** + K=3 smoke + K=30 critical replication.
-3. **Phase 1 interaction diagnostics** — only if Phase 0 passes; sparse pairwise
-   ξ̂_{t,t'} estimation at Levels 1–2.
+2. **Phase 0 reproducibility audit ✅ (2026-05-07).** PF1–PF8: 11/11 passed on
+   HPC login node (CPU, slnode01). K=3 smoke on A100 (gnode01, job 489457)
+   qualitatively matches prior results. K=30 critical replication gate is now **open**.
+3. **Phase 1 interaction diagnostics** — ⛔ blocked until K=30 replication passes.
 4. **Phase 2 pairwise scheduler** — Phase 2a population (Level 2) → Phase 2b
    feature-conditioned (Level 3, deployable) if population pairwise structure
    is positive or feature-predictable interaction structure exists.
@@ -101,11 +102,11 @@ We are no longer in "writing only" mode. The current phase is **theory-first rea
 6. **LaTeX writing** — ch1–ch6 drafted; ch7 / experiments, Abstract, and
    Conclusion remain.
 
-> No full-scale new HPC experiments until pre-flight assertions PF1–PF8 are
-> implemented or manually verified, K=3 smoke matches existing keys, and the
-> theory scaffold is stable. ProSeCo-OWT remains the baseline.
-> See `docs/05_next_steps.md` Gate 2 for the blocking pre-flight checklist.
-> Full theory-first plan: `docs/06_theory_first_research_plan.md`.
+> Phase 0 is complete (PF1–PF8 ✅, K=3 smoke ✅). K=30 replication is the
+> immediate next HPC action (`hpc/phase2b_proseco_owt.sbatch` then
+> `hpc/phase3a_combinatorial.sbatch`). Phase 1 interaction diagnostics remain
+> blocked until K=30 passes. ProSeCo-OWT remains the only active backbone.
+> See `docs/05_next_steps.md` for the full sequential gate plan.
 
 ---
 

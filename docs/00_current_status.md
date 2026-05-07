@@ -1,6 +1,6 @@
 # Current Status — MSc Thesis
 
-> **Current source of truth.** Updated 2026-05-05.
+> **Current source of truth.** Updated 2026-05-07.
 > Compact summary of what is established, what failed, what is open, and risks.
 
 ---
@@ -70,7 +70,7 @@ Best after-uncertainty close ratio = +0.015 (entropy, B=2); negative at B ≥ 3.
 | Refinement A′ | **Demoted to additivity-scale diagnostic.** No longer presented as a regret refinement. |
 | Refinement A″ | **Demoted to rankability diagnostic.** ε_R is not a theorem constant. |
 | ReMDM-loop, MDLM Phase 1 | Archived. Backend issues and near-zero Δ_t. See abandoned-backend lessons table below. |
-| Full-scale HPC new runs | Gated — pending stable theory scaffold, PF1–PF8, and K=3 smoke. |
+| Phase 1 interaction diagnostics | Gated — pending K=30 critical replication (Step 2d). Phase 0 complete. |
 
 ---
 
@@ -112,7 +112,7 @@ vacuous; the operative selected-schedule statement is the finite-pool form
 
 ## Current phase
 
-**Theory-first reassessment and Phase 0 reproducibility planning.**
+**Theory-first reassessment. Phase 0 complete; K=30 replication open.**
 
 The previous ProSeCo-OWT result remains the baseline: tested separable rankers
 do not recover MC-oracle headroom, while true-G schedule search recovers much
@@ -121,13 +121,13 @@ study of marginal, interaction-aware, and online corrector timing.
 
 Sequential gates:
 1. Opus theory pass ✅ — Theorem A baseline, Theorem B/B′ central, Diagnostic Framework C, A′/A″ as diagnostics, Empirical Ranker-Class Limitation; D/E optional.
-2. Phase 0 reproducibility audit — implement or manually verify PF1–PF8, then K=3 smoke, then K=30 critical replication only if the smoke matches qualitatively.
-3. Interaction diagnostics — only after Phase 0 passes.
+2. Phase 0 reproducibility audit ✅ — PF1–PF8: 11/11 on HPC login node (CPU, slnode01, 2026-05-06). K=3 smoke on A100 (gnode01, job 489457) qualitatively matches prior results. K=30 critical replication gate is now open.
+3. Interaction diagnostics — ⛔ blocked until K=30 replication passes.
 4. Pairwise scheduler — only if diagnostics show structure.
 5. LaTeX writing — running in parallel once the theory scaffold is stable.
 
-No full-scale new HPC experiments should be launched until the theory scaffold is
-stable, PF1–PF8 pass, and the K=3 smoke matches qualitatively. See
-`docs/05_next_steps.md` for the
-sequential action plan and `docs/06_theory_first_research_plan.md` for the full
-theory-first programme.
+K=30 replication is the immediate next HPC action: submit
+`hpc/phase2b_proseco_owt.sbatch` then `hpc/phase3a_combinatorial.sbatch`.
+Phase 1 interaction diagnostics remain blocked until K=30 passes. See
+`docs/05_next_steps.md` for the sequential action plan and
+`docs/06_theory_first_research_plan.md` for the full theory-first programme.
