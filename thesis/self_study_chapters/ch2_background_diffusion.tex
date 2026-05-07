@@ -1,0 +1,144 @@
+\chapter{Background: Diffusion as Iterative Denoising}
+\label{ch:background-diffusion}
+
+Diffusion models are generative models built around a simple idea: corrupt data
+gradually, then learn to reverse the corruption. This chapter reviews that idea
+at the level needed for the thesis. The goal is not to develop the full
+continuous-time theory of score-based diffusion, but to isolate the concepts
+that survive the move to text: a state space, a noising process, a learned
+reverse process, a denoising horizon, and an inference-time budget.
+
+\section{Generative Modelling Setup}
+\label{sec:ch2-generative-setup}
+
+Let $\pdata$ denote the unknown data distribution on a space $\mathcal{X}$.
+A generative model defines a distribution $p_\theta$ intended to approximate
+$\pdata$. Sampling from $p_\theta$ should produce new objects that resemble the
+training data. In language modelling, the objects are token sequences; in
+image modelling, they are arrays of pixel values or latent vectors.
+
+Diffusion models introduce an auxiliary family of noisy distributions
+$(p_t)_{t\in[0,1]}$. The endpoint $p_0$ is the data distribution and $p_1$ is a
+simple noise distribution. Generation starts from noise and follows a learned
+reverse path back toward data. In discrete implementations the interval
+$[0,1]$ is replaced by a finite horizon $T$ and a sequence of states
+$x_T,x_{T-1},\ldots,x_0$.
+
+The modelling problem has two parts. The forward process $q$ is chosen by the
+designer and can be simulated exactly. The reverse process is learned. At
+sampling time, the model uses the learned reverse process to denoise a noisy
+state step by step.
+
+\section{Forward Noising and Reverse Denoising}
+\label{sec:ch2-forward-reverse}
+
+In continuous diffusion models, the forward process is often Gaussian. A clean
+data point $x_0$ is progressively mixed with noise:
+\[
+  x_t = \sqrt{\bar{\alpha}_t}\,x_0
+        + \sqrt{1-\bar{\alpha}_t}\,\varepsilon,
+  \qquad \varepsilon \sim \mathcal{N}(0,I).
+\]
+When $t$ is large, the signal term is small and $x_t$ is nearly Gaussian noise.
+The DDPM formulation of \textcite{ho2020ddpm} uses this idea in discrete time.
+Score-based diffusion models express the same principle through stochastic
+differential equations and learned score functions \parencite{song2021score}.
+
+The reverse step asks for a distribution of less-noisy states given the current
+noisy state. In general this reverse conditional is not available exactly, so a
+neural network is trained to approximate the relevant denoising quantity. One
+may train the model to predict the added noise, the clean data, or the score
+$\nabla_x \log p_t(x)$, depending on parameterisation
+\parencite{song2019ncsn,vincent2011connection}. All three views support the
+same operational picture: generation is iterative denoising.
+
+\section{Markov-Chain Viewpoint}
+\label{sec:ch2-markov-view}
+
+The sampling procedure can be viewed as an inhomogeneous Markov chain. A state
+at time $t$ is transformed into a state at time $t-1$ using a transition kernel
+that depends on the current noise level:
+\[
+  x_t \longrightarrow x_{t-1} \longrightarrow \cdots \longrightarrow x_0 .
+\]
+The transition kernel is approximate because it uses a learned denoiser and a
+finite discretisation. The number of transitions is an inference-time design
+choice. More transitions usually means more computation and a closer
+approximation to the ideal reverse process; fewer transitions reduce compute
+but increase discretisation or approximation error.
+
+This Markov-chain viewpoint is important for the thesis because correctors are
+additional transition kernels inserted into an existing trajectory. In
+continuous predictor-corrector samplers, the predictor is a discretised reverse
+SDE or ODE step and the corrector is often a Langevin step that refines the
+current state \parencite{song2021score}. In discrete diffusion, the analogue is
+not a gradient update but a local Markov update on tokens.
+
+\section{Continuous and Discrete Diffusion}
+\label{sec:ch2-continuous-discrete}
+
+The continuous setting is mathematically convenient because the state space is
+Euclidean. Small perturbations are meaningful, gradients exist, and Gaussian
+transition kernels are tractable. Text is different. A token sequence lies in
+the finite product space $\mathcal{V}^L$, where $\mathcal{V}$ is the
+vocabulary and $L$ is the sequence length. There is no infinitesimal move from
+one word to another.
+
+Discrete diffusion models therefore replace Gaussian noising with categorical
+corruption. Some models substitute tokens according to a rate matrix; masked
+diffusion models use a special absorbing mask token $\Mask$. A clean token is
+either preserved or replaced by $\Mask$, and the reverse model predicts the
+missing content. This connects diffusion language models to masked language
+modelling, but with an explicit generative trajectory rather than a single
+training-time corruption.
+
+The move to discrete states changes the inference problem. In continuous
+models, a denoising network can define a vector field. In masked language
+models, the denoiser returns categorical probabilities over the vocabulary at
+masked or revisable positions. Sampling requires committing to tokens. Once a
+token is committed, later mechanisms may or may not be allowed to revise it,
+depending on the sampler.
+
+\section{Inference-Time Budgets}
+\label{sec:ch2-budgets}
+
+Diffusion generation is expensive because it uses repeated model evaluations.
+The usual accounting unit is the number of function evaluations, or NFE. A
+shorter denoising trajectory uses fewer NFEs but may produce lower-quality
+samples. Deterministic samplers such as DDIM were introduced partly to improve
+this tradeoff in continuous diffusion \parencite{song2020ddim}.
+
+The thesis uses a more specific budget. The base predictor trajectory is fixed,
+so its cost is treated as given. The variable cost is the number of corrector
+placements. If a corrector placement costs $c_{\mathrm{corr}}$ extra model
+forward passes, then a placement budget $B$ corresponds to extra compute
+$B_{\mathrm{NFE}} = c_{\mathrm{corr}}B$. The mathematical problem is therefore
+not generic NFE allocation; it is placement of a fixed number of correction
+calls along an existing denoising trajectory.
+
+\section{Quality Functionals and Paired Evaluation}
+\label{sec:ch2-quality}
+
+To compare two generation procedures one needs a quality functional. In this
+thesis a quality functional is any fixed map $F$ from a completed sequence to a
+real number, with larger values treated as better. Examples include negative
+language-model loss under a reference model, learned reward scores, or other
+automatic metrics. The theory in Chapter~\ref{ch:contribution} is agnostic to
+the choice of $F$; the empirical conclusions are always conditional on the
+chosen $F$.
+
+Because generation is random, schedule comparisons should be paired whenever
+possible. A paired comparison holds the seed and baseline trajectory fixed and
+changes only the intervention being tested. This common-random-number
+principle reduces variance and is central to the schedule-gain definition used
+later.
+
+\section{Summary}
+\label{sec:ch2-summary}
+
+Diffusion models generate by iterative denoising. The details differ between
+continuous and discrete state spaces, but the common structure is a noisy
+starting state, a learned reverse process, a finite denoising horizon, and an
+inference-time budget. For text, the natural diffusion state is a partially
+masked token sequence. The next chapter develops this discrete masked setting
+in detail.

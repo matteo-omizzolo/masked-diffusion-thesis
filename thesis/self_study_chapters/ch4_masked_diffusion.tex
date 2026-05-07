@@ -1,0 +1,136 @@
+\chapter{Model Families and Inference-Time Mechanics}
+\label{ch:masked-diffusion}
+
+The previous chapter described the mechanics of masked diffusion. This chapter
+places the main model families and inference-time methods into a taxonomy. The
+taxonomy matters because many methods improve masked diffusion generation, but
+they do so by changing different parts of the pipeline. The thesis concerns
+fixed-budget timing of a fixed informed corrector. It is therefore necessary to
+separate base models, remasking samplers, informed refinement mechanisms, and
+trajectory-search methods.
+
+\section{MDLM-Style Masked Diffusion}
+\label{sec:ch4-mdlm}
+
+MDLM is the closest base-model ancestor of the empirical backend used in this
+thesis \parencite{sahoo2024mdlm}. Its state is a partially masked token
+sequence, and its denoiser predicts clean tokens from that state. Sampling
+starts from a highly masked sequence and repeatedly unmasks positions until a
+complete sequence is produced.
+
+The important feature for this thesis is the separation between the base
+predictor and any additional correction. The predictor supplies the default
+trajectory. It determines the horizon $T$, the masking or unmasking schedule,
+and the intermediate states at which a corrector could be inserted. Once this
+predictor is fixed, corrector timing becomes an additional layer.
+
+SEDD offers a different discrete diffusion formulation based on estimating
+ratios of the data distribution \parencite{lou2024sedd}. LLaDA and Dream show
+that diffusion-style language generation can be scaled to large language-model
+settings \parencite{nie2025llada,ye2025dream}. These models are part of the
+broader masked/discrete diffusion landscape. They are not themselves a timing
+theory.
+
+\section{Remasking and Iterative Refinement Samplers}
+\label{sec:ch4-remasking}
+
+Remasking methods change the inference process by allowing tokens to be masked
+again or by revisiting uncertain positions through a modified sampler.
+ReMDM is the main example in the thesis taxonomy
+\parencite{wang2025remdm}. It introduces remasking strategies that can improve
+generation by changing how the reverse process handles already-filled tokens.
+
+This is adjacent to corrector timing but not identical to it. A remasking
+sampler changes the trajectory itself: positions may be returned to a masked
+state, the predictor may see states outside the original unmasking path, and
+the NFE accounting is tied to a modified inference procedure. In the thesis
+framework, by contrast, the predictor trajectory is fixed and an additional
+corrector is placed at selected time steps.
+
+Other uncertainty-driven or entropy-driven decoding methods also belong near
+this category when their primary object is token ordering, path choice, or
+unmasking policy rather than corrector placement
+\parencite{chen2025denoisingentropy,benhamu2025ebsampler,kim2025tokenordering,kim2025klass,hong2025upo,he2025mdpo}.
+They are relevant because they show that inference-time mechanics matter, but
+they do not answer the fixed-budget corrector-timing question directly.
+
+\section{ProSeCo as the Empirical Backend}
+\label{sec:ch4-proseco}
+
+ProSeCo is the empirical backend used in this thesis
+\parencite{schiff2026proseco}. It is a self-correcting masked diffusion system:
+after tokens have been committed by the base predictor, an annealed refinement
+mechanism can revise eligible positions. This makes it a natural backend for
+studying corrector timing, because the corrector is meaningful, the denoising
+trajectory is explicit, and the extra cost of correction can be counted.
+
+In the ProSeCo-OWT case study, the predictor schedule, corrector kernel, and
+evaluation functional are held fixed. The variable is the placement schedule:
+the set of time steps at which the corrector is applied. The empirical
+question is whether simple signals can choose those steps well, or whether the
+value of a schedule depends on interactions among placements.
+
+The thesis does not treat ProSeCo as a theory assumption. It is the primary
+case study because it is an informed self-correction backend with available
+weights and a traceable experiment path. The mathematical framework in
+Chapter~\ref{ch:contribution} applies to any fixed predictor/corrector pair
+with a definable schedule gain.
+
+\section{PRISM and Quality-Guided Informed Refinement}
+\label{sec:ch4-prism}
+
+PRISM is best classified as informed-corrector-adjacent or informed refinement
+\parencite{kim2025prism}. It uses quality or reward-guided information to
+improve masked diffusion samples. This makes it relevant to the thesis, but it
+must be handled carefully.
+
+There are two distinct uses of PRISM-like ideas. First, PRISM as a
+non-separable quality-guided refinement mechanism is a possible informed
+refinement backend. The thesis does not currently test this use, and therefore
+does not rule it out. Second, a PRISM-style quality-mass statistic can be used
+as a per-step separable score. The thesis denotes this signal by $QM_t$
+(historical raw files may use \texttt{Q\_t}). When used this way, quality mass
+belongs to the marginal-ranker baseline analysed by Theorem A in
+Chapter~\ref{ch:contribution}.
+
+This distinction prevents an overclaim. A negative result for tested separable
+rankers is not a rejection of PRISM as an informed refinement method. It only
+limits PRISM-style quality mass when it is reduced to a separable timing score
+inside the tested ranker class.
+
+\section{Trajectory Search and Test-Time Scaling}
+\label{sec:ch4-search}
+
+Another family of methods spends additional computation by searching over
+trajectories, candidates, or refinements. IterRef uses iterative refinement as
+a test-time scaling mechanism \parencite{lee2025iterref}. S$^3$ uses
+stratified search for diffusion language models \parencite{bilal2026s3}.
+Particle Gibbs methods use particle or MCMC ideas to scale inference-time
+exploration \parencite{dang2025particlegibbs}. These methods are important
+because they show that additional computation can be directed in structured
+ways.
+
+They differ from the main thesis object in two respects. First, they usually
+search over candidate trajectories or outputs, not just over the time steps at
+which a fixed corrector is inserted. Second, they may use reward, verifier, or
+true-feedback information that is unavailable in a deployable open-loop timing
+rule. In the thesis experiments, search procedures with true schedule-gain
+feedback are interpreted as structural existence results: they can show that
+good schedules exist, but not necessarily that an inference-time scheduler has
+been learned.
+
+\section{Why Timing Is the Object}
+\label{sec:ch4-why-timing}
+
+The methods reviewed in this chapter all modify inference-time behaviour, but
+at different layers. Base models define the denoising distribution. Remasking
+changes the sampler. Informed refinement changes or augments the correction
+mechanism. Search methods branch over candidates. Corrector timing is the
+remaining trajectory-level allocation question: if the model already has a
+corrector and a fixed budget, where should the corrector be placed?
+
+This is the question that can be studied with schedule gains. It is narrow
+enough to admit a clean mathematical framework, yet broad enough to include
+different model/corrector pairs. The next chapter defines informed correctors
+and the signals used for timing, then motivates the formal schedule-selection
+framework of Chapter~\ref{ch:contribution}.

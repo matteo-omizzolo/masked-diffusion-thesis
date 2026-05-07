@@ -315,10 +315,118 @@
 }
 
 @article{dang2025particlegibbs,
-  title   = {Inference-Time Scaling of Diffusion Language Models with Particle {Gibbs} Sampling},
-  author  = {Dang, Kaiwen and Han, Xingchao and Xu, Haotian and Xu, Jingwei and Srivastava, Nikunj and Ermon, Stefano},
+  title   = {Inference-Time Scaling of Diffusion Language Models via Trajectory Refinement},
+  author  = {Dang, Meihua and Han, Jiaqi and Xu, Minkai and Xu, Kai and Srivastava, Akash and Ermon, Stefano},
   journal = {arXiv preprint arXiv:2507.08390},
+  year    = {2025},
+  note    = {{PG-DLM}: particle Gibbs sampling for diffusion language models}
+}
+
+%% ---- Discrete diffusion foundations (added for literature review) ----
+
+@inproceedings{austin2021d3pm,
+  title     = {Structured Denoising Diffusion Models in Discrete State-Spaces},
+  author    = {Austin, Jacob and Johnson, Daniel D. and Ho, Jonathan and Tarlow, Daniel and van den Berg, Rianne},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2021},
+  note      = {{D3PM}. arXiv:2107.03006}
+}
+
+@inproceedings{sohldickstein2015deep,
+  title     = {Deep Unsupervised Learning Using Nonequilibrium Thermodynamics},
+  author    = {Sohl-Dickstein, Jascha and Weiss, Eric A. and Maheswaranathan, Niru and Ganguli, Surya},
+  booktitle = {International Conference on Machine Learning},
+  year      = {2015},
+  note      = {Original diffusion-model construction. arXiv:1503.03585}
+}
+
+%% ---- Continuous-time samplers (added) ----
+
+@inproceedings{lu2022dpmsolver,
+  title     = {{DPM-Solver}: A Fast {ODE} Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps},
+  author    = {Lu, Cheng and Zhou, Yuhao and Bao, Fan and Chen, Jianfei and Li, Chongxuan and Zhu, Jun},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2022},
+  note      = {arXiv:2206.00927}
+}
+
+@article{song2020improvedncsn,
+  title   = {Improved Techniques for Training Score-Based Generative Models},
+  author  = {Song, Yang and Ermon, Stefano},
+  journal = {Advances in Neural Information Processing Systems},
+  year    = {2020},
+  note    = {arXiv:2006.09011}
+}
+
+%% ---- Masked diffusion scheduling theory (added) ----
+
+@article{chen2025optimalschedules,
+  title   = {Optimal Inference Schedules for Masked Diffusion Models},
+  author  = {Chen, Sitan and Cong, Kevin and Li, Jerry},
+  journal = {arXiv preprint arXiv:2511.04647},
   year    = {2025}
+}
+
+@article{luxembourg2025plan,
+  title   = {Plan for Speed: Dilated Scheduling for Masked Diffusion Language Models},
+  author  = {Luxembourg, Omer and Permuter, Haim and Eldar, Yonina C.},
+  journal = {arXiv preprint arXiv:2506.19037},
+  year    = {2025}
+}
+
+@article{sahoo2025eso,
+  title   = {Esoteric Language Models: Bridging Autoregressive and Masked Diffusion {LLMs}},
+  author  = {Sahoo, Subham Sekhar and Yang, Zhihan and Akhauri, Yash and Liu, Johnna and Singh, Deepansha and Cheng, Zhoujun and Liu, Zhengzhong and Xing, Eric and Thickstun, John and Vahdat, Arash},
+  journal = {arXiv preprint arXiv:2506.01928},
+  year    = {2025},
+  note    = {{Eso-LMs}}
+}
+
+%% ---- Self-correcting / corrective DLM literature (added) ----
+
+@article{huang2025remedi,
+  title   = {Don't Settle Too Early: Self-Reflective Remasking for Diffusion Language Models},
+  author  = {Huang, Zemin and Wang, Yuhang and Chen, Zhiyang and Qi, Guo-Jun},
+  journal = {arXiv preprint arXiv:2509.23653},
+  year    = {2025},
+  note    = {{RemeDi}. Code: github.com/maple-research-lab/RemeDi}
+}
+
+@article{wu2026dsl,
+  title   = {Discrete Stochastic Localization for Self-Correcting Diffusion Language Models},
+  author  = {Wu, Yunshu and Cheng, Jiayi and Thakuria, Partha and Brekelmans, Rob and Papalexakis, Evangelos E. and Ver Steeg, Greg},
+  journal = {arXiv preprint arXiv:2602.16169},
+  year    = {2026},
+  note    = {{DSL}}
+}
+
+@article{zhang2026cdlm,
+  title   = {Corrective Diffusion Language Models},
+  author  = {Zhang, Shuibai and Peng, Fred Zhangzhi and Zhang, Yiheng and Pan, Jin and Chrysos, Grigorios G.},
+  journal = {arXiv preprint arXiv:2512.15596},
+  year    = {2026},
+  note    = {{CDLM}}
+}
+
+%% ---- Submodular optimization references (added for ch5 transition) ----
+
+@article{nemhauser1978submodular,
+  title   = {An Analysis of Approximations for Maximizing Submodular Set Functions---{I}},
+  author  = {Nemhauser, George L. and Wolsey, Laurence A. and Fisher, Marshall L.},
+  journal = {Mathematical Programming},
+  volume  = {14},
+  number  = {1},
+  pages   = {265--294},
+  year    = {1978}
+}
+
+@article{golovin2011adaptive,
+  title   = {Adaptive Submodularity: Theory and Applications in Active Learning and Stochastic Optimization},
+  author  = {Golovin, Daniel and Krause, Andreas},
+  journal = {Journal of Artificial Intelligence Research},
+  volume  = {42},
+  pages   = {427--486},
+  year    = {2011}
 }
 
 %% ---- Evaluation ----

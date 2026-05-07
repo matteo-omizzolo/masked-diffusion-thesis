@@ -1,0 +1,163 @@
+\chapter{Informed Correctors and the Timing Problem}
+\label{ch:informed-correctors}
+
+This chapter bridges the literature on informed correctors to the schedule
+framework in Chapter~\ref{ch:contribution}. A corrector is an additional
+inference-time transition that refines the current state of a diffusion
+sampler. An informed corrector uses information from the model, the current
+state, a learned quality score, a reward, or another diagnostic to make that
+transition more targeted than an uninformed local move.
+
+The thesis does not design a new corrector kernel. It fixes a corrector and
+studies when to apply it. This chapter explains why that timing problem is
+natural.
+
+\section{Corrector Kernels}
+\label{sec:ch5-corrector-kernels}
+
+In the continuous predictor-corrector framework, the predictor advances the
+reverse diffusion process and the corrector performs an MCMC-like refinement
+step \parencite{song2021score}. In discrete diffusion, the same idea becomes a
+local Markov transition on token states. The transition may resample one token,
+a block of tokens, or a set of eligible positions. If the transition is
+designed to preserve or improve an appropriate target distribution, it can
+reduce sampling error at the cost of additional model evaluations.
+
+\textcite{zhao2024informedcorrectors} study informed correctors for discrete
+diffusion models, including locally balanced proposals and confidence-guided
+selection. The statistical MCMC background connects to locally informed
+proposals in discrete spaces \parencite{zanella2020informedproposals} and to
+questions about Gibbs or Metropolis-within-Gibbs convergence
+\parencite{roberts1997updating,ascolani2024entropycontraction,secchi2025mwggap}.
+Discrete Flow Matching, entropy-adaptive Gibbs sampling, Psi-samplers, and
+Feynman-Kac correctors provide additional perspectives on correction and
+sampling in discrete generative models
+\parencite{gat2024dfm,koh2024eags,deschenaux2026psisamplers,hasan2026fkc}.
+
+These works motivate the existence of useful corrector kernels. They do not,
+by themselves, solve the placement problem. Once a kernel exists and has a
+nontrivial cost, a second question appears: at which denoising steps should it
+be used?
+
+\section{Action Sets and Corrective Effort}
+\label{sec:ch5-action-sets}
+
+A corrector does not act on an abstract trajectory; it acts on positions in
+the current state. Let $R_t$ denote the revisable or action set at step $t$.
+This is the set of positions the corrector is allowed to modify. In a
+self-correction backend such as ProSeCo, $R_t$ may consist of already
+committed positions eligible for revision \parencite{schiff2026proseco}. In
+another backend it could be defined differently.
+
+The action set distinguishes correctors from remasking. A remasking sampler
+changes the state by returning positions to a masked or uncertain status. A
+corrector, as used in this thesis, is a fixed refinement mechanism with a
+declared action set. The timing question assumes that this mechanism is already
+specified.
+
+Corrective effort is costly. If one corrector placement performs
+$c_{\mathrm{corr}}$ additional forward passes, then a schedule with $B$
+placements has extra-NFE cost
+\[
+  B_{\mathrm{NFE}} = c_{\mathrm{corr}}B .
+\]
+The budget $B$ counts placements; the quantity $B_{\mathrm{NFE}}$ records the
+associated compute. Chapter~\ref{ch:contribution} formalises this distinction.
+
+\section{Signals for Timing}
+\label{sec:ch5-signals}
+
+An informed timing rule needs signals. The simplest signals are computed at
+each denoising step and then used to rank steps. This thesis uses three
+representative step signals:
+\[
+  H_t,\qquad M_t^{-1},\qquad QM_t .
+\]
+The entropy signal $H_t$ measures aggregate uncertainty over the revisable
+set. The inverse margin $M_t^{-1}$ measures lack of confidence by comparing
+the top token probabilities. The quality-mass signal $QM_t$ is inspired by
+quality-guided or PRISM-style refinement \parencite{kim2025prism}. Historical
+raw files may call this signal \texttt{Q\_t}; the thesis writes $QM_t$ to avoid
+confusion with the pairwise schedule surrogate $Q(S)$ in
+Chapter~\ref{ch:contribution}.
+
+The signals must be computed on the same action set the corrector uses. If the
+corrector can only revise positions in $R_t$, then a signal aggregated over a
+different set is not a clean proxy for the value of applying the corrector at
+step $t$. This signal/action-set consistency condition is one of the Phase 0
+pre-flight checks before new experiments are trusted.
+
+\section{The Marginal Timing Baseline}
+\label{sec:ch5-marginal-baseline}
+
+The most natural first timing rule is marginal ranking. Let $\Delta_t$ be the
+gain from applying the corrector only at step $t$, relative to the no-corrector
+baseline. If the gain from a schedule were exactly additive,
+\[
+  G(S) = \sum_{t\in S}\Delta_t,
+\]
+then the optimal size-$B$ schedule would be obtained by choosing the $B$ largest
+marginal gains. Since the true $\Delta_t$ values are unavailable at inference
+time, one replaces them with an observable score such as $H_t$, $M_t^{-1}$, or
+$QM_t$.
+
+This gives the baseline tested by Theorem A in Chapter~\ref{ch:contribution}.
+Theorem A does not say that marginal ranking always works. It says that if
+schedule gains are approximately additive and the proxy score is calibrated to
+the marginal gains, then top-$B$ ranking is near-optimal. The theorem is useful
+because it makes the failure modes explicit: poor calibration, non-additivity,
+or both.
+
+\section{Why Interactions Matter}
+\label{sec:ch5-interactions}
+
+Corrector placements may interact. Applying a corrector at an early step can
+change the state encountered later. Two placements may be redundant if they
+repair the same kind of error, or complementary if one creates a context in
+which the other becomes more valuable. In such cases, knowing the singleton
+gains $\Delta_t$ is not enough.
+
+The pairwise interaction between two placements is
+\[
+  \xi_{t,t'} = G(\{t,t'\}) - \Delta_t - \Delta_{t'} .
+\]
+If these interactions are small, the marginal baseline may be adequate. If
+they are structured, an interaction-aware surrogate may explain schedule value
+better than the additive surrogate. If higher-order effects dominate, even
+pairwise scheduling may fail. Chapter~\ref{ch:contribution} formalises these
+possibilities through Theorem B, Theorem B$'$, and Diagnostic Framework C.
+
+\section{ProSeCo-OWT as the Case Study}
+\label{sec:ch5-proseco-case-study}
+
+The empirical case study is ProSeCo-OWT. Prior experiments in this repository
+used a ProSeCo annealed-refinement corrector with an MDLM-style OpenWebText
+backend and horizon $T=64$. The quality functional was negative GPT-2
+negative log-likelihood on a fixed window. Those prior results suggest three
+facts: there is MC-oracle headroom over uniform placement at budgets
+$B\in\{2,3,4\}$; tested separable rankers do not recover that headroom; and
+search procedures using true schedule-gain feedback recover a substantial
+fraction of it.
+
+These statements are not treated as fresh final evidence until Phase 0
+re-confirms the backend and experiment path. The current tests check
+determinism, empty-schedule equivalence, single-correction equivalence, common
+random numbers, budget accounting, scoring consistency, corrector action sets,
+and signal/action-set consistency. Only after those checks pass should new
+experiments or stronger empirical claims be made.
+
+\section{From Correctors to the Chapter 6 Framework}
+\label{sec:ch5-to-ch6}
+
+The preceding chapters have separated the layers of the problem. A masked
+diffusion language model supplies a denoising trajectory. A corrector kernel
+supplies an additional refinement transition. Signals supply possible
+step-wise timing information. The unresolved question is how to reason about a
+budgeted set of placements.
+
+Chapter~\ref{ch:contribution} gives the formal answer. It defines the
+schedule gain $G(S)$, the marginal gains $\Delta_t$, the additive surrogate
+$A(S)$, pairwise interactions $\xi_{t,t'}$, the pairwise surrogate $Q(S)$, and
+diagnostics for deciding whether a model/corrector pair is marginal,
+interaction-driven, higher-order, or online-decision-like. The empirical
+chapters then test which regime ProSeCo-OWT occupies.
