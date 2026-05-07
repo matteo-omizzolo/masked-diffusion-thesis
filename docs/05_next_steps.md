@@ -1,8 +1,8 @@
 # Next Steps — Action Plan
 
-> **Current source of truth.** Updated 2026-05-07.
-> Phase: Phase 0 complete. K=3 smoke qualitatively matches prior results (2026-05-07).
-> K=30 gate is now OPEN. Phase 1 interaction diagnostics blocked until K=30 passes.
+> **Current source of truth.** Updated 2026-05-08.
+> Phase: K=30 critical replication complete (Phase 2b job 490106 ✅, Phase 3a job 479941 ✅).
+> Phase 1 interaction diagnostics gate is NOW OPEN.
 
 ---
 
@@ -88,15 +88,21 @@ Debug command: `python scripts/legacy/debug_proseco_owt_load.py --checkpoint "$P
       nearly-empty committed set at early predictor steps → G≈0). Inverted-signal phenomenon reproduced.
 - [x] HPC real-backend PF1–PF8: 11 passed, 0 skipped on slnode01 (cpu, T=4). ✅
 
-**Step 2d — K=30 critical replication. ✅ GATE OPEN (Step 2c passed 2026-05-07).**
+**Step 2d — K=30 critical replication. ✅ GATE CLOSED (2026-05-08).**
 
-Do not launch Phase 1 until Step 2d passes. K=30 may now be submitted via
-`hpc/phase2b_proseco_owt.sbatch` + `hpc/phase3a_combinatorial.sbatch`.
+Both K=30 components are complete:
 
-**Pre-submit requirement:** Before each sbatch submission, run a Codex pre-submit
-review (see `hpc/README.md` "Pre-submit rule"). Address BLOCKING/WARNING findings
-before submitting. Codex review must cover: sbatch script, changed files, git status,
-validation commands, expected result folder, gate being opened/closed.
+- **Phase 2b K=30 replication:** job 490106, gnode01 A100, finished 2026-05-07.
+  Output: `results/phase2b_k30_rep_cf89e00/` (4/4 shards, 30 seeds, no canonical overwrite).
+  Headroom ~+0.37 at B∈{2,3,4} (canonical ~+0.45); separable rankers −38% to −72%;
+  mean_delta_oracle (cheating marginal/time-profile oracle ranker) +13–29%; qualitative
+  conclusions unchanged. Codex pre-submit review completed 2026-05-08.
+- **Phase 3a K=30:** job 479941, gnode02 A100, all 30 seeds complete (2026-04-20).
+  Output: `results/phase3a_proseco_owt/` (4/4 shards, 30 seeds, B={2,3,4,8}).
+  CD-G 74–84%, BS-AG 49–64% of +0.45 headroom (canonical Phase 2b baseline);
+  p < 0.001 at B=2,3,4 for both methods. Codex pre-submit review completed 2026-05-08.
+
+**Phase 1 interaction diagnostics gate is now open.** Proceed to Gate 3.
 
 ---
 

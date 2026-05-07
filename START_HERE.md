@@ -1,6 +1,6 @@
 # START HERE — Thesis Orientation (2-minute read)
 
-> **Current source of truth.** Updated 2026-05-07.
+> **Current source of truth.** Updated 2026-05-08.
 > All detailed docs are reachable via `docs/README.md`.
 > Files under `docs/archive/` are historical and must not be used to infer
 > current status unless explicitly requested.
@@ -60,11 +60,10 @@ headroom.
 
 - **LaTeX ch1–ch6.** Introduction, background, informed-corrector bridge, and
   ch6 mathematical framework now have full drafts. They still need supervisor
-  review and final polish after K=30 replication.
+  review and final polish. Empirical claims in ch7 may now be written.
 - **LaTeX ch7 / experiments, abstract, conclusion.** Not written.
-- **Empirical anchors.** Prior ProSeCo-OWT results remain pending K=30 critical
-  replication before final thesis claims. Phase 0 gate passed; K=30 is the
-  current blocking gate.
+- **Interaction diagnostics (Phase 1).** Gate 3 (sparse pair diagnostics + schedule-level
+  validation) not yet run. This is the current blocking gate for further theory claims.
 
 ---
 
@@ -84,7 +83,7 @@ headroom.
 
 ## Current phase
 
-We are no longer in "writing only" mode. The current phase is **K=30 critical replication**:
+K=30 critical replication is **complete**. The current phase is **Phase 1 interaction diagnostics**:
 
 1. **Opus theory pass ✅ (2026-05).** Theorem stack formalized in
    `research/candidate_theorems.md` §0–§7: Theorem A (marginal baseline),
@@ -93,19 +92,24 @@ We are no longer in "writing only" mode. The current phase is **K=30 critical re
    Theorem D (optional/appendix), Lemma E (optional/conditional).
 2. **Phase 0 reproducibility audit ✅ (2026-05-07).** PF1–PF8: 11/11 passed on
    HPC login node (CPU, slnode01). K=3 smoke on A100 (gnode01, job 489457)
-   qualitatively matches prior results. K=30 critical replication gate is now **open**.
-3. **Phase 1 interaction diagnostics** — ⛔ blocked until K=30 replication passes.
-4. **Phase 2 pairwise scheduler** — Phase 2a population (Level 2) → Phase 2b
-   feature-conditioned (Level 3, deployable) if population pairwise structure
-   is positive or feature-predictable interaction structure exists.
-5. **Phase 3 regime map** — optional secondary backbone.
-6. **LaTeX writing** — ch1–ch6 drafted; ch7 / experiments, Abstract, and
-   Conclusion remain.
+   qualitatively matches prior results.
+3. **K=30 critical replication ✅ (2026-05-08).**
+   - Phase 2b K=30 replication: job 490106, gnode01, finished 2026-05-07.
+     Output: `results/phase2b_k30_rep_cf89e00/`. Headroom ~+0.37 (canonical +0.45);
+     separable rankers fail (−38 % to −72 %); qualitative conclusions unchanged.
+   - Phase 3a K=30: job 479941, gnode02, all 30 seeds complete (2026-04-20).
+     Output: `results/phase3a_proseco_owt/`. CD-G 74–84 %, BS-AG 49–64 % of
+     +0.45 headroom (canonical baseline; p < 0.001 at B = 2, 3, 4). Gate closed.
+4. **Phase 1 interaction diagnostics** — ✅ **NOW OPEN.** Sparse pair diagnostics
+   (Gate 3a) then schedule-level validation (Gate 3b). See `docs/05_next_steps.md`.
+5. **Phase 2 pairwise scheduler** — blocked until Gate 3b passes.
+6. **Phase 3 regime map** — optional secondary backbone.
+7. **LaTeX writing** — ch1–ch6 drafted; ch7 / experiments, Abstract, and
+   Conclusion may now be written (K=30 gate closed).
 
-> Phase 0 is complete (PF1–PF8 ✅, K=3 smoke ✅). K=30 replication is the
-> immediate next HPC action (`hpc/phase2b_proseco_owt.sbatch` then
-> `hpc/phase3a_combinatorial.sbatch`). Phase 1 interaction diagnostics remain
-> blocked until K=30 passes. ProSeCo-OWT remains the only active backbone.
+> K=30 replication complete (Phase 2b job 490106 ✅, Phase 3a job 479941 ✅).
+> Phase 1 interaction diagnostics gate is **open**. Submit Phase 1 sbatch
+> after Codex pre-submit review. ProSeCo-OWT remains the only active backbone.
 > See `docs/05_next_steps.md` for the full sequential gate plan.
 
 ---
