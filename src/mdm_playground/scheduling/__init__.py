@@ -14,17 +14,20 @@ Public API:
 - `estimate_single_step_gain(y_base, y_branch, F, meta)` → per-step gain dict
 - `allocate_budget(signal_trace, budget, policy_name, policy_kwargs)` → allocation
 - `evaluate_schedule(allocation, generator, F)` → metrics
+- `GenerationTrace` → optional backend trace for Phase 0 pre-flight audits
 """
 
 from .signals import compute_signals
 from .gain import estimate_single_step_gain
 from .allocation import allocate_budget, ALLOCATION_POLICIES
 from .evaluate import evaluate_schedule
+from .trace import GenerationTrace
 
 __all__ = [
     "compute_signals",
     "estimate_single_step_gain",
     "allocate_budget",
     "evaluate_schedule",
+    "GenerationTrace",
     "ALLOCATION_POLICIES",
 ]

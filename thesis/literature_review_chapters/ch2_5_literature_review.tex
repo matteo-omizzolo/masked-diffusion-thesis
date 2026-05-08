@@ -1,0 +1,1405 @@
+%% literature_review_chapters/ch2_5_literature_review.tex
+%%
+%% Standalone literature-review draft covering chapters 2--5 of the thesis.
+%% Not yet wired into thesis/main.tex. Notation reuses thesis/macros.tex.
+%%
+%% Structure:
+%%   Chapter 2: Continuous Foundations of Diffusion Models
+%%   Chapter 3: Discrete Diffusion Models
+%%   Chapter 4: Masked Diffusion Language Models
+%%   Chapter 5: Remasking, Self-Correction, and Informed Correctors
+%%
+%% Audience: mathematically mature ML reader. The chapters foreshadow but do
+%% not develop the contribution-chapter framework (G(S), A(S), Q(S),
+%% Theorem A/B/B', Diagnostic Framework C); those remain in ch6.
+
+%% =====================================================================
+%% Chapter 2 -- Continuous Foundations of Diffusion Models
+%% =====================================================================
+
+\chapter{Continuous Foundations of Diffusion Models}
+\label{lit:ch:continuous-diffusion}
+
+This chapter reviews continuous-state diffusion models at the level needed to
+motivate the discrete masked setting that follows. The aim is not a complete
+derivation of the score-based framework. It is to isolate the structural
+ingredients that survive the move to text: a designer-chosen forward
+corruption process, a learned reverse process, a notion of score or denoising
+target, an inference-time discretisation, and the practice of inserting
+auxiliary correction transitions along an otherwise fixed sampling
+trajectory. The last of these is the conceptual root of corrector scheduling
+and is introduced here in its native continuous form before it is recast for
+discrete states in
+Chapters~\ref{lit:ch:discrete-diffusion}--\ref{lit:ch:correctors}.
+
+\section{From likelihood-based generative modelling to diffusion}
+\label{lit:sec:gen-modeling}
+
+Generative modelling on a data space $\mathcal{X}$ seeks a parametric
+distribution $p_\theta$ that minimises a divergence to the unknown data
+distribution $\pdata$. Maximum-likelihood estimation,
+$\theta^\star \in \argmin_\theta \KL{\pdata}{p_\theta}$, is attractive because
+it is consistent and gradient-friendly when $\log p_\theta$ is tractable, but
+tractable density families are restrictive. Autoregressive models exploit the
+chain rule but are intrinsically sequential at sampling. Normalising flows
+admit exact likelihood through bijective parameterisations at the cost of
+architectural restrictions. Variational autoencoders relax the likelihood
+through a stochastic latent and an evidence lower bound but introduce an
+amortisation gap.
+
+Diffusion models occupy a different position in this design space. They
+factor generation through a long Markov chain of conditionally tractable
+transitions, with the high-noise endpoint chosen to be a reference
+distribution from which exact sampling is trivial. The construction is due
+to \textcite{sohldickstein2015deep}, who proposed parameterising both a
+forward Markov noising chain and a learned reverse Markov chain and training
+the latter to maximise a variational lower bound on the marginal data
+log-likelihood. The construction was largely dormant until
+\textcite{ho2020ddpm} simplified the training loss into a noise-prediction
+regression on Gaussian forward chains. In parallel, \textcite{song2019ncsn}
+introduced score-based generative models via denoising score matching across
+multiple noise scales. \textcite{song2021score} unified these viewpoints
+through a continuous-time stochastic differential equation. The literature
+has since converged on a small set of equivalent formulations that differ in
+parameterisation and training objective but agree on the geometry of the
+underlying process.
+
+The relevance for the present thesis is structural rather than
+algorithmic. Diffusion models exhibit a consistent split between an inference
+trajectory the designer fixes (a sequence of intermediate noisy states) and
+a learned per-step transition the network supplies. Inference-time
+interventions---accelerated solvers, corrector steps, guidance---operate on
+the trajectory, not on the trained network. This split survives the move
+from $\mathbb{R}^d$ to $\mathcal{V}^L$ even when nearly all of the
+mathematical machinery of the continuous theory does not.
+
+\section{Forward noising and reverse denoising}
+\label{lit:sec:fwd-rev}
+
+Fix a forward noising process indexed by $t\in[0,1]$ (or, in discrete
+time, $t\in\{1,\ldots,T\}$) with kernel $q(x_t\mid x_0)$ and marginals
+$q_0 = \pdata$ and $q_T \approx p_{\mathrm{ref}}$, where
+$p_{\mathrm{ref}}$ is a reference distribution from which exact sampling
+is trivial---typically $\mathcal{N}(0,I)$ or
+$\mathcal{N}(0,\sigma_{\max}^2 I)$. The reverse process
+$p_\theta(x_{t-1}\mid x_t)$ is parameterised so that, when initialised at
+$x_T \sim p_{\mathrm{ref}}$ and composed iteratively, its marginal at
+$t=0$ approximates $\pdata$.
+
+The DDPM-style discrete-time forward chain uses a variance schedule
+$\{\betanoise_t\}_{t=1}^{T}\subset(0,1)$ and the kernel
+\[
+  q(x_t \mid x_{t-1})
+  = \mathcal{N}\!\big(x_t;\, \sqrt{1-\betanoise_t}\,x_{t-1},\, \betanoise_t I\big).
+\]
+A direct calculation gives the closed-form $t$-step kernel,
+\[
+  q(x_t \mid x_0)
+  = \mathcal{N}\!\big(x_t;\, \sqrt{\abardpm_t}\,x_0,\, (1-\abardpm_t)I\big),
+  \qquad
+  \abardpm_t = \prod_{s=1}^{t}(1-\betanoise_s).
+\]
+The shortcut from $x_0$ to $x_t$ is what enables stochastic-gradient
+training: one samples a clean datum $x_0\sim\pdata$, a time index $t$, and
+noise $\varepsilon\sim\mathcal{N}(0,I)$, and forms
+$x_t = \sqrt{\abardpm_t}\,x_0 + \sqrt{1-\abardpm_t}\,\varepsilon$ in one
+step.
+
+The exact reverse conditional $q(x_{t-1}\mid x_t,x_0)$ is also Gaussian with
+closed-form mean and variance, but it depends on the unobserved $x_0$. The
+model therefore predicts a quantity from which the reverse mean can be
+reconstructed: the noise $\varepsilon$, the clean datum $x_0$, or the
+marginal score $\nabla_{x}\log q_t(x_t)$. The three choices are equivalent
+up to a time-dependent reweighting and produce the same minimiser
+\parencite{ho2020ddpm,song2021score}.
+
+\section{Denoising diffusion probabilistic models}
+\label{lit:sec:ddpm}
+
+\textcite{ho2020ddpm} train an $\varepsilon$-prediction network
+$\etheta(x_t,t)$ to minimise the simple regression loss
+\[
+  \mathcal{L}_{\mathrm{simple}}
+  = \E_{t,x_0,\varepsilon}\,
+    \big\|\varepsilon
+        - \etheta\!\big(\sqrt{\abardpm_t}\,x_0
+                       + \sqrt{1-\abardpm_t}\,\varepsilon,\, t\big)\big\|^2,
+\]
+where $t$ is sampled uniformly on $\{1,\ldots,T\}$ and
+$\varepsilon\sim\mathcal{N}(0,I)$. This loss is a reweighted version of
+the variational lower bound on $\log p_\theta(x_0)$, and \textcite{ho2020ddpm}
+report that the unweighted form performs better empirically. The
+corresponding ancestral sampler is
+\[
+  x_{t-1}
+  = \tfrac{1}{\sqrt{1-\betanoise_t}}\Big(x_t
+       - \tfrac{\betanoise_t}{\sqrt{1-\abardpm_t}}\,\etheta(x_t,t)\Big)
+    + \sigma_t z,
+  \qquad z\sim\mathcal{N}(0,I),
+\]
+with a schedule-dependent variance $\sigma_t$. The combined effect is that
+the network supplies the predicted denoising direction and the designer
+supplies a Gaussian fluctuation calibrated to the local noise level.
+
+The objective admits several equivalent reformulations. With
+$\xhat_\theta(x_t,t)
+ = (x_t - \sqrt{1-\abardpm_t}\,\etheta(x_t,t))/\sqrt{\abardpm_t}$ the same
+network is an $x_0$ predictor; with $\stheta(x_t,t) =
+-\etheta(x_t,t)/\sqrt{1-\abardpm_t}$ it is a score estimator. These
+equivalences are routinely used in practice to switch between
+parameterisations without retraining.
+
+The DDPM training loss separates the network from the schedule. The
+network learns a single function over noisy inputs and time indices; the
+schedule $\{\betanoise_t\}$ is fixed in advance and determines the marginals
+along which both training samples and reverse trajectories pass. As long as
+the chain is long enough to make $q(x_T)\approx\pi$, the schedule details
+affect the difficulty of the regression at each $t$ but not the existence of
+a Bayes-optimal solution. This decoupling is preserved in masked
+diffusion, where the schedule fixes a marginal mask ratio and the network
+learns to denoise across the implied family of partially masked sequences.
+
+\section{Score matching and the score-based view}
+\label{lit:sec:score-matching}
+
+The score function of a smooth distribution $p$ on $\mathbb{R}^d$ is
+$s(x) = \nabla_x\log p(x)$. \textcite{hyvarinen2005estimation} introduced
+score matching as a way to fit unnormalised densities without computing a
+partition function: under regularity conditions, the implicit objective
+\[
+  \mathcal{J}_{\mathrm{ISM}}(\theta)
+  = \E_{x\sim p}\,\Big[
+      \tfrac{1}{2}\|\stheta(x)\|^2
+      + \tr\!\big(\nabla_x \stheta(x)\big)
+    \Big]
+\]
+agrees, up to a constant, with the squared-error score-matching loss. The
+trace term is computationally inconvenient at scale.
+
+\textcite{vincent2011connection} showed that score matching against a
+smoothed distribution $p_\sigma$, obtained by convolving $p$ with
+$\mathcal{N}(0,\sigma^2 I)$, is equivalent to denoising score matching:
+\[
+  \mathcal{J}_{\mathrm{DSM}}(\theta;\sigma)
+  = \E_{x_0\sim p,\,\tilde x\sim\mathcal{N}(x_0,\sigma^2 I)}\,
+    \big\|\stheta(\tilde x) - \nabla_{\tilde x}\log p(\tilde x\mid x_0)\big\|^2.
+\]
+Because $\nabla_{\tilde x}\log p(\tilde x\mid x_0) = -(\tilde x-x_0)/\sigma^2$
+when the conditional is Gaussian, the inner gradient has a closed form and
+the loss is a simple regression. \textcite{song2019ncsn} train a
+noise-conditional score network across a geometric sequence of noise scales
+$\{\sigma_i\}_{i=1}^{N}$ and sample by annealed Langevin dynamics. Subsequent
+work refines training stability and sampling \parencite{song2020improvedncsn}.
+
+The score-based view does not commit to a normalisable density. It instead
+fits a vector field $\stheta(x,t)$ that approximates $\nabla_x\log q_t(x)$
+across time. Sampling becomes the integration of a stochastic process whose
+drift is built from this vector field. This is structurally different from
+autoregressive or flow-based models: there is no exact likelihood evaluation,
+but sampling cost is decoupled from the likelihood computation and can be
+tuned independently.
+
+\section{Continuous-time diffusion via stochastic differential equations}
+\label{lit:sec:sde}
+
+\textcite{song2021score} unify DDPM and NCSN by writing the forward process
+as a stochastic differential equation
+\[
+  \dif x_t = f(x_t,t)\,\dif t + g(t)\,\dif \Wt,
+  \qquad x_0 \sim \pdata,
+\]
+where $\Wt$ is a standard Brownian motion. Variance-preserving (VP) and
+variance-exploding (VE) SDEs correspond to the DDPM and NCSN constructions
+respectively. The marginal density $q_t$ is governed by a Fokker--Planck
+equation. The classical reverse-time formula \parencite{anderson1982reverse}
+gives the reverse SDE
+\[
+  \dif x_t = \big[f(x_t,t) - g(t)^2\,\nabla_x\log q_t(x_t)\big]\,\dif t
+              + g(t)\,\dif \bar \Wt,
+\]
+where $\bar\Wt$ is a Brownian motion under reverse time. Substituting a
+learned score $\stheta(x_t,t)\approx\nabla_x\log q_t(x_t)$ yields a sampling
+SDE. \textcite{song2021score} additionally introduce the probability-flow ODE
+\[
+  \dif x_t = \big[f(x_t,t) - \tfrac{1}{2}g(t)^2\,\stheta(x_t,t)\big]\,\dif t,
+\]
+which has the same time marginals as the reverse SDE but is deterministic
+conditional on $x_T$.
+
+The continuous-time view is conceptually clean. Training estimates a single
+score field $\stheta(\cdot,\cdot)$; sampling integrates either the reverse
+SDE or the ODE; the choice of forward SDE family becomes a design variable
+rather than an incidental discretisation. The view also exposes sampling
+cost as a function of integrator and step count. Subsequent literature
+exploits this exposed structure (\S\ref{lit:sec:fast-samplers}).
+
+The SDE formulation is also where the connection to continuous-time Markov
+chains on discrete state spaces becomes clearest. A continuous-state SDE
+generates a Markov process whose generator acts on smooth test functions; a
+continuous-time Markov chain on a finite alphabet generates a Markov process
+whose generator is a rate matrix. Discrete diffusion models, reviewed in
+Chapter~\ref{lit:ch:discrete-diffusion}, replace the diffusion operator by a
+categorical generator and inherit much of the structural vocabulary of
+\textcite{song2021score} despite working in a different state space.
+
+\section{Predictor--corrector samplers}
+\label{lit:sec:pred-corr}
+
+\textcite{song2021score} introduce predictor--corrector samplers as a
+practical way to reduce the discretisation error of reverse-SDE
+integrators. A predictor step advances the chain from time $t$ to time
+$t-\Delta t$ using a numerical scheme for the reverse SDE or ODE. A
+corrector step then runs one or more iterations of an MCMC kernel that
+targets $q_{t-\Delta t}$, holding the time index fixed. The canonical
+corrector is overdamped Langevin dynamics:
+\[
+  x \;\leftarrow\; x + \tfrac{\eta_t^2}{2}\,\stheta(x,t-\Delta t) + \eta_t\,z,
+  \qquad z\sim\mathcal{N}(0,I),
+\]
+applied for $K$ iterations with a step size $\eta_t$ scaled to the local
+noise level. \textcite{song2021score} report that, on image benchmarks,
+replacing pure-predictor sampling with predictor--corrector sampling at
+fixed total NFE consistently lowers Fr\'echet Inception Distance.
+
+The conceptual structure is general and is the immediate ancestor of the
+masked-diffusion correctors discussed in
+Chapter~\ref{lit:ch:correctors}. Three properties are worth isolating.
+First, the predictor and corrector consume the same trained network; they
+differ only in how that network's output is used. Second, the corrector
+targets a fixed marginal at the current time, so it does not violate the
+time decomposition supplied by the forward process. Third, both steps cost
+one or more model evaluations, so allocating effort between predictor and
+corrector trades against allocating effort to additional predictor
+steps. The last property already foreshadows fixed-budget timing: with a
+finite NFE budget, where should corrector calls be placed along the
+trajectory?
+
+In the continuous case this question is partly answered by the Langevin
+diffusion's local mixing rate, which in turn is governed by the conditioning
+of $q_t$. At noise levels where $q_t$ is well concentrated and isotropic, a
+Langevin corrector mixes quickly and a few iterations suffice; at
+intermediate noise levels, where the marginal is multi-modal, mixing is
+slower and additional corrector steps may be more valuable. The thesis
+question asks for the analogue of this allocation principle in the discrete
+masked setting, where the corrector is no longer a Langevin step but a fixed
+informed Markov kernel on tokens.
+
+\section{Deterministic and accelerated samplers}
+\label{lit:sec:fast-samplers}
+
+Because each predictor or corrector step is a model evaluation, the dominant
+inference cost in diffusion models is the number of function evaluations
+(NFE). Two families of accelerated samplers reduce NFE without retraining
+the score network.
+
+The first uses non-Markovian deterministic trajectories.
+\textcite{song2020ddim} introduce DDIM, a family of samplers that share
+marginals with the DDPM forward process but allow deterministic transitions
+and consistent latent--sample correspondences. With $\eta=0$ the DDIM
+sampler is invertible and acts as a pseudo-encoder; with $\eta=1$ it
+recovers DDPM. DDIM trades stochasticity for fewer steps and is widely used
+as a low-NFE baseline.
+
+The second family exploits the semi-linear structure of the diffusion ODE.
+\textcite{lu2022dpmsolver} introduce DPM-Solver, an exponential integrator
+tailored to the structure
+$\dif x_t/\dif t = f(t)\,x_t + g(t)\,\stheta(x_t,t)$ with affine $f,g$;
+the resulting samplers achieve high-quality samples in roughly ten function
+evaluations on image benchmarks. Subsequent work develops higher-order
+solvers and adaptive step-size control, and the related literature on
+solver-aware schedule learning tunes the discretisation grid for a given
+solver and dataset.
+
+What these accelerated samplers share is that they treat the trained score
+network as a black box and recompose the inference trajectory: where to
+sample time points, how to integrate, and how to allocate function
+evaluations. This is the same family of design questions that the present
+thesis instantiates for masked-diffusion correctors. The continuous
+literature has already established that, with a fixed score network,
+inference-time scheduling is a meaningful research object; the discrete
+literature considered in subsequent chapters has begun to develop its own
+counterpart.
+
+\section{Inference-time guidance}
+\label{lit:sec:guidance}
+
+A third category of inference-time intervention modifies the sampling
+distribution rather than the schedule. \textcite{dhariwal2021diffusionbeats}
+use an auxiliary classifier $p_\phi(y\mid x_t)$ trained on noisy inputs and
+bias the score during reverse sampling toward class $y$:
+\[
+  \tilde s(x_t,t,y)
+  = \stheta(x_t,t) + w\,\nabla_{x_t}\log p_\phi(y\mid x_t),
+\]
+with a guidance scale $w\geq 0$. \textcite{ho2022cfg} show that the
+auxiliary classifier can be removed by training the score network on both
+conditional and unconditional inputs (with random label dropout) and
+combining at sampling:
+\[
+  \tilde s(x_t,t,y)
+  = (1+w)\,\stheta(x_t,t,y) - w\,\stheta(x_t,t,\varnothing),
+\]
+where $\varnothing$ is a null condition. Classifier-free guidance is now the
+default mechanism for conditional diffusion across modalities.
+
+Guidance is interesting for the present thesis because it is structurally
+similar to corrector ideas: both modify the sampler at inference without
+retraining the base model, and both can be tuned per noise level. Unlike
+correctors, however, guidance changes the marginal distribution itself
+rather than reducing approximation error toward an unchanged marginal. The
+analogue in masked diffusion is reward-guided refinement
+(Chapter~\ref{lit:ch:correctors}, \S\ref{lit:sec:prism}), which similarly
+biases the inference distribution toward higher-reward outputs.
+
+\section{Why continuous diffusion theory does not transfer directly to language}
+\label{lit:sec:to-discrete}
+
+The continuous theory is mathematically convenient because the state space
+is Euclidean. Small perturbations are meaningful, gradients exist, the
+score $\nabla_x\log q_t$ is well defined, and Gaussian transition kernels
+are tractable. Text is different. A token sequence lives in the finite
+product space $\mathcal{V}^L$, where $|\mathcal{V}|$ is a finite vocabulary
+size and $L$ is sequence length; for a typical language model
+$|\mathcal{V}|$ is in the tens of thousands and $L$ in the thousands. There
+is no infinitesimal move from one token to another, no canonical metric
+tensor on $\mathcal{V}^L$ that would make `local Gaussian noise' meaningful,
+and no continuous score field whose gradient one could integrate.
+
+Three options have been pursued. The first embeds tokens in a continuous
+space, runs a continuous diffusion in the embedding, and decodes back to
+tokens at sampling time. Embedding-space approaches introduce an
+additional decoding problem and decouple the diffusion process from the
+discrete data distribution; the remainder of this review focuses on
+diffusion processes defined directly on discrete token states. The
+second replaces the continuous SDE with a continuous-time Markov chain
+on $\mathcal{V}^L$, with rate matrices governing categorical transitions.
+The third uses a discrete-time categorical Markov chain. The latter two
+preserve the discrete data distribution at every step.
+
+Chapter~\ref{lit:ch:discrete-diffusion} reviews the discrete-time and
+continuous-time discrete diffusion literature.
+Chapter~\ref{lit:ch:masked-diffusion} restricts attention to the masked or
+absorbing-state special case, the empirical setting for the rest of the
+thesis. The continuous theory remains useful, but principally as a source of
+structural vocabulary---predictor versus corrector, schedule as design
+variable, NFE as the operational cost---rather than as an importable theorem
+stack.
+
+
+%% =====================================================================
+%% Chapter 3 -- Discrete Diffusion Models
+%% =====================================================================
+
+\chapter{Discrete Diffusion Models}
+\label{lit:ch:discrete-diffusion}
+
+The discrete state space changes the type of diffusion process available
+and, consequently, the type of inference-time intervention that is
+meaningful. This chapter reviews the discrete diffusion literature with a
+focus on three questions: how the forward corruption is constructed on a
+finite alphabet; how the reverse process is parameterised and trained; and
+how the unavoidable factorisation of the reverse over positions interacts
+with sampling error. The factorisation question motivates the move to
+inference-time correction in Chapter~\ref{lit:ch:correctors}.
+
+\section{Categorical state spaces and discrete corruption}
+\label{lit:sec:categorical}
+
+Let $\calV$ be a finite alphabet of size $|\calV|$ and let
+$\mathcal{X}=\calV^{\seqlen}$ be the product space of length-$\seqlen$
+sequences. The data distribution $\ptrue$ is a probability mass function on
+$\mathcal{X}$. Unlike $\mathbb{R}^d$, the space $\mathcal{X}$ has no group
+structure compatible with `addition of small noise': two tokens are either
+equal or unequal, and there is no canonical interpolation between them.
+
+The standard discrete diffusion construction therefore replaces additive
+Gaussian noise by a categorical Markov chain on $\calV$ (or, in some
+constructions, on an enlarged state space such as $\calVm = \calV\cup\{\Mask\}$).
+A forward chain at time $t$ is given by a transition matrix
+$Q_t\in\mathbb{R}^{|\calV|\times|\calV|}$ whose rows are probability
+distributions over the next state. The chain factorises across positions:
+\[
+  \qfwd(\zt \mid \clean)
+  = \prod_{\ell=1}^{\seqlen} \qfwd\big(\zt^\ell \mid \clean^\ell\big),
+\]
+where $\qfwd(\zt^\ell \mid \clean^\ell)$ is the row of the cumulative
+transition matrix $\bar Q_t = Q_1 Q_2 \cdots Q_t$ indexed by $\clean^\ell$.
+The position-wise factorisation is a property of the forward process, not of
+the data, and is the structural reason that discrete diffusion can be
+trained efficiently: one can sample $\zt$ given $\clean$ in one step
+regardless of the inter-position dependencies of $\ptrue$.
+
+\section{Discrete-time and continuous-time formulations}
+\label{lit:sec:dt-ct}
+
+There are two common parameterisations of the forward chain. The
+discrete-time formulation chooses a sequence of stochastic matrices
+$Q_1,\ldots,Q_T$ with $\bar Q_t = \prod_{s\leq t}Q_s$ and views generation
+as a backward chain over the index set $\{T,T-1,\ldots,1,0\}$. The
+continuous-time formulation specifies a rate matrix
+$R_t\in\mathbb{R}^{|\calV|\times|\calV|}$ with non-negative off-diagonals
+and zero row sums; the marginal $\bar Q_t$ then satisfies the Kolmogorov
+forward equation
+\[
+  \od{\bar Q_t}{t} = \bar Q_t R_t, \qquad \bar Q_0 = I.
+\]
+The continuous-time view is closer in spirit to the SDE formulation of
+\S\ref{lit:sec:sde} and is the framework in which several recent papers
+state results.
+
+The reverse process takes the sampled $z_T \sim \qfwd(\cdot)$ and traces
+back toward $z_0$ using a learned conditional distribution
+$\ptheta(z_{t-1}\mid \zt)$ at each step. The exact reverse conditional under
+the forward chain is
+\[
+  \qfwd(z_{t-1}\mid \zt, \clean)
+  = \frac{\qfwd(\zt\mid z_{t-1})\,\qfwd(z_{t-1}\mid \clean)}{\qfwd(\zt\mid \clean)},
+\]
+and depends on the unobserved $\clean$. In practice the reverse model is
+trained either to predict $\clean$ from $\zt$ (an $x_0$-prediction
+parameterisation) or to estimate position-wise transition ratios. Both
+parameterisations factorise the reverse over positions, which is the source
+of the inference-time approximation gap discussed in
+\S\ref{lit:sec:factorization} and \S\ref{lit:sec:lz}.
+
+\section{D3PM and structured discrete diffusion}
+\label{lit:sec:d3pm}
+
+\textcite{austin2021d3pm} introduce structured denoising diffusion
+probabilistic models (D3PMs) and provide the first systematic treatment of
+discrete diffusion across families of forward kernels. They consider four
+families of $Q_t$ matrices. \emph{Uniform} kernels mix smoothly toward the
+uniform distribution on $\calV$. \emph{Gaussian-like} kernels use transition
+probabilities induced by a discretised Gaussian on an ordered or
+otherwise structured discrete state space, producing locality structure
+on the alphabet. \emph{Absorbing} kernels
+allow each token to transition to a special $\Mask$ state, making the chain
+monotone in a masked set. \emph{Discretised continuous-state} kernels mimic
+a continuous diffusion through binning. Each family produces a different
+inductive bias and a different decoding behaviour.
+
+The reverse-process loss in \textcite{austin2021d3pm} is a hybrid of an
+evidence lower bound and an auxiliary cross-entropy on the predicted $x$
+from each $\zt$. The auxiliary loss empirically improves training stability
+and provides a direct supervision signal at every time step. The D3PM
+construction makes explicit the position-wise factorisation of both the
+forward chain and the reverse model, which simplifies both training and
+sampling and is inherited by all subsequent discrete diffusion families.
+
+The absorbing kernel introduced by \textcite{austin2021d3pm} is the
+immediate ancestor of masked diffusion language models. Because absorbing
+transitions are monotone---a token, once moved to $\Mask$, remains masked
+under further noising---the chain has a particularly simple structure: the
+set of masked positions at time $t$ is a superset of the set at time
+$t' < t$. This monotonicity is what makes masked diffusion empirically
+attractive for language and is treated in detail in
+Chapter~\ref{lit:ch:masked-diffusion}.
+
+\section{SEDD and the score-entropy view}
+\label{lit:sec:sedd}
+
+\textcite{lou2024sedd} reformulate discrete diffusion through ratio
+estimation. For a continuous-time Markov chain with rate matrix $R$, the
+reverse generator depends on the ratios $\qfwd(z')/\qfwd(z)$ for pairs of
+adjacent states, and \textcite{lou2024sedd} introduce a parameterisation
+that estimates these ratios directly. They define the score-entropy loss,
+a discrete analogue of denoising score matching, which is consistent under
+mild assumptions and admits closed-form gradients for several common rate
+matrices.
+
+Two structural advantages follow. First, ratio estimation avoids the need
+for an explicit normalisation constant in the discrete reverse
+parameterisation. Second, the score-entropy loss is convex in the predicted
+ratios, in contrast to the evidence-lower-bound objective which is
+non-convex even at the function-class level. \textcite{lou2024sedd} report
+empirical gains on language modelling benchmarks, although later models
+with absorbing-state forward processes
+(Chapter~\ref{lit:ch:masked-diffusion}) report lower perplexity at
+comparable parameter counts in the benchmark suites used by subsequent
+masked-diffusion papers.
+
+The SEDD parameterisation is conceptually closest to the continuous
+score-based view of \S\ref{lit:sec:score-matching}: both estimate a
+non-normalised quantity associated with the forward process and use it to
+drive the reverse dynamics. The main difference is that the discrete
+`score' is a finite collection of ratios rather than a vector field. SEDD
+also illustrates that the choice of training loss for discrete diffusion is
+genuinely open: D3PM uses an ELBO with auxiliary cross-entropy, SEDD uses
+score-entropy, and masked diffusion language models
+(Chapter~\ref{lit:ch:masked-diffusion}) use a tightened cross-entropy
+bound.
+
+\section{Discrete flow matching}
+\label{lit:sec:dfm}
+
+\textcite{gat2024dfm} extend the flow matching framework of continuous
+diffusion to discrete states. Flow matching parameterises a probability path
+$\pi_t$ between a source distribution $\pi_0$ (typically a simple reference)
+and a target distribution $\pi_1=\ptrue$, and trains a network to match the
+conditional vector field along this path. In the discrete version, the path
+is a sequence of categorical distributions and the conditional vector field
+is replaced by a generator of a categorical jump process.
+
+Two consequences are relevant for the present thesis. First, discrete flow
+matching is the most general framework currently available for
+parameterising discrete diffusion: D3PM corresponds to specific source and
+path choices, masked diffusion to absorbing source and product path. Second,
+the framework makes explicit that the source distribution is a design
+variable. In particular, masked diffusion's choice of source---the all-mask
+sequence---is one of many. \textcite{gat2024dfm} also study uniform and
+other categorical sources, and the empirical advantages of the absorbing
+source are not automatic from the framework but emerge from the interaction
+of source choice, path geometry, and parameterisation.
+
+\section{Factorised reverse approximations and inference error}
+\label{lit:sec:factorization}
+
+A constraint shared by all discrete diffusion models considered in this
+chapter is that the reverse model factorises over positions:
+\[
+  \pfact(z_{t-1}\mid \zt)
+  = \prod_{\ell=1}^{\seqlen}\ptheta(z_{t-1}^\ell\mid \zt).
+\]
+This is computationally necessary: the joint conditional distribution over
+$\seqlen$ positions has $|\calV|^{\seqlen}$ atoms, and any practical decoder
+must factorise. But the true reverse conditional $\qfwd(z_{t-1}\mid \zt)$ is
+generally not factorised across positions, even when the forward chain is:
+marginalising over the unknown $\clean$ introduces dependence between
+positions, and that dependence is exactly the data dependence the reverse
+should model.
+
+This factorisation gap is the discrete-diffusion analogue of the
+discretisation error that predictor--corrector samplers were designed to
+address in \S\ref{lit:sec:pred-corr}. In the continuous-time limit each
+step acts on at most one position and the factorised parameterisation
+aligns with the ideal reverse generator. At any finite horizon used in
+practice, the factorised reverse incurs a bias relative to the joint
+true reverse conditional that the trained network cannot absorb
+pointwise. Inference-time mechanisms that operate jointly across
+positions, or that refine one position at a time after others have been
+committed, are the natural targets for reducing this finite-$T$ bias.
+
+The observation places discrete diffusion in a different inference-design
+regime from its continuous counterpart. A continuous-time SDE can in
+principle be integrated to within numerical precision, and a Langevin
+corrector is then an error-reducing tool against discretisation alone. A
+practical discrete-time factorised reverse, run at the horizons used in
+practice, has a non-trivial gap between the learned per-position
+predictions and the joint reverse conditional, and this gap motivates
+joint refinement during inference rather than further time refinement
+alone.
+
+\section{The Lavenant--Zanella error decomposition}
+\label{lit:sec:lz}
+
+\textcite{lavenant2025lz} make this gap precise for masked diffusion language
+models with factorised reverses. They establish a quantitative error bound
+whose two leading terms admit a clean operational interpretation: a
+\emph{learning} error $\Elearn$ that captures the gap between the trained
+denoiser $\ptheta(x\mid \zt)$ and the Bayes-optimal denoiser
+$q(x\mid \zt)$, and a \emph{factorisation} error $\Efact$ that captures
+the gap between the factorised reverse $\pfact$ and the true reverse
+$\qfwd(z_{t-1}\mid \zt)$ even when the denoiser is exact.
+
+The decomposition has two implications relevant to the present thesis.
+First, $\Elearn$ scales with the quality of the trained denoiser and is a
+property of training, not of inference. Second, $\Efact$ is structurally
+inference-time: it depends on the time discretisation, the sampling
+procedure, and any inference-time intervention applied to the trajectory.
+The decomposition itself is structural; whether either term dominates in
+a given model is an empirical question outside the scope of the bound.
+The separation suggests that inference-time mechanisms should be analysed
+separately from denoiser training error, even when the two cannot always
+be cleanly disentangled in practice.
+
+\textcite{lavenant2025lz} additionally study optimal time schedules for
+masked diffusion under their bound and derive prescriptions for the rate at
+which mask probability should change with $t$. The optimal schedules are
+not uniform-in-time, and the deviation from uniform depends on the data
+distribution and the noise level via specific functional dependencies. The
+schedule-optimisation result is conceptually important for the thesis:
+even at the level of the predictor schedule, the choice of where to spend
+inference effort is not benign. Corrector timing, the object of the present
+thesis, is the analogous question one rung higher---with the predictor
+schedule fixed, where to spend a separate corrector budget.
+
+\textcite{chen2025optimalschedules} subsequently strengthen the analysis.
+They derive a tight characterisation of the divergence between the true and
+the sampled distribution under masked diffusion as a function of the
+unmasking schedule, expose a connection to univariate function
+approximation theory, and prove both lower and upper bounds. They also show
+that, without strong a priori knowledge of the data distribution, no
+schedule can compete with the optimal schedule on every distribution,
+while in benign settings characterised by total correlation and dual total
+correlation $\mathcal{O}(\log L)$ steps suffice. The result is the
+strongest current rigorous statement of why scheduling matters for masked
+diffusion sampling, and it bounds what a fixed predictor schedule can
+achieve on its own.
+
+\section{The case for inference-time correction}
+\label{lit:sec:case-correction}
+
+Three observations from the foregoing are worth assembling. First, the
+practical discrete diffusion models reviewed here rely on tractable local
+or factorised reverse parameterisations. Second, the resulting
+finite-horizon sampling error is structurally inference-time, separate
+from training error in the sense that it persists when the trained
+denoiser is held fixed. Third, the recent error-decomposition and
+schedule-theoretic results
+\parencite{lavenant2025lz,chen2025optimalschedules} expose this gap and
+tie it to specific properties of the inference procedure.
+
+These observations motivate the move to inference-time correction. A
+corrector is a fixed Markov transition that operates on the current state
+and is intended to reduce finite-horizon sampling error at the cost of
+additional NFE. Whether
+such a corrector exists for a given discrete diffusion family, what its
+action set is, and how to schedule its use are separate questions and form
+the subject of Chapter~\ref{lit:ch:correctors}. Before that,
+Chapter~\ref{lit:ch:masked-diffusion} narrows attention to the masked or
+absorbing-state special case, which is the empirical setting for the
+remainder of the thesis.
+
+
+%% =====================================================================
+%% Chapter 4 -- Masked Diffusion Language Models
+%% =====================================================================
+
+\chapter{Masked Diffusion Language Models}
+\label{lit:ch:masked-diffusion}
+
+Masked diffusion language models (MDLMs) are the absorbing-state special
+case of discrete diffusion. The forward process either keeps each token as
+is or replaces it with a single dedicated $\Mask$ symbol, never returning a
+previously masked position to the alphabet, and the reverse process learns
+to fill in masked positions from the surrounding context. This chapter
+develops the masked-diffusion construction, examines where its monotone
+absorbing structure simplifies training and sampling relative to alternative
+discrete diffusion families, surveys the recent scaling efforts toward
+language model regimes, and introduces the inference-time mechanics---token
+ordering, unmasking schedules, committed-token revisability---that will be
+needed for the remasking and corrector literature in
+Chapter~\ref{lit:ch:correctors}.
+
+\section{The absorbing-mask process}
+\label{lit:sec:absorbing}
+
+Let $\calV$ be the alphabet, $\seqlen$ the sequence length, and $\Mask$ a
+distinguished symbol not in $\calV$. The masked-diffusion forward chain
+operates on the extended state space $\calVm = \calV\cup\{\Mask\}$. Fix a
+non-increasing schedule $\alpha_t : [0,1]\to[0,1]$ with $\alpha_0 = 1$ and
+$\alpha_1 = 0$, interpreted as the fraction of positions that remain
+unmasked at time $t$. The forward process replaces each clean token by
+$\Mask$ independently with probability $1-\alpha_t$:
+\[
+  \qfwd\big(\zt^\ell \mid \clean^\ell\big)
+  = \alpha_t\,\delta_{\clean^\ell} + (1-\alpha_t)\,\delta_{\Mask},
+  \qquad \ell=1,\ldots,\seqlen.
+\]
+The chain is absorbing: once a position is marked $\Mask$, it remains so
+under further noising. The marginal $\qfwd(\zt\mid \clean)$ therefore
+depends only on the random subset $M_t \subseteq \{1,\ldots,\seqlen\}$ of
+currently masked positions, and the position-wise transitions are
+independent.
+
+The reverse model is conventionally parameterised as an $x$-predictor:
+given a partially masked sequence $\zt$, the network outputs a categorical
+distribution $\ptheta(\cdot\mid \zt)$ over $\calV^{\seqlen}$ that factorises
+across positions and is supported only on the masked positions (committed
+tokens are passed through). Sampling at time $t$ then unmasks a
+designer-chosen subset of masked positions by drawing from the predicted
+marginal at each. The schedule $\alpha_t$ controls the expected fraction of
+masked positions at time $t$ but does not specify which positions are
+unmasked at any given step; the latter is the unmasking policy of
+\S\ref{lit:sec:token-ordering}.
+
+The forward construction is mathematically simple and computationally
+cheap: a single sample of $(\clean,t,U)$ with
+$U\sim\mathrm{Uniform}[0,1]^{\seqlen}$ produces $\zt$ in closed form by
+thresholding $U$ against $\alpha_t$ position-wise. This shortcut makes
+large-scale MDLM training feasible and is the masked-diffusion analogue of
+the DDPM Gaussian shortcut from \S\ref{lit:sec:fwd-rev}.
+
+\section{MDLM and the simplified objective}
+\label{lit:sec:mdlm}
+
+\textcite{sahoo2024mdlm} establish a tight evidence lower bound for masked
+diffusion that admits a particularly simple training loss. Writing the
+position-wise cross-entropy of the predicted denoiser against the
+ground-truth token at position $\ell$ as
+$\mathrm{CE}\!\big(\clean^\ell, \ptheta(\cdot\mid \zt)\big)$, they show that
+the negative ELBO collapses to a weighted sum
+\[
+  -\mathrm{ELBO}
+  \;\leq\;
+  \E_{\clean,t,\zt}\,
+  \sum_{\ell:\, \zt^\ell = \Mask}
+    w_t\,\mathrm{CE}\!\big(\clean^\ell, \ptheta(\cdot\mid \zt)\big),
+\]
+where $w_t = -\dot\alpha_t/(1-\alpha_t)$ is a closed-form weight depending
+only on the schedule and where $\dot\alpha_t$ is the time derivative of the
+schedule. The unmasked positions contribute zero loss because the forward
+chain leaves them invariant. The training procedure is therefore a weighted
+masked-language-model regression with weights dictated by the schedule.
+This is the key empirical advantage that \textcite{sahoo2024mdlm} document:
+a simple training objective with a tight ELBO, requiring no auxiliary
+cross-entropy term and no complex sampling-time machinery.
+
+\textcite{sahoo2024mdlm} also derive a parameterisation of the reverse
+transition whose coefficients are fixed by the absorbing schedule rather
+than left as tunable hyperparameters. Sampling reduces to a straightforward
+iteration: at each step the predicted distribution at masked positions is
+sampled, the masked set is updated, and the schedule advances.
+
+A practical consequence of the MDLM construction is that the trained
+denoiser is a single neural network that maps any partially masked sequence
+$\zt$ to per-position distributions over $\calV$. Once trained, that
+network supports a family of inference strategies: vanilla iterative
+unmasking, batched parallel decoding, conditional infilling, and---relevantly
+for this thesis---remasking and corrector samplers
+(Chapter~\ref{lit:ch:correctors}) that revisit committed positions.
+
+\section{Scoped advantages of masked diffusion over alternative discrete
+families}
+\label{lit:sec:masked-advantages}
+
+Among recent language-focused discrete diffusion papers, absorbing-mask
+models are the most prominent high-performing family at present, but the
+literature does not establish universal dominance. The differences
+between masked and non-masked discrete diffusion are best understood as a
+small set of structural advantages and trade-offs.
+
+The clearest advantage is that the absorbing forward chain is monotone in
+the masked set, which simplifies the ELBO. Under a uniform forward chain
+(D3PM-uniform), every position can transition to any token at every step,
+and the exact reverse conditional has support on the full
+$|\calV|^{\seqlen}$ space. The factorised reverse therefore has to fit a
+more entangled marginal. Under absorbing forward chains, the masked
+positions are clearly identified and the reverse only needs to fit the data
+marginal at masked positions conditional on the committed tokens, which is
+closer to the masked-language-model setup that pretraining literature has
+converged on.
+
+\textcite{lou2024sedd} report that the score-entropy training objective
+with absorbing-mask forward chains attains the best perplexity in their
+suite, but the gap between absorbing and uniform varies across model scales
+and is sensitive to training compute. \textcite{austin2021d3pm} note that
+the absorbing kernel benefits from a compatibility between forward chain
+and supervision: the network is trained to predict $\clean$ given $\zt$,
+and the absorbing chain ensures that, at any $t$, the supervision is
+well-defined at all masked positions and trivially correct at unmasked
+positions.
+
+A second advantage is that masked-diffusion sampling never has to undo a
+wrong substitution. Under a non-absorbing chain such as D3PM-uniform, a
+position can be assigned a token, then re-corrupted, then assigned a
+different token; the reverse process must implicitly handle this revision.
+Under absorbing chains, once a position is unmasked, the standard sampler
+leaves it alone---unless an explicit revisability mechanism is added. This
+simplification of the trajectory geometry is why masked diffusion is a
+particularly clean substrate for studying additional inference-time
+corrections.
+
+There are also limitations. Masked diffusion gives up the within-step token
+revision that uniform discrete diffusion supports `for free'. Adding
+revisability back---through remasking samplers, self-correction backends,
+or informed correctors---is the topic of Chapter~\ref{lit:ch:correctors}.
+Masked diffusion also commits, by construction, to a particular path
+through state space (positions become unmasked monotonically), which
+constrains the reverse trajectories that can be expressed; \textcite{wu2026dsl}
+and \textcite{huang2025remedi} discuss this constraint explicitly and
+propose remasking-aware training to relax it.
+
+The current literature consensus is therefore best summarised as follows.
+Masked diffusion offers a particularly tight ELBO, a simple training
+objective, and a clean trajectory geometry. It does not, on the available
+evidence, dominate alternative discrete diffusion formulations on every
+axis, and its monotone-mask constraint introduces specific limitations that
+subsequent inference-time mechanisms are designed to address.
+
+\section{Scaling masked diffusion to language model regimes}
+\label{lit:sec:scaling}
+
+Several recent works pretrain masked diffusion language models at scales
+comparable to mid-sized autoregressive language models.
+\textcite{nie2025llada} introduce LLaDA, an 8B-parameter masked diffusion
+language model trained on 2.3T tokens with a curriculum that mixes
+mask-prediction and next-token-prediction objectives. The authors report
+parity with LLaMA-3 8B-Instruct on several benchmarks and document
+diffusion-specific inference properties at this scale: bidirectional
+context use, native infilling, and parallel decoding.
+
+\textcite{ye2025dream} introduce Dream-7B, a 7B masked diffusion language
+model with an alternative pretraining recipe. The paper reports parity
+with autoregressive baselines on selected reasoning and coding benchmarks
+while supporting native parallel and infilling modes.
+\textcite{sahoo2025eso} introduce Esoteric Language Models (Eso-LMs),
+which interpolate between autoregressive and masked-diffusion regimes
+during training so that the resulting model supports both modes at
+inference. The claimed deployment tradeoff is that a single Eso-LM can be
+configured per-input as autoregressive (for KV-cached low-latency
+single-user generation) or as masked-diffusion (for parallel decoding
+and infilling).
+
+These scaling efforts establish that the masked-diffusion training recipe
+is compatible with the same scale of compute as autoregressive language
+modelling and that the resulting models inherit the inference-time
+flexibility of masked diffusion. They do not yet establish parity at the
+largest scales: the published frontier-scale autoregressive models remain
+substantially larger than published MDLMs at the time of writing, and
+direct comparisons at matched compute are limited. The relevance for the
+present thesis is that the empirical backend used in the contribution
+chapters (an MDLM-style ProSeCo OpenWebText model) inherits the
+inference-time mechanics---monotone mask, factorised reverse, schedule-based
+sampling---unchanged from this scaling literature.
+
+\section{Token ordering and unmasking schedules}
+\label{lit:sec:token-ordering}
+
+The masked-diffusion sampler must specify, at each step, both how many
+positions to unmask and which positions to unmask. The first is governed by
+the schedule $\alpha_t$ and is essentially a property of the forward chain;
+the second is the unmasking policy and is an inference-time degree of
+freedom not fixed by training.
+
+\textcite{kim2025tokenordering} study the sensitivity of MDLM sample
+quality to the unmasking policy. They show empirically that the canonical
+training-time policy---random masking---is not optimal at inference, and
+that a planning-time policy that prefers high-confidence tokens improves
+sample quality. Their analysis decomposes the error into a `train for the
+worst, plan for the best' principle: train against worst-case mask sets to
+ensure robustness, then exploit confidence-aware unmasking at inference.
+Subsequent work refines this picture. \textcite{kim2025klass} introduce
+KL-guided unmasking, in which the policy minimises KL divergence to a
+reference distribution; \textcite{hong2025upo} train the unmasking policy
+directly to optimise downstream reward; \textcite{he2025mdpo} formalise the
+discrepancy between training and inference unmasking distributions and
+propose a training-time correction.
+
+\textcite{benhamu2025ebsampler} introduce entropy-bounded sampling, in
+which the number of positions unmasked per step is determined by a target
+entropy on the predicted token distribution. \textcite{chen2025denoisingentropy}
+study uncertainty-driven decoding paths and show that quantifying
+uncertainty per position can improve sample quality.
+\textcite{luxembourg2025plan} propose dilated unmasking schedules that
+target inference speed by parallelising appropriately conditioned positions.
+These methods all share a common principle: the predictor schedule and the
+unmasking policy together are tunable inference-time machinery, separate
+from the trained denoiser.
+
+The thesis problem is one rung higher than this token-ordering literature.
+The token-ordering literature asks `at each unmasking step, which positions
+should be unmasked?' with a fixed predictor budget. The corrector-timing
+problem asks `at which time steps should an additional refinement
+transition be applied?' with a fixed predictor schedule, a fixed corrector
+kernel, and a fixed budget for corrector calls. Token ordering and corrector
+timing are complementary---one chooses how to unmask, the other chooses
+when to refine---and both are inference-time scheduling questions over a
+fixed denoiser.
+
+\textcite{chen2025optimalschedules}, in addition to their schedule-theoretic
+results discussed in \S\ref{lit:sec:lz}, give the cleanest current statement
+of why these schedule questions are meaningful: even with a Bayes-optimal
+denoiser, the choice of unmasking schedule affects the divergence between
+the sampled and true distributions, and this dependence cannot be removed
+by training alone. Inference-time scheduling is therefore not a heuristic
+on top of a finished model; it is a structural component of the generative
+procedure.
+
+\section{The clean trajectory perspective}
+\label{lit:sec:clean-trajectory}
+
+Masked diffusion gives a particularly clean trajectory on which to operate.
+A sample path is a sequence
+\[
+  z_T,\, z_{T-1},\, \ldots,\, z_0,
+\]
+with $z_T$ either fully masked or near-fully masked and $z_0$ a completed
+token sequence. The state at step $t$ is fully determined by the masked
+set $M_t$ and the committed tokens at positions outside $M_t$, with
+$M_T \supseteq M_{T-1} \supseteq \cdots \supseteq M_0$ in the absence of
+remasking. Inference-time interventions---accelerated solvers, alternative
+unmasking policies, remasking, correctors, search procedures---all operate
+on this trajectory.
+
+The cleanness has three operational implications for the rest of the
+thesis. First, the corrector kernel has a well-defined action set at each
+step, namely a subset of positions either still masked or, in
+self-correcting backends, eligible for revision. Second, intermediate states
+$\zt$ are explicit: any signal computed at step $t$ has a precise referent,
+in contrast to continuous diffusion where the intermediate state is a
+sample from a marginal that the network can only estimate. Third, the cost
+of inserting a corrector call at step $t$ is well-defined: it is the cost
+of one or more additional forward passes, conditional on $\zt$. The latter
+two properties are what make a paired schedule-gain definition
+$G(S) = F(z_0^{S}) - F(z_0^{\varnothing})$ a meaningful object even before
+a particular corrector or quality functional is fixed.
+
+The next chapter introduces the inference-time mechanisms that operate on
+this trajectory: remasking samplers, uncertainty-driven decoding, informed
+correctors, self-correcting backends, quality-guided refinement, and
+trajectory search. The chapter ends by motivating the timing question that
+the contribution chapters formalise.
+
+
+%% =====================================================================
+%% Chapter 5 -- Remasking, Self-Correction, and Informed Correctors
+%% =====================================================================
+
+\chapter{Remasking, Self-Correction, and Informed Correctors}
+\label{lit:ch:correctors}
+
+The previous chapters established that masked diffusion language models
+leave a structural gap between the factorised reverse process used at
+inference and the true reverse conditional, and that this gap is not closed
+by training. Inference-time mechanisms that operate on the masked
+trajectory are designed to reduce this gap, and the recent literature has
+produced a substantial number of them. This chapter organises that
+literature into a taxonomy useful for the present thesis---remasking
+samplers, uncertainty-driven decoding, informed correctors, self-correction
+backends, quality-guided refinement, and trajectory search---and then
+narrows attention to the informed-corrector lineage that is the immediate
+ancestor of corrector timing. A short concluding section sketches the
+structural reasons why corrector timing is itself a research question,
+deferring the formal framework to Chapter~\ref{ch:contribution}.
+
+\section{A taxonomy of inference-time mechanisms}
+\label{lit:sec:taxonomy}
+
+The methods reviewed in this chapter all modify inference-time behaviour,
+but at different layers. It is useful to distinguish them up front. A
+\emph{base masked diffusion language model} supplies the trained denoiser
+and a default sampling procedure (\S\ref{lit:sec:mdlm}). A \emph{remasking
+sampler} changes the sampling procedure: positions previously committed
+may be returned to the masked state and resampled, with the net effect
+being a non-monotone trajectory through state space. An \emph{informed
+corrector} is a fixed Markov transition that operates on the current state
+at chosen times, refining a designated action set without changing the
+underlying sampler. A \emph{self-correction backend} is a base model
+jointly trained to support both unmasking and refinement, so that the
+corrector and the predictor share parameters. \emph{Quality-guided
+refinement} biases the inference distribution toward higher-reward outputs
+using learned per-token quality scores. \emph{Trajectory search}, finally,
+branches over candidate trajectories or candidates at each step and uses
+external feedback (a reward, a verifier, or true schedule-gain information)
+to keep the best.
+
+These categories overlap. A self-correction backend supplies a specific
+informed corrector (the trained refinement head) and changes the action set
+(committed tokens become eligible for revision). A remasking sampler can
+be reinterpreted as a designed corrector with a particular action set
+(positions to unmask again). Quality-guided refinement can supply a
+per-step signal that an informed corrector or a remasking sampler can use
+to choose what to refine. The thesis question---corrector timing---takes
+one specific configuration: a fixed predictor schedule, a fixed informed
+corrector, and a fixed corrector-placement budget, and asks at which time
+steps the corrector should be applied.
+
+This isolation matters because the literature does not always distinguish
+the layers cleanly. The taxonomy in Table~\ref{lit:tab:taxonomy} is the
+working vocabulary used for the rest of the chapter.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{p{3.6cm} p{6.2cm} p{4.6cm}}
+\toprule
+Layer & What changes at inference & Examples \\
+\midrule
+Base model
+  & Sampler and denoiser fixed
+  & MDLM, SEDD, LLaDA, Dream \\
+Remasking sampler
+  & Trajectory itself; positions can be re-masked
+  & ReMDM, RemeDi, DSL \\
+Self-correction backend
+  & Sampler refines committed tokens jointly with unmasking
+  & ProSeCo \\
+Informed corrector
+  & Fixed Markov kernel applied at chosen steps to a single trajectory
+  & Zhao et al.\ correctors \\
+Quality-guided refinement
+  & Inference biased by learned quality scores
+  & PRISM, IterRef, S$^3$ \\
+Trajectory search / TTS
+  & Branch over candidates or particles with external feedback
+  & IterRef, S$^3$, PG-DLM, Feynman--Kac correctors \\
+\bottomrule
+\end{tabular}
+\caption{Working taxonomy of inference-time mechanisms for masked diffusion
+language models. Layers are distinct in principle and overlap in practice;
+the corrector-timing question of this thesis fixes the base model, the
+corrector kernel, and the corrector budget, and varies only the placement
+schedule.}
+\label{lit:tab:taxonomy}
+\end{table}
+
+\section{Remasking samplers}
+\label{lit:sec:remasking}
+
+Remasking samplers extend masked diffusion by allowing tokens to be
+returned to the masked state mid-trajectory. \textcite{wang2025remdm}
+introduce ReMDM, the canonical remasking-sampler formulation. ReMDM
+specifies a probability schedule for re-masking each currently committed
+position at each step, parameterised by a per-step rate that is itself an
+inference-time hyperparameter. The denoiser is the standard MDLM-trained
+network; the sampler does the work. \textcite{wang2025remdm} show that a
+calibrated re-masking schedule improves sample quality at the cost of
+additional sampling steps, and that the technique benefits from being
+combined with confidence-based unmasking policies.
+
+\textcite{huang2025remedi} introduce RemeDi (Remasking-enabled Diffusion
+Language Model), in which the denoiser jointly predicts both token
+distributions and per-token confidence scores, and the sampler uses the
+confidence scores to remask uncertain tokens at each step. The training
+objective is augmented with a confidence head that is supervised against
+held-out signals. The mechanism is a remasking sampler with an integrated
+training-time signal, sitting between the pure-sampler ReMDM and the
+joint-training ProSeCo (\S\ref{lit:sec:proseco}).
+
+\textcite{wu2026dsl} propose Discrete Stochastic Localization (DSL), which
+trains a single SNR-invariant denoiser across a continuum of corruption
+levels including the remasking-induced `going back to lower SNR'
+transitions. The argument is that current MDLM training does not match the
+input distribution seen by remasking samplers, and that bridging this
+distributional gap during training improves sample quality at moderate
+compute cost. \textcite{zhang2026cdlm} introduce CDLM (Corrective Diffusion
+Language Models), which observes that MDLMs often fail to assign lower
+confidence to incorrect tokens after they have been committed, and propose
+a training-time augmentation that explicitly supervises corrective
+behaviour. The resulting model produces calibrated confidence at committed
+positions, which any remasking or corrector mechanism can then use as a
+signal.
+
+The boundary between remasking samplers and self-correction backends
+(\S\ref{lit:sec:proseco}) is fluid. A self-correction backend can be viewed
+as a remasking sampler with a particular trained-in correction head; a
+remasking sampler with a strong supervision signal on confidence (RemeDi,
+CDLM) can be viewed as a partial self-correction backend. The thesis
+treats them as distinct because the timing question is different: a
+remasking sampler's correction frequency is a sampler hyperparameter
+integrated into the entire trajectory, whereas a self-correction backend
+supports a per-step decision to invoke the refinement head.
+
+\section{Uncertainty-driven decoding}
+\label{lit:sec:uncertainty}
+
+A second family of inference-time mechanisms uses model uncertainty to
+drive decoding decisions. \textcite{benhamu2025ebsampler} introduce
+entropy-bounded unmasking: at each step, the sampler unmasks the largest
+set of positions whose total predicted entropy stays below a target. The
+rationale is that unmasking many low-entropy positions in parallel does not
+noticeably degrade quality, while unmasking high-entropy positions in
+parallel does. The method accelerates inference at fixed quality and
+exposes a target-entropy hyperparameter that can itself be tuned per step.
+
+\textcite{chen2025denoisingentropy} formalise the role of entropy as a
+per-step quality signal, introduce a denoising-entropy quantity that
+decomposes total entropy into reducible and irreducible parts, and show
+that decoding paths that prioritise reducing entropy at the right rate
+produce better samples. The method optimises an entropy-trajectory
+objective and is most directly related to the corrector-timing question
+of this thesis: it is a per-step scheduling problem, although its decision
+variable is the unmasking policy rather than corrector placement.
+
+These uncertainty-driven mechanisms supply candidate signals for corrector
+timing: per-step entropy, per-step inverse margin, and entropy-trajectory
+derivatives are all observable quantities that could serve as proxies for
+the marginal value of correction at a given step. They motivate the
+marginal-ranker baseline developed in Chapter~\ref{ch:contribution}.
+
+\section{Informed correctors for discrete diffusion}
+\label{lit:sec:informed-correctors}
+
+\textcite{zhao2024informedcorrectors} introduce informed correctors for
+discrete diffusion models. An informed corrector is a Markov transition
+designed to refine the current state of a discrete diffusion sampler using
+model-derived information beyond the trained denoiser's per-position
+distribution. The two primary instances developed in their paper are based
+on locally balanced proposals \parencite{zanella2020informedproposals} and
+on confidence-weighted resampling.
+
+The first family of correctors in \textcite{zhao2024informedcorrectors}
+uses locally balanced proposals in the sense of
+\textcite{zanella2020informedproposals}: at each corrector step a small
+number of positions are selected for resampling, and a proposal
+constructed from a balancing function applied to local probability ratios
+is used to update those positions. The second family uses
+confidence-based resampling, in which positions with low predicted
+confidence are selected for resampling. The precise proposal form,
+target, and acceptance rule for each variant are stated in the notation
+of the original paper. Both correctors require a notion of action
+set---the positions on which the corrector is allowed to operate---and a
+notion of corrector budget---how many corrector steps to take.
+
+The relevance for the present thesis is that informed correctors
+instantiate a structural pattern: a fixed Markov transition with a
+designated action set, a per-application cost, and an empirical effect on
+sample quality. The thesis takes this pattern as given and asks the next
+question: with the corrector fixed and a budget for placements, where
+should the corrector be applied? This question is partly answered by the
+literature on adaptive samplers and partly left open. The remainder of this
+chapter surveys the most relevant adjacent work and then turns to the
+timing question.
+
+\section{MCMC background: informed proposals, Gibbs samplers, and
+convergence}
+\label{lit:sec:mcmc}
+
+Informed correctors borrow heavily from the MCMC literature on discrete
+state spaces, and several theoretical strands are worth situating because
+they recur in the thesis.
+
+\textcite{zanella2020informedproposals} introduces locally informed
+proposals for discrete-space MCMC, parameterising the proposal
+distribution via a balancing function $g:[0,\infty)\to[0,\infty)$
+applied to local probability ratios. The framework includes the Barker
+proposal and the locally balanced proposals as members of the family,
+and proves asymptotic optimality of the locally balanced choice under
+specified high-dimensional regimes. The proposals can be combined with a
+Metropolis--Hastings accept/reject step or used as drop-in samplers
+depending on the target.
+
+The Gibbs sampler is the canonical block-Markov-chain Monte Carlo
+procedure: at each step, one selects a coordinate (or block of coordinates)
+and updates it from its full conditional distribution. Theoretical results
+on Gibbs samplers go back to \textcite{roberts1997updating}, who study how
+the choice of update scheme (random scan, systematic scan, blocked Gibbs)
+affects mixing under specific covariance structures. The discrete Gibbs
+sampler is also the canonical model for masked-diffusion correctors: a
+corrector that resamples the marginal at a single position from the
+predicted distribution conditional on the rest is precisely a Gibbs step,
+and a corrector that resamples a small block is a blocked Gibbs step.
+
+\textcite{ascolani2024entropycontraction} establish entropy-contraction
+results for Gibbs samplers under log-concavity assumptions.
+\textcite{secchi2025mwggap} analyse the spectral gap of
+Metropolis-within-Gibbs samplers under log-concavity. Both works give
+quantitative convergence rates that depend on specific structural
+properties of the target (curvature, conditioning). For discrete
+diffusion correctors the targets are typically not log-concave in any
+natural geometry, and these results do not transfer directly. They
+nonetheless supply a vocabulary for thinking about why some corrector
+steps are more valuable than others: corrector placements at points
+where the chain is far from the target make more progress per step than
+placements at points where the chain is already close.
+
+The classical comparison theorems for reversible Markov chains
+\parencite{diaconis1993comparison} provide one further piece of vocabulary.
+They allow one to bound the spectral gap of one Markov kernel in terms of
+another, with a constant depending on a Radon--Nikodym-type ratio. In the
+corrector context, this is the right framework for asking whether two
+correctors with different action sets or different acceptance rules have
+comparable mixing properties. The thesis does not develop this line of
+analysis directly, but it draws on the spectral-gap vocabulary in the
+diagnostic framework of Chapter~\ref{ch:contribution} when comparing
+pairwise-aware to marginal schedules.
+
+\section{ProSeCo: self-correcting masked diffusion}
+\label{lit:sec:proseco}
+
+\textcite{schiff2026proseco} introduce ProSeCo, a self-correcting masked
+diffusion model that jointly trains an unmasking head and a correction
+head. The model has the same overall architecture as a standard MDLM but
+is trained on a curriculum that includes both standard mask-prediction
+examples and synthetic `mistake' examples in which the supervision target
+differs from the model's previously committed token. The result is a
+single network that supports two operations at inference: ordinary
+unmasking, used to fill in masked positions, and refinement, used to
+revise committed positions.
+
+The refinement head defines an informed corrector with a specific action
+set: at any step $t$, the set of revisable positions is the set of
+currently committed positions, and the corrector resamples those positions
+from the refinement head's predicted distribution. The corrector cost is
+one additional forward pass per refinement step.
+\textcite{schiff2026proseco} report that ProSeCo improves sample quality
+on standard benchmarks and exhibits the qualitative behaviour expected of
+a self-correction model: when refinement is enabled, committed tokens that
+conflict with later-revealed context tend to be revised toward the data
+distribution.
+
+The relevance for the thesis is twofold. First, ProSeCo supplies a concrete
+informed corrector with a well-defined action set, a measurable cost per
+call, and an empirical track record of helpful behaviour. Second,
+ProSeCo's predictor--corrector structure is the closest masked-diffusion
+analogue of the continuous predictor--corrector samplers of
+\S\ref{lit:sec:pred-corr}: the predictor advances the trajectory, the
+corrector refines without changing the time index, and the inference-time
+cost is partitioned between the two. The thesis takes ProSeCo as the
+empirical backend and studies the corrector-timing question on top of its
+trained refinement head, holding the head and its training fixed.
+
+ProSeCo is one instance of a broader family of self-correcting and
+corrective masked-diffusion designs. \textcite{huang2025remedi} jointly
+train the denoiser with a confidence head used by the sampler to decide
+what to remask. \textcite{zhang2026cdlm} explicitly train for corrective
+behaviour by augmenting the loss with examples that require the model to
+assign lower confidence to incorrect tokens. \textcite{wu2026dsl} train a
+single denoiser to be SNR-invariant across mask schedules, supporting
+remasking-induced trajectories without retraining. These approaches differ
+in whether they expose a separate refinement head (ProSeCo) or fold the
+corrective behaviour into the unmasking head (RemeDi, CDLM, DSL), and in
+whether the corrector is invoked through an explicit per-step decision
+(ProSeCo) or as part of the standard sampler (RemeDi).
+
+\section{PRISM: quality-guided refinement}
+\label{lit:sec:prism}
+
+\textcite{kim2025prism} introduce PRISM, a method for self-correction that
+does not require retraining the base denoiser. PRISM trains a separate
+per-token quality scorer on synthetic mistake examples and uses the
+resulting scores at inference to identify low-quality committed tokens,
+remask them, and let the base denoiser regenerate them. The method is
+plug-in in the sense that any pretrained masked diffusion language model
+can be paired with a separately trained PRISM scorer.
+
+PRISM has two distinct uses that should be distinguished, because the
+literature occasionally conflates them and the present thesis takes a
+careful position on each.
+
+First, \emph{PRISM as a non-separable quality-guided refinement
+mechanism}. In its native deployment, PRISM uses the full vector of
+per-token quality scores to choose a refinement set, so the refinement
+is not equivalent to ranking time steps by a single scalar. Used this
+way, PRISM is an informed-refinement backend in its own right. The
+present thesis does not test this deployment of PRISM and does not rule
+it out as a backend.
+
+Second, \emph{PRISM-style quality mass as a per-step separable timing
+signal}. The aggregate quality mass at step $t$, which the thesis denotes
+$QM_t$, is a single scalar that summarises how confident the PRISM scorer
+is in the currently committed tokens. As a per-step signal, $QM_t$ is in
+the same class as $H_t$ (entropy) and $M_t^{-1}$ (inverse margin)---a
+separable score on which marginal ranking can be evaluated. The
+contribution chapters of this thesis test marginal ranking on signals of
+this class. A negative result for tested separable rankers does not rule
+out PRISM as a non-separable backend; it limits PRISM-style quality mass
+when used as a separable timing score in the tested ranker class.
+
+This distinction matters because the literature on quality-guided
+refinement is closely connected to the literature on corrector timing
+without being identical. Quality scores are useful as signals for
+refinement; the question of where in the trajectory to spend a fixed
+number of refinement calls remains open even when the refinement mechanism
+itself has been validated.
+
+\section{Trajectory search and test-time scaling}
+\label{lit:sec:search}
+
+A separate line of work spends additional inference compute on searching
+over trajectories or candidates. \textcite{lee2025iterref} introduce
+IterRef, an iterative-refinement procedure for masked text-to-mask models
+that uses reward signals to guide each refinement round.
+\textcite{bilal2026s3} introduce S$^3$, a stratified scaling search that
+branches over candidate paths at each step and keeps the best according
+to a verifier. \textcite{dang2025particlegibbs} introduce PG-DLM, a
+particle Gibbs sampler for diffusion language models that combines
+sequential Monte Carlo with MCMC to refine entire trajectories using
+reward feedback. \textcite{koh2024eags} introduce entropy-adaptive Gibbs
+sampling, in which Gibbs steps are scheduled in proportion to estimated
+entropy and refinement is restricted to high-entropy regions of the
+sequence. \textcite{deschenaux2026psisamplers} develop a curriculum-based
+corrector family ($\Psi$-samplers) that combines several elements of
+corrector kernel design with schedule curriculum learning.
+\textcite{hasan2026fkc} introduce discrete Feynman--Kac correctors, an
+SMC-style approximation of the reverse process in which a population of
+weighted candidate trajectories is propagated and reweighted at each
+step.
+
+These approaches differ from the thesis question in two structural
+respects. First, they search over candidate trajectories or outputs; they
+do not, in general, fix a single trajectory and ask only at which time
+steps an additional corrector should be applied. Second, they use external
+feedback---reward, verifier, ancestor signal, or explicit schedule-gain
+estimation---that is not generally available in a deployable inference-time
+scheduler. The thesis treats search procedures with true-feedback access
+as structural existence results: they can show that good schedules exist
+(because, given true feedback, they can find them), but they do not
+establish that an inference-time scheduler can be learned from observable
+signals alone.
+
+\section{From informed correctors to timing}
+\label{lit:sec:to-timing}
+
+The methods reviewed in this chapter all modify inference-time behaviour,
+but they do so at different layers of the masked-diffusion pipeline. The
+base model supplies a denoiser. Remasking samplers change the trajectory.
+Self-correction backends supply a fixed refinement transition with a
+designated action set. Quality-guided refinement biases the inference
+distribution. Trajectory search branches over candidates. The thesis
+question---corrector timing---takes one specific configuration: a base
+masked diffusion model, a fixed informed corrector, a fixed quality
+functional, and a fixed corrector-placement budget. The remaining degree
+of freedom is the schedule: the set of denoising time steps at which the
+corrector is applied.
+
+This timing question has analogues in several adjacent literatures, and it
+is worth previewing the connections. Set-function optimisation and
+submodularity supply the language for offline schedule selection: with a
+corrector budget $B$, choosing a size-$B$ schedule that maximises a
+quality functional is a cardinality-constrained set-function problem, and
+the theory of submodular optimisation classifies when greedy selection is
+provably near-optimal. The classical result is due to
+\textcite{nemhauser1978submodular}---greedy maximisation of a monotone
+submodular function under a cardinality constraint achieves a $(1-1/e)$
+approximation---and adaptive submodularity extends the argument to
+policies that observe outcomes between actions
+\parencite{golovin2011adaptive}. These results are not directly applicable
+here because corrector schedule gains are not, in general, monotone
+submodular, but they supply a useful classification scheme: additive,
+submodular, complementary, or higher-order.
+
+Sequential Monte Carlo and particle filtering supply the language for
+trajectory-level refinement. The SMC pattern---propagate a population of
+trajectories, monitor degeneracy, and rejuvenate when needed---maps
+directly onto the masked-diffusion corrector: propagate a partially masked
+trajectory, monitor a degeneracy diagnostic (entropy, margin, quality
+mass), and apply a corrector when the diagnostic exceeds a threshold.
+This analogy motivates uncertainty-triggered online policies and is the
+closest non-trivial parallel for the corrector-timing question.
+\textcite{hasan2026fkc} and \textcite{dang2025particlegibbs} make the
+particle/SMC connection explicit.
+
+Sensor scheduling and active sensing supply an analogous language for
+resource-constrained measurement allocation in linear-Gaussian state
+estimation. The discrete masked-diffusion setting does not satisfy the
+linear-Gaussian assumption, so these criteria transfer as design
+intuition rather than as importable bounds, but the underlying question
+is structurally similar: when should a scarce inference-time call be
+spent to reduce a downstream error?
+
+Value-of-information arguments suggest that a corrector call should be
+spent when its expected benefit exceeds the opportunity cost of saving
+the budget for a future step. Index policies for resource-constrained
+allocation give cheap policy classes for this kind of budget-aware
+online decision, with the caveat that their optimality typically rests
+on separability assumptions that may or may not hold in the
+masked-diffusion setting.
+
+These analogies are intellectually fertile but not, on their own,
+decisive. None of them solves the corrector-timing problem off the shelf.
+They do, however, suggest the structure that a thesis-grade answer should
+have. With a fixed predictor, a fixed corrector, and a fixed budget, one
+can ask at three levels of generality. At the coarsest level, is there any
+schedule that beats uniform placement? At the next level, can a separable
+per-step ranker recover most of the available headroom? At the next, do
+schedule interactions matter, and if so are they captured by pairwise
+terms or do they require higher-order or search-based scheduling? The
+contribution chapters of this thesis formalise these questions through
+the schedule-gain object $G(S)$, the additive surrogate $A(S)$, and the
+pairwise surrogate $Q(S)$, and develop diagnostics for classifying a
+given backend into the corresponding regimes (no-op, marginal,
+interaction-driven, higher-order/search-driven, or online-decision). The
+empirical chapters then ask which of these regimes a specific
+masked-diffusion backend occupies.
+
+The chapter has surveyed the literature that supplies the corrector
+kernel, the action set, the candidate signals, and the structural
+vocabulary. The remaining task is to fix these ingredients and to develop
+a principled framework for corrector timing. That is the subject of
+Chapter~\ref{ch:contribution}.
+
+%% =====================================================================
+%% End of literature-review draft (chapters 2--5)
+%% =====================================================================

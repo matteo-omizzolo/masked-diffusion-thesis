@@ -1,35 +1,46 @@
 \chapter{Experiments}
 \label{ch:experiments}
 
-%% Status: PLACEHOLDER — fill after gap decision.
-%%
-%% Setup (already in place):
-%%   - Model: MDLM-OWT checkpoint (130M parameters), OpenWebText
-%%   - Code: kuleshov-group/remdm (patched, in external/remdm/)
-%%   - Infrastructure: HPC Bocconi cluster, up to 4x A100 80GB
-%%   - No new training; inference-only
-%%
-%% Candidate experiments (one set per gap):
-%%
-%% --- Gap D ---
-%% \section{Selection Criterion Comparison}
-%%   - Fix T=256, vary selection criterion: confidence, entropy, random-k
-%%   - Metrics: MAUVE, gen_ppl
-%%   - Validates: which criterion is empirically best?
-%%
-%% \section{Budget Sweep}
-%%   - Fix best criterion, vary k \in {5%, 10%, 20%, 40%}
-%%   - Validates: advantage as function of budget
-%%
-%% --- Gap B/C ---
-%% \section{Entropy-Adaptive Scheduling}
-%%   - Entropy-triggered corrector vs. fixed allocation
-%%   - Validates: adaptive > uniform under fixed NFE budget
-%%
-%% Note: do NOT reference or re-use archived step-sweep results
-%% (T=256, T=512 runs) as evidence for thesis claims.
-%% Those runs are infrastructure only.
-%%
-%% \section{Experimental Setup}
-%% \section{Results}
-%% \section{Discussion}
+This chapter is intentionally a scaffold. It should be written only after
+Phase 0 re-confirms the real ProSeCo-OWT backend path and the old qualitative
+pattern. Until then, prior results are background for planning, not final
+thesis evidence.
+
+\section{Experimental Setup}
+\label{sec:exp-setup}
+
+To be written after Phase 0. The setup should state the fixed predictor
+schedule, fixed informed corrector, placement budget $B$, extra-NFE budget
+$B_{\mathrm{NFE}} = c_{\mathrm{corr}}B$, paired common-random-number protocol,
+quality functional $F$, evidence tiers, and bootstrap procedure.
+
+\section{Phase 0 Reproducibility}
+\label{sec:exp-phase0}
+
+To be written after the checkpoint-backed PF1--PF8 checks and K=3 smoke.
+This section should report whether the current code path reproduces the old
+qualitative ProSeCo-OWT keys before any new experiment is trusted.
+
+\section{ProSeCo-OWT Case Study}
+\label{sec:exp-proseco-owt}
+
+To be written after Phase 0. The main body should report the ProSeCo-OWT
+case study with current scoped language: tested separable rankers do not
+recover MC-oracle headroom under the verified protocol, while CD-G and BS-AG
+are search-based existence results using true schedule-gain feedback.
+
+\section{Interaction Diagnostics}
+\label{sec:exp-interaction-diagnostics}
+
+To be written after Phase 1. This section should report schedule-level
+validation of $Q(S)$ against $G(S)$ on no-leakage size-$B$ candidate pools,
+not only pairwise heatmaps. It should state whether Theorem B/B$'$ is useful
+on the verified pool and at which level of analysis.
+
+\section{Discussion}
+\label{sec:exp-discussion}
+
+To be written after Phase 1 / Phase 2 gates. The discussion should preserve
+the single-backbone scope, distinguish MC-oracle and pool-oracle headroom from
+the unobservable exhaustive oracle, and avoid deployable scheduler claims
+unless a Level-3 feature-conditioned scheduler succeeds on held-out seeds.

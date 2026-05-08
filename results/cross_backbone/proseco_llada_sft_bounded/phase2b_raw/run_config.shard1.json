@@ -1,0 +1,35 @@
+{
+  "backend": "proseco_llada_sft",
+  "T": 64,
+  "K_total": 8,
+  "K_shard": 1,
+  "shard_idx": 1,
+  "shard_count": 8,
+  "B_values": [
+    2,
+    4
+  ],
+  "mc_B_values": [
+    2,
+    4
+  ],
+  "mc_P": 24,
+  "seed_start": 142,
+  "policies": [
+    "uniform",
+    "front",
+    "back",
+    "middle",
+    "entropy_top_B_pt",
+    "entropy_bot_B_pt",
+    "margin_top_B_pt",
+    "quality_top_B_pt",
+    "entropy_top_B_mp",
+    "mean_delta_oracle"
+  ],
+  "checkpoint": "/home/3316152/mdm/checkpoints/proseco_llada_sft",
+  "corrector_steps": 1,
+  "protocol_a_dir": "/home/3316152/mdm/masked-diffusion-thesis/results/cross_backbone/proseco_llada_sft_bounded/protocol_a",
+  "timestamp": "2026-04-22T11:19:40",
+  "shard_out_suffix": "shard1-of-8"
+}

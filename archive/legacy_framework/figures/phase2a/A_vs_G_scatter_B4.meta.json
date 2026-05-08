@@ -1,9 +1,0 @@
-{
-  "source_json": "results/phase2a/rank_A_vs_G.json",
-  "fields": [
-    "data.spearman_by_B.4",
-    "data.pearson_by_B.4",
-    "data.scatter_points_by_B.4"
-  ],
-  "n_schedules": 30
-}

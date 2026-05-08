@@ -1,10 +1,34 @@
 \begin{abstract}
-%% TODO: write after the research direction is finalised.
-%%
-%% Draft scope (placeholder):
-%% This thesis studies informed correctors for masked diffusion language models —
-%% principled, signal-guided correction strategies applied at inference time that
-%% improve sample quality beyond the unmasking-only optimum, without additional training.
-%% We develop [theoretical/empirical] results for [Gap D / B+C / E, TBD].
+Masked diffusion language models generate by progressively unmasking token
+positions along a denoising trajectory. An informed corrector is an additional
+inference-time refinement mechanism that can be inserted at selected steps of
+this trajectory. When corrector placements are limited by a budget $B$, timing
+becomes a combinatorial schedule-selection problem: which $B$ steps out of $T$
+should receive a corrector call?
+
+This thesis develops a model- and corrector-agnostic framework for fixed-budget
+informed-corrector timing. The framework defines a schedule gain $G(S)$, a
+marginal additive surrogate $A(S)$, pairwise interactions $\xi_{t,t'}$, a
+pairwise surrogate $Q(S)$, and a regime-classification protocol. The central
+theoretical contributions are Theorem~A, a marginal proxy regret bound
+identifying when separable per-step ranking is near-optimal, and
+Theorems~B/B$'$, a pairwise surrogate regret framework with a finite-pool
+high-probability form suited to experimental validation. Diagnostic
+Framework~C classifies a given model/corrector pair into no-op,
+marginal/rankable, interaction-driven, higher-order, or online-decision-like
+regimes.
+
+The empirical case study is ProSeCo-OWT, a self-correcting masked diffusion
+system. Prior baseline results indicate that tested separable rankers do not
+recover the Monte Carlo oracle headroom at budgets $B\in\{2,3,4\}$, while
+search procedures using true schedule-gain feedback recover 49--84\% of
+that headroom. These empirical claims are treated as pending Phase~0
+reproducibility re-confirmation before use as final thesis evidence.
+
+The thesis is deliberately scoped: it studies timing of a fixed corrector
+under a fixed predictor, not remasking, token selection, corrector-kernel
+design, or generic test-time scaling. Limitations include single-backbone
+empirical scope, pending re-validation of prior results, and the absence of
+a deployable Level-3 feature-conditioned scheduler.
 \end{abstract}
 \newpage

@@ -1,0 +1,50 @@
+diff --git a/models/hf/modeling_proseco.py b/models/hf/modeling_proseco.py
+index b6d805e..2a7490c 100644
+--- a/models/hf/modeling_proseco.py
++++ b/models/hf/modeling_proseco.py
+@@ -5,8 +5,12 @@ import math
+ import typing
+ 
+ import einops
+-import flash_attn
+-import flash_attn.layers.rotary
++try:
++    import flash_attn
++    import flash_attn.layers.rotary
++    _HAS_FLASH_ATTN = True
++except ImportError:
++    _HAS_FLASH_ATTN = False
+ import torch
+ import torch.nn as nn
+ import torch.nn.functional as F
+@@ -115,9 +119,27 @@ def rotate_half(x):
+ 
+ 
+ def apply_rotary_pos_emb(qkv, cos, sin):
+-	cos = cos[0,:,0,0,:cos.shape[-1]//2]
+-	sin = sin[0,:,0,0,:sin.shape[-1]//2]
+-	return flash_attn.layers.rotary.apply_rotary_emb_qkv_(qkv, cos, sin)
++    # cos/sin from Rotary.forward: shape (1, seq_len, 3, 1, head_dim)
++    # qkv: (batch, seq_len, 3, n_heads, head_dim)
++    if _HAS_FLASH_ATTN:
++        cos = cos[0, :, 0, 0, :cos.shape[-1] // 2]
++        sin = sin[0, :, 0, 0, :sin.shape[-1] // 2]
++        return flash_attn.layers.rotary.apply_rotary_emb_qkv_(qkv, cos, sin)
++    # Pure PyTorch SDPA fallback — apply rotary to Q (index 0) and K (index 1).
++    # Rotary.forward sets cos[:,:,2,:,:]=1 and sin[:,:,2,:,:]=0, making V an identity,
++    # so we only need to rotate Q and K explicitly.
++    d = qkv.shape[-1]  # head_dim
++    cos_s = cos[0, :, 0, 0, :d // 2]  # (seq_len, head_dim//2)
++    sin_s = sin[0, :, 0, 0, :d // 2]  # (seq_len, head_dim//2)
++    cos_s = cos_s.unsqueeze(0).unsqueeze(2)  # (1, seq_len, 1, head_dim//2)
++    sin_s = sin_s.unsqueeze(0).unsqueeze(2)  # (1, seq_len, 1, head_dim//2)
++    for qi in (0, 1):  # rotate Q and K
++        x = qkv[:, :, qi, :, :]          # (b, s, h, d)
++        x1, x2 = x[..., :d // 2], x[..., d // 2:]
++        qkv[:, :, qi, :, :] = torch.cat(
++            [x1 * cos_s - x2 * sin_s, x2 * cos_s + x1 * sin_s], dim=-1
++        )
++    return qkv
+ 
+ 
+ # function overload

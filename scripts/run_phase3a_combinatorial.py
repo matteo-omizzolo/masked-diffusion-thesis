@@ -369,12 +369,30 @@ def build_generator(args: argparse.Namespace) -> Any:
         )
     if args.checkpoint is None:
         raise SystemExit("--checkpoint required unless --surrogate")
-    from mdm_playground.scheduling.backends.proseco_owt import ProSeCoOWTGenerator
-    return ProSeCoOWTGenerator(
-        checkpoint=args.checkpoint,
-        T=args.T,
-        corrector_steps=args.corrector_steps,
+    from mdm_playground.scheduling.backends import detect_proseco_snapshot_backend
+
+    backend = args.backend if args.backend != "auto" else detect_proseco_snapshot_backend(
+        args.checkpoint
     )
+    if backend == "proseco_owt":
+        from mdm_playground.scheduling.backends.proseco_owt import ProSeCoOWTGenerator
+
+        return ProSeCoOWTGenerator(
+            checkpoint=args.checkpoint,
+            T=args.T,
+            corrector_steps=args.corrector_steps,
+        )
+    if backend == "proseco_llada_sft":
+        from mdm_playground.scheduling.backends.proseco_llada_sft import (
+            ProSeCoLLaDASFTGenerator,
+        )
+
+        return ProSeCoLLaDASFTGenerator(
+            checkpoint=args.checkpoint,
+            T=args.T,
+            corrector_steps=args.corrector_steps,
+        )
+    raise SystemExit(f"Unsupported backend: {backend}")
 
 
 # ---------------------------------------------------------------------------
@@ -455,6 +473,13 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--seed_start", type=int, default=42)
     p.add_argument("--protocol_a_dir", type=str, required=True)
     p.add_argument("--checkpoint", type=str, default=None)
+    p.add_argument(
+        "--backend",
+        type=str,
+        default="auto",
+        choices=("auto", "proseco_owt", "proseco_llada_sft"),
+        help="Backend type. 'auto' infers from checkpoint snapshot files.",
+    )
     p.add_argument("--corrector_steps", type=int, default=1)
     p.add_argument("--out_dir", type=str, default="results/phase3a_proseco_owt")
     p.add_argument("--shard_idx", type=int, default=0)
@@ -488,7 +513,12 @@ def main() -> int:
     print("=" * 70)
     print("Phase 3a — Combinatorial scheduling baselines (CD-G + BS-AG)")
     print("=" * 70)
-    print(f"  Backend:      {'SURROGATE' if args.surrogate else 'ProSeCo-OWT'}")
+    backend_label = "SURROGATE" if args.surrogate else args.backend
+    if not args.surrogate and args.backend == "auto" and args.checkpoint is not None:
+        from mdm_playground.scheduling.backends import detect_proseco_snapshot_backend
+
+        backend_label = detect_proseco_snapshot_backend(args.checkpoint)
+    print(f"  Backend:      {backend_label}")
     print(f"  T, K:         {args.T}, {args.K}")
     print(f"  B_values:     {B_values}")
     print(f"  CD:           max_attempts={args.cd_max_attempts}, window={args.cd_window}")
@@ -502,7 +532,7 @@ def main() -> int:
     print(f"  my_seeds ({len(my_seeds)}/{len(seeds_all)}): {my_seeds[:5]}{'...' if len(my_seeds) > 5 else ''}")
 
     run_config = {
-        "backend": "surrogate" if args.surrogate else "proseco_owt",
+        "backend": backend_label.lower(),
         "T": args.T,
         "K_total": args.K,
         "K_shard": len(my_seeds),

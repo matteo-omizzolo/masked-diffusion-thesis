@@ -134,7 +134,7 @@ def main():
     try:
         import importlib.util
         spec = importlib.util.spec_from_file_location("modeling_proseco", modeling_path)
-        mod = importlib.util.load_from_spec(spec)
+        mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         print("  [OK] modeling_proseco.py imports successfully (no flash_attn required)")
     except Exception as e:

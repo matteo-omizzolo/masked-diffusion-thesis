@@ -30,20 +30,53 @@
 }
 
 @article{kim2025prism,
-  title   = {{PRISM}: Provably Robust and Interpretable Self-Correction for Masked Diffusion},
-  author  = {Kim, Minyoung and others},
+  title   = {Fine-Tuning Masked Diffusion for Provable Self-Correction},
+  author  = {Kim, Jaeyeon and Kim, Seunggeun and Lee, Taekyun and Pan, David Z. and Kim, Hyeji and Kakade, Sham and Chen, Sitan},
   journal = {arXiv preprint arXiv:2510.01384},
-  year    = {2025}
+  year    = {2025},
+  note    = {{PRISM}: Plug-in Remasking for Inference-time Self-correction of Masked Diffusions. Code: github.com/SeunggeunKimkr/PRISM}
 }
 
 %% ---- Remasking / schedule papers ----
 
-@article{gat2024remdm,
+@article{wang2025remdm,
   title   = {Remasking Discrete Diffusion Models with Inference-Time Scaling},
-  author  = {Gat, Itai and others},
+  author  = {Wang, Guanghan and Schiff, Yair and Sahoo, Subham Sekhar and Kuleshov, Volodymyr},
   journal = {arXiv preprint arXiv:2503.00307},
   year    = {2025},
-  note    = {NeurIPS 2025}
+  note    = {NeurIPS 2025. Code: github.com/kuleshov-group/remdm}
+}
+
+@article{lee2025iterref,
+  title   = {Effective Test-Time Scaling of Discrete Diffusion through Iterative Refinement},
+  author  = {Lee, Sanghyun and Kim, Sunwoo and Kim, Seungryong and Park, Jongho and Park, Dongmin},
+  journal = {arXiv preprint arXiv:2511.05562},
+  year    = {2025},
+  note    = {{IterRef}: iterative reward-guided refinement}
+}
+
+@article{bilal2026s3,
+  title   = {{$S^3$}: Stratified Scaling Search for Test-Time in Diffusion Language Models},
+  author  = {Bilal, Ahsan and Mohsin, Muhammad Ahmed and Umer, Muhammad and Aali, Asad and Khanzada, Muhammad Usman and Rafique, Muhammad Usman and He, Zihao and Fox, Emily and Hougen, Dean F.},
+  journal = {arXiv preprint arXiv:2604.06260},
+  year    = {2026},
+  note    = {Submitted to COLM 2026}
+}
+
+@article{nie2025llada,
+  title   = {Large Language Diffusion Models},
+  author  = {Nie, Shen and Zhu, Fengqi and You, Zebin and Zhang, Xiaolu and Ou, Jingyang and Hu, Jun and Zhou, Jun and Lin, Yankai and Wen, Ji-Rong and Li, Chongxuan},
+  journal = {arXiv preprint arXiv:2502.09992},
+  year    = {2025},
+  note    = {Code and weights: github.com/ML-GSAI/LLaDA; GSAI-ML/LLaDA-8B on Hugging Face}
+}
+
+@article{ye2025dream,
+  title   = {Dream 7B: Diffusion Large Language Models},
+  author  = {Ye, Jiacheng and Xie, Zhihui and Zheng, Lin and Gao, Jiahui and Wu, Zirui and Jiang, Xin and Li, Zhenguo and Kong, Lingpeng},
+  journal = {arXiv preprint arXiv:2508.15487},
+  year    = {2025},
+  note    = {Code and weights: github.com/DreamLM/Dream; Dream-org/Dream-v0 on Hugging Face}
 }
 
 @article{lavenant2025lz,
@@ -223,9 +256,10 @@
 
 @article{schiff2026proseco,
   title   = {Learn from Your Mistakes: Self-Correcting Masked Diffusion Models},
-  author  = {Schiff, Yair and Belhasin, Or and Uziel, Guy and Wang, Kevin and Arriola, Marianne and Turok, Natan and Elad, Michael and Kuleshov, Volodymyr},
+  author  = {Schiff, Yair and Belhasin, Omer and Uziel, Roy and Wang, Guanghan and Arriola, Marianne and Turok, Gilad and Elad, Michael and Kuleshov, Volodymyr},
   journal = {arXiv preprint arXiv:2602.11590},
-  year    = {2026}
+  year    = {2026},
+  note    = {Project and weights: proseco-discrete-diffusion.github.io; kuleshov-group/proseco-owt}
 }
 
 %% ---- Corrector scheduling / entropy papers (Gap B/C context) ----
@@ -281,10 +315,118 @@
 }
 
 @article{dang2025particlegibbs,
-  title   = {Inference-Time Scaling of Diffusion Language Models with Particle {Gibbs} Sampling},
-  author  = {Dang, Kaiwen and Han, Xingchao and Xu, Haotian and Xu, Jingwei and Srivastava, Nikunj and Ermon, Stefano},
+  title   = {Inference-Time Scaling of Diffusion Language Models via Trajectory Refinement},
+  author  = {Dang, Meihua and Han, Jiaqi and Xu, Minkai and Xu, Kai and Srivastava, Akash and Ermon, Stefano},
   journal = {arXiv preprint arXiv:2507.08390},
+  year    = {2025},
+  note    = {{PG-DLM}: particle Gibbs sampling for diffusion language models}
+}
+
+%% ---- Discrete diffusion foundations (added for literature review) ----
+
+@inproceedings{austin2021d3pm,
+  title     = {Structured Denoising Diffusion Models in Discrete State-Spaces},
+  author    = {Austin, Jacob and Johnson, Daniel D. and Ho, Jonathan and Tarlow, Daniel and van den Berg, Rianne},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2021},
+  note      = {{D3PM}. arXiv:2107.03006}
+}
+
+@inproceedings{sohldickstein2015deep,
+  title     = {Deep Unsupervised Learning Using Nonequilibrium Thermodynamics},
+  author    = {Sohl-Dickstein, Jascha and Weiss, Eric A. and Maheswaranathan, Niru and Ganguli, Surya},
+  booktitle = {International Conference on Machine Learning},
+  year      = {2015},
+  note      = {Original diffusion-model construction. arXiv:1503.03585}
+}
+
+%% ---- Continuous-time samplers (added) ----
+
+@inproceedings{lu2022dpmsolver,
+  title     = {{DPM-Solver}: A Fast {ODE} Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps},
+  author    = {Lu, Cheng and Zhou, Yuhao and Bao, Fan and Chen, Jianfei and Li, Chongxuan and Zhu, Jun},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2022},
+  note      = {arXiv:2206.00927}
+}
+
+@article{song2020improvedncsn,
+  title   = {Improved Techniques for Training Score-Based Generative Models},
+  author  = {Song, Yang and Ermon, Stefano},
+  journal = {Advances in Neural Information Processing Systems},
+  year    = {2020},
+  note    = {arXiv:2006.09011}
+}
+
+%% ---- Masked diffusion scheduling theory (added) ----
+
+@article{chen2025optimalschedules,
+  title   = {Optimal Inference Schedules for Masked Diffusion Models},
+  author  = {Chen, Sitan and Cong, Kevin and Li, Jerry},
+  journal = {arXiv preprint arXiv:2511.04647},
   year    = {2025}
+}
+
+@article{luxembourg2025plan,
+  title   = {Plan for Speed: Dilated Scheduling for Masked Diffusion Language Models},
+  author  = {Luxembourg, Omer and Permuter, Haim and Eldar, Yonina C.},
+  journal = {arXiv preprint arXiv:2506.19037},
+  year    = {2025}
+}
+
+@article{sahoo2025eso,
+  title   = {Esoteric Language Models: Bridging Autoregressive and Masked Diffusion {LLMs}},
+  author  = {Sahoo, Subham Sekhar and Yang, Zhihan and Akhauri, Yash and Liu, Johnna and Singh, Deepansha and Cheng, Zhoujun and Liu, Zhengzhong and Xing, Eric and Thickstun, John and Vahdat, Arash},
+  journal = {arXiv preprint arXiv:2506.01928},
+  year    = {2025},
+  note    = {{Eso-LMs}}
+}
+
+%% ---- Self-correcting / corrective DLM literature (added) ----
+
+@article{huang2025remedi,
+  title   = {Don't Settle Too Early: Self-Reflective Remasking for Diffusion Language Models},
+  author  = {Huang, Zemin and Wang, Yuhang and Chen, Zhiyang and Qi, Guo-Jun},
+  journal = {arXiv preprint arXiv:2509.23653},
+  year    = {2025},
+  note    = {{RemeDi}. Code: github.com/maple-research-lab/RemeDi}
+}
+
+@article{wu2026dsl,
+  title   = {Discrete Stochastic Localization for Self-Correcting Diffusion Language Models},
+  author  = {Wu, Yunshu and Cheng, Jiayi and Thakuria, Partha and Brekelmans, Rob and Papalexakis, Evangelos E. and Ver Steeg, Greg},
+  journal = {arXiv preprint arXiv:2602.16169},
+  year    = {2026},
+  note    = {{DSL}}
+}
+
+@article{zhang2026cdlm,
+  title   = {Corrective Diffusion Language Models},
+  author  = {Zhang, Shuibai and Peng, Fred Zhangzhi and Zhang, Yiheng and Pan, Jin and Chrysos, Grigorios G.},
+  journal = {arXiv preprint arXiv:2512.15596},
+  year    = {2026},
+  note    = {{CDLM}}
+}
+
+%% ---- Submodular optimization references (added for ch5 transition) ----
+
+@article{nemhauser1978submodular,
+  title   = {An Analysis of Approximations for Maximizing Submodular Set Functions---{I}},
+  author  = {Nemhauser, George L. and Wolsey, Laurence A. and Fisher, Marshall L.},
+  journal = {Mathematical Programming},
+  volume  = {14},
+  number  = {1},
+  pages   = {265--294},
+  year    = {1978}
+}
+
+@article{golovin2011adaptive,
+  title   = {Adaptive Submodularity: Theory and Applications in Active Learning and Stochastic Optimization},
+  author  = {Golovin, Daniel and Krause, Andreas},
+  journal = {Journal of Artificial Intelligence Research},
+  volume  = {42},
+  pages   = {427--486},
+  year    = {2011}
 }
 
 %% ---- Evaluation ----

@@ -1,351 +1,150 @@
-# Open Questions
+> TECHNICAL WORKLOG.
+> Current thesis status starts at `START_HERE.md`.
+> Current theory-first plan: `docs/06_theory_first_research_plan.md`.
+> Theorem stack: `research/candidate_theorems.md` §0–§7.
 
-**Updated:** April 2026 (repriotized after GPT Pro v2 assessment)
+# Open Questions — Current
 
-> Unresolved technical points, fragile assumptions, and places where empirical
-> evidence is needed to guide theory. The April 2026 restructure moved the
-> main theorem from contraction to proxy-regret (Theorem A), which shifts
-> priorities: the central uncertainty is now **calibration of the signal-to-gain
-> relationship (Q5, Q2)**, not whether a Gibbs-style contraction bound holds.
-
----
-
-## Q5 — Is the additive / approximate-additive gains assumption realistic? **[CENTRAL]**
-
-**Promoted to central question after GPT Pro v2.**
-
-**Context.** Theorem A assumes approximate additivity:
-
-    sup_{|S| ≤ B} |G(S) − ∑_{t ∈ S} Δ_t| ≤ η_B.
-
-The regret bound scales as 2Bε + 2η_B. If η_B is large relative to typical
-G(Ŝ_B), Theorem A is vacuous.
-
-**Failure modes.**
-- Correcting at step t changes Z_t', which propagates through subsequent
-  predictor steps. The gain from correcting at step t may depend on whether
-  step t' was also corrected.
-- Heavy-tailed interactions — a single pair (t, t') may dominate η_B.
-
-**Action.**
-1. **Protocol B primary measurement.** For a grid of B ∈ {T/16, T/8, T/4},
-   measure ∑_{t ∈ S} Δ_t vs G(S) for randomly sampled |S| = B schedules.
-2. **Pairwise diagnostic.** Estimate γ = sup |ξ_{t, t'}| from a sampled set of
-   pairs; feed into Proposition C's bound η_B ≤ γ B² / 2.
-3. **Decision.** If η_B is empirically small, Theorem A is non-vacuous and
-   this thesis's main theorem stands. If η_B is large, consider:
-   (a) reducing B to a small regime where the bound is tight,
-   (b) reformulating as a sequential optimization (dynamic programming) with
-       locally additive rewards plus state dependence,
-   (c) using expectation-version bound with variance structure.
-
-**Severity.** Critical — determines whether Theorem A's bound is useful.
-
-**Dependencies.** Requires Phase 1 experimental infrastructure (MDLM + ReMDM
-one-loop harness). See `docs/experiments/entropy_proxy_experiment.md`,
-Protocol B.
+**Updated:** 2026-05-06 (post theory-correction pass).
+The theorem stack is formalized; remaining questions concern empirical
+estimation of bound constants, statistical stability of regime diagnostics,
+and the literature-freshness check before the final thesis claim.
 
 ---
 
-## Q2 — Is entropy a good proxy for marginal gain? **[CENTRAL]**
+## Active open questions — theory-first programme
 
-**Context.** Theorem A's calibration hypothesis is
-|Δ_t − ψ(s_t)| ≤ ε. The regret scales as 2Bε. The choice ψ = entropy-based
-proxy is the baseline candidate; confidence margin and quality mass are alternatives.
+### OQ-T1 — Theorem B at which level of analysis?
 
-**Sharpened from GPT Pro v2.** The earlier draft conflated the token-change
-rate (TCR_t) with Δ_t. These must be measured and calibrated separately:
-- TCR_t correlates with entropy by construction (high entropy → many possible
-  resamples → more positions changed in expectation) but may be only weakly
-  correlated with *quality* gain Δ_t.
-- The proxy design question is: which ψ minimizes ε relative to Δ_t, not
-  relative to TCR_t.
+Theorem B can be instantiated at three levels (`candidate_theorems.md` §2.4):
+Level 1 diagnostic (uses true counterfactual G({t,t'})), Level 2 population
+(optimises Q̄ for one global schedule), Level 3 feature-conditioned (Q̂_i
+from observable features, no true G_i at inference). Open: at which level
+does Theorem B's hypothesis hold for ProSeCo-OWT? The thesis can claim a
+deployable scheduler **only at Level 3**.
 
-**Failure modes.**
-1. **Early trajectory.** High entropy, low context; corrector is ineffective;
-   entropy overpredicts Δ_t. (Handled by Proposition B's low-gain-region
-   exclusion.)
-2. **Late trajectory.** Low entropy, small residual uncertainty; but a few
-   uncertain positions may carry large quality gain.
-3. **Miscalibration.** Model entropy may not reflect true conditional
-   uncertainty, especially on out-of-distribution trajectories.
+Tests: Phase 1 settles Levels 1–2; Phase 2b settles Level 3.
 
-**Action.**
-- **Protocol A primary measurement.** For each t, measure one-loop Δ_t under
-  a chosen F. Correlate with s_t across three choices:
-  (a) mean conditional entropy H_t,
-  (b) inverse confidence margin (1 − M_t),
-  (c) quality mass Q_t (PRISM-style).
-- Report Pearson, Spearman, and a calibration curve; extract ε per choice.
+### OQ-T2 — Estimating ζ_{B,C}, α_{B,δ}, ω_B, κ_B without leakage; no-leakage pool construction
 
-**Severity.** Critical — the whole thesis turns on whether *some* trajectory
-signal gives ε small enough to beat uniform.
+Constants split into orthogonal sources of error:
+- ζ_{B,C} — pairwise approximation bias on candidate pool C_B.
+- α_{B,δ} — surrogate estimation error on C_B (high probability over training
+  pool); use leave-one-seed-out.
+- ω_B — optimizer gap, reported by the optimizer.
+- κ_B — pool-vs-MC-pool gap (estimable only against the MC pool, never
+  against the exhaustive (T choose B) oracle).
 
-**Dependencies.** Protocol A of the entropy-proxy experiment. PRISM
-availability gates quality-mass estimation.
+**No-leakage pool construction (Theorem B′ data-dependence caveat).** The
+candidate pool C_B must be **fixed independently of held-out evaluation G**.
+Acceptable: random sampling (MC pool); beam candidates from training-seed
+Δ̂, ξ̂; Q̂-greedy candidates from training-seed Q̂. **Not acceptable**:
+pools selected using held-out G or by an optimizer with G-feedback on test
+seeds. If C_B depends on training data, evaluate on held-out seeds; if it
+depends on test G, the bound does not apply.
 
----
+Open: a clean estimation protocol that reports each constant separately with
+paired BCa CIs and a no-leakage pool construction.
 
-## Q6 — What is the right formal definition of "corrector loop"? **[RESOLVED for Phase 1]**
+### OQ-T3 — Statistical stability of Diagnostic Framework C at K=30 (with pair / pool sampling)
 
-**Context.** Different papers define correctors differently:
-- Zhao et al.: Barker / MPF Metropolis-Hastings steps
-- ProSeCo: annealed iterative refinement of committed tokens
-- ReMDM: remasking + re-prediction (debatably a corrector vs. a predictor-
-  schedule extension)
-- Gibbs sampling: resample one or more positions from the conditional
+Diagnostics U_B^{MC,N}, R_B, I_B, P_B^{level}, C_B^{MC,N} all carry BCa CIs
+over seeds. But P_B^{level} and ζ_{B,C} also depend on pair / schedule
+sampling; bootstrapping only over seeds while pair / schedule samples are
+sparse understates uncertainty. Open:
 
-**Resolution (April 2026 — ProSeCo adoption).** The Phase 1 corrector is
-definitively the ProSeCo annealed refinement kernel:
+- At K=30 paired seeds and the planned pair-pool size, does the **nested
+  bootstrap** (seeds × sampled pairs/schedules) CI for P_B − R_B exclude 0?
+- If borderline, K=60 may be needed; alternatively grow the pair pool.
+- Do not classify Regime III vs IV unless the CI for P_B − R_B (or
+  ζ_{B,C} − η_{B,C}) is stable under both seed-bootstrap and pair-pool
+  resampling.
 
-> **A corrector loop at step t** = take x̂_0 = argmax(p_θ(x_0|x_t)); run
-> `corrector_steps=2` backbone calls at decreasing noise levels τ ∈ {1.0, 0.5};
-> apply the result to unmasked positions R_t only. One loop costs 2 NFEs.
+### OQ-T4 — Online-state sufficiency for Theorem D
 
-This definition was chosen over the MDLM Gibbs-resample corrector because the
-MDLM heuristic was harmful at all steps (all Δ_t ≤ 0) — an unrecoverable
-failure mode that makes Theorem A vacuous by construction. The ProSeCo kernel
-refines committed tokens rather than resampling masked tokens, providing a
-principled mechanism with non-trivially positive expected Δ_t.
+Theorem D is useful only if some compact z_t admits small ‖V − V̂‖_∞.
+Protocol C (bucketed (signal_quartile, phase) state) found this fails.
+Open: does adding (b_t, u_t, continuous H_t/M_t^{-1}) recover predictive
+value? Appendix-grade unless Phase 4 demonstrates it.
 
-**Theorem A remains corrector-kernel agnostic in its statement.** The ProSeCo
-kernel is the empirical instantiation used to measure ε, η_B, γ.
+### OQ-T5 — Secondary backbone for Diagnostic Framework C external validity
 
-**What remains open.** Whether a second kernel (e.g., Zhao et al.'s Barker
-kernel or conf-guided partial resample) gives smaller ε or η_B — left as a
-thesis extension if Phase 1 results are strong.
+Which (model, corrector) pair is feasible **and** likely to lie in a
+different regime than ProSeCo-OWT? Candidates: ReMDM-conf, MDLM with a
+non-Gibbs partial-resample corrector, LLaDA-SFT (only after the Tier 3
+protocol issue is fixed). Required: enough headroom (U_B > 0) to make
+the diagnostic comparison meaningful.
 
-**Severity.** Resolved for Phase 1. Kernel comparison remains open as extension.
+### OQ-T6 — PRISM feasibility (decision rule)
 
----
+Without pretrained weights, can a usable quality head be trained in 1–2
+weeks? Decision rule: if no, cite as related work and use QM_t (existing
+PRISM-style mass) as a candidate signal. Do not pivot the thesis around
+PRISM. A non-separable PRISM use is not pursued in this thesis but is not
+ruled out by the Empirical Ranker-Class Limitation (`candidate_theorems.md` §1.5).
 
-## Q4 — Does ProSeCo already subsume the thesis direction? **[RESOLVED — novelty confirmed]**
+### OQ-T7 — Minimum experiment set for August writing freeze
 
-**Context.** ProSeCo (arXiv:2602.11590) is the closest existing
-corrector-scheduling paper. It exposes scheduling knobs and empirically studies
-corrector-budget allocation.
+Working candidate: Phase 0 + Phase 1 sparse pairwise + Phase 2a population
+pairwise. Phase 2b feature-conditioned runs if either population pairwise
+structure is positive (P_B^pop > R_B^pop with CI excluding 0) or
+feature-predictable interaction structure exists on held-out seeds under a
+pre-specified R² or rank-correlation threshold.
+If Phase 2a fails, the thesis claim becomes "tested separable rankers do not
+recover MC-oracle headroom; pairwise also fails on this regime; Diagnostic
+Framework C explains why; CD-G provides an existence proof." Do not enter
+Phase 4 (Theorem D / online controller) unless Phase 1/2 succeed and time
+remains.
 
-**Resolution (April 2026 — ProSeCo audit complete).** ProSeCo has been read and
-audited in detail (`docs/experiments/proseco_backend_audit.md`). Confirmed:
+### OQ-L1 — Literature freshness check before final thesis claim
 
-1. ProSeCo uses a fixed periodic corrector schedule (every `corrector_every_n_steps`
-   steps, starting from `corrector_start_iter`). It does **not** use trajectory
-   signals to decide *when* to apply the corrector.
-2. ProSeCo does not define or measure Δ_t (per-step marginal gain).
-3. ProSeCo does not provide any proxy-regret theorem, ε bound, or η_B estimate.
-4. ProSeCo's schedule comparison is empirical (fixed periodic vs. no corrector);
-   it does not search over signal-adaptive schedules.
+Before final thesis claims, verify novelty positioning against current
+masked-diffusion LM literature: ProSeCo, PRISM, entropy-adaptive
+Gibbs / EAGS, Denoising Entropy, KLASS, DEMASK, and recent
+trajectory-search / test-time-scaling work. Do not claim the area is
+untouched; claim a specific gap in **fixed-budget trajectory-level
+corrector timing** with a regime-diagnostic framework.
 
-**The thesis uses ProSeCo as its corrector backend, not as a competitor.**
-This is strictly cleaner than the earlier framing. The thesis says:
-
-> Given the ProSeCo corrector kernel, we provide a theoretical proxy-regret
-> framework (Theorem A) and empirically estimate ε, η_B, γ that ProSeCo's
-> own analysis does not provide.
-
-**What would still invalidate the thesis.** If a concurrent preprint provides
-Theorem A's proxy-regret bound with empirical ε/η_B estimates for masked diffusion
-corrector scheduling. As of April 2026, no such preprint is known.
-
-**Severity.** Resolved. No further action needed unless a new preprint appears.
+Status: deferred until July; flagged here to avoid forgetting.
 
 ---
 
-## Q1 — Does geometric contraction hold for masked diffusion correctors? **[DOWNGRADED]**
+## Carry-over LaTeX-prose questions (writing phase)
 
-**Downgraded from critical to medium after GPT Pro v2.**
-
-**Context.** Stretch Appendix C2 (formerly Candidate Theorem 2) models
-corrector contraction as E_fact(t) · ρ(t)^{k_t}. The question is whether this
-geometric model holds for real masked-diffusion correctors.
-
-**Why downgraded.** Theorem A (proxy-regret) is now the main theorem and does
-not require geometric contraction. The contraction route is preserved as a
-stretch result for an eventual appendix.
-
-**Why it might hold.** A discrete-MCMC contraction framework (not the Ascolani
-et al. log-concave-systematic-scan version, which does not apply; but a more
-general coupling / Dobrushin-style bound) might yield per-loop contraction
-for the corrector kernel.
-
-**Why it might fail.** Text distributions are discrete, high-dimensional, and
-not log-concave. The corrector targets the conditional posterior at a
-particular noise level, which changes across steps.
-
-**Action.**
-- Read Ascolani et al. 2024 carefully (correct scan type: random-scan).
-- Read the Denoising Entropy Bounds paper.
-- Empirically test: run k ∈ {0, 1, 2, 4, 8} loops at fixed t and check for
-  approximate exponential decay in error. (This is Q7 below.)
-- Pursue the contraction theorem only if both the literature and the empirics
-  support it.
-
-**Severity.** Medium — affects only Stretch Appendix C2.
+| OQ | Item | Status |
+|---|---|---|
+| OQ-W1 | ch6 LaTeX prose for Theorem A combining step | Initial full draft written; polish after Phase 0 results |
+| OQ-W2 | ch6 LaTeX prose for Diagnostics A′, A″ | Initial full draft written; diagnostics only, not theorem variants |
+| OQ-W3 | ch6 Empirical Ranker-Class Limitation (formal time-only part + scoped empirical part) | Initial full draft written; verify wording after Phase 0 re-confirmation |
+| OQ-W4 | ch7 single-backbone caveat scoping (regime III vs IV language) | Defer until Phase 1 outcome |
 
 ---
 
-## Q3 — How sensitive is the optimal schedule to the total budget B?
+## Resolved questions (summary only)
 
-**Context.** Under Theorem A, the regret 2Bε + 2η_B scales with B. If η_B
-grows faster than linearly in B, the useful range of B is bounded.
+| Question | Resolution |
+|---|---|
+| Approximate additivity realistic? | η_B measured (σ_ξ at 0.174/0.240/0.309 for B=2/3/4); A′ is now a diagnostic scale, not a refinement |
+| Entropy as proxy? | Spearman ρ(ψ,Δ) ≈ 0.10–0.15; ε_R is a diagnostic only; tested separable rankers do not recover headroom |
+| Practical oracle estimate? | MC-oracle (best-of-100) used as practical upper bound at B ∈ {2,3,4}; **not** the exhaustive oracle |
+| ProSeCo novelty? | ProSeCo provides no Δ_t / proxy-regret / scheduling theory — confirmed |
+| L∞ ε vs ε_R? | ε_R is **not** a theorem constant. The safe selected-schedule statement is the finite-pool form of Theorem A (= Theorem B′ with Q := A). R_B = ρ(A,G) and (1−|ρ|)·σ_Δ are reported as A″ diagnostics only. |
+| √B vs B² bound? | Superseded. A′ is now an additivity-scale diagnostic only; no √B regret theorem is active. |
+| Choice of F? | F = − GPT-2 NLL on 512-token window; treated as relative within-run metric |
+| Budget unit? | B = corrector-placement budget; B_NFE = c_corr · B (c_corr = 2 for ProSeCo) |
+| Budget sensitivity? | B ∈ {2,3,4,8,16}; ranker saturation at B=8 |
+| Adaptive (Protocol C) shrinkage? | ε̃/ε ∈ [0.983, 0.986] — no shrinkage; honest negative |
+| Theorem B exact-Q form? | Proved (`candidate_theorems.md` §2.1) |
+| Theorem B estimated-Q̂ constant? | 2 α_B (not 4 α_B); proof in §2.2 |
+| Theorem B′ high-prob form? | Proved over fixed, no-leakage candidate pool C_B (§2.3); κ_B against MC pool, never the exhaustive oracle |
+| Theorem D constant? | 2Tδ; honest about not having c B δ in general |
+| Proposition C → Diagnostic Framework C | Renamed; it is a definition + protocol, not a proven proposition |
+| Q_t vs Q(S) collision | Resolved: signal is QM_t; Q(S) is the pairwise surrogate; historical files use `Q_t` |
+| Refinement A′ status? | **Demoted to additivity-scale diagnostic** (was: variance-form regret refinement); does not control selected-schedule regret without finite-pool conversion |
+| Refinement A″ status? | **Demoted to rankability diagnostic** (was: rank-form regret refinement); ε_R is not used as a theorem constant |
+| Negative-Result Corollary status? | **Reframed as Empirical Ranker-Class Limitation**; formal part for time-only / seed-averaged separable ψ; empirical part on tested rankers; does not rule out feature-conditioned separable rankers, non-separable PRISM, pairwise / online / search policies |
+| Phase 2b decision gate? | Run if **either** (G2a-pop) population P_B^pop > R_B^pop **or** (G2a-feat) ξ_{i,t,t'} feature-predictable on held-out seeds (R² ≥ pre-specified threshold) |
+| Phase 1 uncertainty? | Nested bootstrap over (seeds, pair-pool) for P_B^{level}, ζ_{B,C}; do not classify regime unless CI of P_B − R_B and ζ_{B,C} − η_{B,C} stable |
+| MC-oracle vs exhaustive oracle? | U_B^{MC,N} reports best-of-N pool oracle; U_B^* (exhaustive) is unobservable and never reported |
 
-**Implication.** Test multiple budget levels (B ∈ {T/16, T/8, T/4, T/2}) and
-report Theorem A's bound at each B. Expect a sweet spot where 2Bε + 2η_B is
-small relative to G(Ŝ_B).
-
-**Severity.** Medium — an empirical Pareto question rather than a theoretical
-obstacle.
-
----
-
-## Q7 — Can the contraction factor ρ(t) be estimated empirically?
-
-**Context.** Only relevant if Stretch Appendix C2 is pursued. The
-empirical diagnostic is the same as the "approximate exponential decay"
-check in Q1.
-
-**Action.** Design a diagnostic experiment: for each step t in a sampled
-subset, run k ∈ {0, 1, 2, 4, 8} corrector loops and measure per-loop error
-reduction. Check whether log(error) decays linearly in k. Fit ρ(t) and see
-whether it correlates with any aggregate signal.
-
-**Severity.** Low — useful diagnostic regardless of the theorem; only
-critical if the contraction route becomes the main theorem.
-
----
-
-## Q8 — Is the TCR ≠ Δ_t distinction empirically significant? **[NEW]**
-
-**Raised by GPT Pro v2.**
-
-**Context.** The token-change rate (TCR_t — fraction of positions that a single
-corrector loop actually changes) and the quality gain (Δ_t — change in a
-trajectory quality functional F) are distinct quantities. The previous draft
-sometimes conflated them. Confusing the two would systematically mis-calibrate
-the proxy.
-
-**Action.**
-- Protocol A measures both TCR_t and Δ_t at each t.
-- Report correlation between TCR_t and Δ_t; if weak, the distinction is
-  material and Δ_t should be used exclusively for calibration.
-- If TCR_t and Δ_t are strongly correlated, TCR_t may be usable as a
-  cheap surrogate for Δ_t (though this weakens the novelty contribution).
-
-**Severity.** High — affects the validity of Protocol A's ε estimate.
-
----
-
-## Q9 — What F should define Δ_t? **[NEW]**
-
-**Raised by GPT Pro v2.**
-
-**Context.** Δ_t := F(y_t^{+1}) − F(y_base) requires choosing F. Candidates:
-- Negative LM-NLL under a reference language model (cheap, per-trajectory)
-- MAUVE (computed over a pool; not per-trajectory)
-- PRISM quality score (requires PRISM checkpoint)
-- Perplexity under a reference scorer
-
-**Trade-off.** Per-trajectory quantities are ideal for Δ_t but may be noisy;
-pool-level quantities (MAUVE) are stable but cannot isolate per-step effects.
-
-**Proposed.** Primary F = negative LM-NLL; sanity-check with pool-level MAUVE
-at the end of the trajectory.
-
-**Severity.** Medium — affects numerical magnitudes of ε, η_B but not the
-structure of the theorem. **Phase 2c may swap to MAUVE/F-pool** if Phase 2b
-shows uniform-vs-signal margins are within F-noise band.
-
----
-
-## Q10 — Does √B-scaling variance bound on η_B fit Phase 1 better than Prop C's B² bound? **[NEW — post-audit]**
-
-**Raised by 2026-04-19 stress test (`THEORY_STRESS_TEST.md` §6, §10.1).**
-
-**Context.** Proposition C predicts η_B ≤ γ·B(B−1)/2. On Phase 1 ProSeCo-OWT this
-gives η(B=8) ≤ 7.4 vs measured η_95(B=8) = 0.68 — a ≈11× looseness. The variance-
-form Refinement A′ predicts 𝔼|G−A| ≈ σ_ξ·B/√2, which is consistent with the
-linear-in-B scaling of the measurements.
-
-**Action.**
-1. Compute σ_ξ (std of pairwise interactions) on Phase 1 data; check whether
-   σ_ξ·B/√2 fits the (η_95(B=4), η_95(B=8), η_95(B=16)) sequence to within 30%.
-2. If yes, write up Refinement A′ as a thesis chapter result; replace Prop C in
-   the main statement of Theorem A.
-3. If no, investigate higher-order interactions (triple diagnostic).
-
-**Severity.** High — determines whether Theorem A can be made non-vacuous via a
-sharper additivity bound rather than a smaller (backbone, corrector, F).
-
-**Dependencies.** None new — uses existing Phase 1 protocol_b data.
-
----
-
-## Q11 — Is rank-based ε_R the right calibration quantity for Top-B selection? **[NEW — post-audit]**
-
-**Raised by 2026-04-19 stress test (`THEORY_STRESS_TEST.md` §4, §10.2).**
-
-**Context.** On Phase 1 ProSeCo-OWT, ε_rms ≈ 0.134 looks small only because the
-proxy is nearly flat (Spearman ≈ −0.19). Theorem A's uniform-ε bound cannot
-distinguish "informative-low-ε" from "uninformative-low-ε". Refinement A″
-proposes ε_R := (1 − |ρ|)·σ_Δ as a rank-sensitive substitute.
-
-**Action.**
-1. Recompute ε_R for each signal on Phase 1 data; report alongside ε_rms.
-2. Phase 2a (offline reanalysis) should report A↔G rank correlation per B,
-   which directly tests whether rank-ordering of A approximates rank-ordering
-   of G — the operational claim Refinement A″ rests on.
-3. If ε_R is materially different from ε_rms across signals, propose to swap
-   the calibration object in Theorem A's Assumption 3 to ε_R.
-
-**Severity.** High — determines whether Theorem A's calibration assumption is
-the right one for Top-B selection.
-
-**Dependencies.** None new — uses existing Phase 1 protocol_a data plus Phase 2a
-A↔G analysis.
-
----
-
-## Q12 — What is the true G(S_B*)? **[NEW — post-audit]**
-
-**Raised by 2026-04-19 stress test (`THEORY_STRESS_TEST.md` §8).**
-
-**Context.** Theorem A references S_B* := argmax_{|S|=B} G(S), but the experiment
-never computes this. `policy_comparison.oracle` is mean-field top-B of Δ̄_t, which
-is S_A*, not S_B*. We cannot honestly report "proxy regret vs oracle" because we
-don't know what the oracle is.
-
-**Action.**
-- For B = 4 at T = 64, all C(64, 4) ≈ 635k subsets are enumerable on a single
-  trajectory — feasible on ≈10 trajectories.
-- For B = 8, Monte-Carlo 300–1000 random schedules per trajectory and report
-  the maximum G observed (a lower bound on G(S_B*)).
-- Phase 2b includes mc_B_values = [2, 3, 4] for exactly this purpose.
-
-**Severity.** Critical — without it, no proxy-regret statement can honestly
-appear in the thesis.
-
-**Dependencies.** Phase 2b paired sweep.
-
----
-
-## Priority Ordering (April 2026, post-audit)
-
-1. **Q5** (approximate additivity / η_B) — **Central**; Phase 2b plus offline
-   reanalysis.
-2. **Q2** (signal as proxy / ε) — **Central**; Phase 2a (ε_R) + Phase 2b paired.
-3. **Q12** (true S_B*) — **Critical**; Phase 2b Monte-Carlo upper-envelope.
-4. **Q6** (corrector definition) — **Central** framing; settled for Phase 1;
-   may revisit if Phase 2b says swap is warranted.
-5. **Q11** (ε_R as right calibration) — High; Phase 2a deliverable.
-6. **Q10** (variance vs Prop C bound) — High; offline check then write-up.
-7. **Q8** (TCR vs Δ_t) — High; Protocol A.
-8. **Q4** (ProSeCo novelty) — Resolved; ProSeCo is the backend, not a competitor.
-9. **Q9** (choice of F) — Medium; Phase 2c MAUVE-swap pending Phase 2b.
-10. **Q3** (budget sensitivity) — Medium; Phase 2b sweep covers B ∈ {2,3,4,8,16}.
-11. **Q1** (contraction) — Medium; only for Stretch C2.
-12. **Q7** (empirical ρ) — Low; diagnostic only.
-
-All questions cross-reference `docs/experiments/entropy_proxy_experiment.md`
-and `docs/gpt_pro_assessment_response.md`. Q10–Q12 originate from
-`docs/thesis/theory/THEORY_STRESS_TEST.md` and
-`docs/thesis/experiments/EXPERIMENT_CRITICAL_AUDIT.md`.
+Full provenance: `research/proof_worklog.md`, `research/proof_ledger.md`.

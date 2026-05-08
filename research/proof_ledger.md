@@ -1,6 +1,28 @@
+> TECHNICAL WORKLOG.
+> Current thesis status starts at `START_HERE.md`. Summary in `docs/03_theory.md`.
+> Current theory-first plan: `docs/06_theory_first_research_plan.md`.
+
 # Proof Ledger: Provenance Tracking
 
-**Updated:** April 2026 (expanded after GPT Pro v2 assessment)
+**Updated:** April 2026 (expanded after GPT Pro v2 assessment).
+**Correction:** May 2026 — see correction block below.
+
+## Current correction — May 2026
+
+This ledger records provenance, including **superseded** theory.
+
+Current active theory is: **A → B / B′ → Diagnostic Framework C**.
+- A′ and A″ are **diagnostics** only (not regret refinements).
+- The old "Negative-Result Corollary" is **superseded** by the
+  Empirical Ranker-Class Limitation (`candidate_theorems.md` §1.5).
+- The old "Proposition C" (γ B(B−1)/2 pairwise interaction bound) is
+  **superseded** by Theorem B / B′ + Diagnostic Framework C.
+
+Older entries below are **historical** unless explicitly referenced by
+`research/candidate_theorems.md` §0–§7. Pre-revision proofs are archived
+at `docs/archive/old_theory_stack/candidate_theorems_pre_2026_05.md`.
+
+---
 
 > Tracks the origin of every proof ingredient, inequality, decomposition, or
 > modeling choice used in the thesis. Every new claim, definition, and
@@ -22,7 +44,7 @@
 | `[Validated empirically]` | Empirical check completed; see linked experiment |
 | `[Depends on calibration]` | Argument holds modulo empirical signal calibration (ε) |
 | `[Depends on approximate additivity]` | Argument holds modulo additivity bound (η_B) |
-| `[Depends on bounded pairwise interaction]` | Holds modulo γ (Proposition C) |
+| `[Depends on bounded pairwise interaction]` | Historical tag: held modulo γ in old Proposition C; superseded by Theorem B/B′ diagnostics |
 | `[Needs verification]` | Flagged for future formal or empirical work |
 | `[Empirically motivated]` | Supported by data rather than theory |
 
@@ -85,9 +107,10 @@
   framing.
 - **Tag:** `[Adapted from GPT Pro assessment v2; standard exchange argument]`
 
-### Approximate Additivity via Pairwise Interaction (Proposition C)
+### Approximate Additivity via Pairwise Interaction (Historical Proposition C)
 - **Source:** Combinatorial optimization; second-order interaction models.
 - **Adapted for:** Linking η_B to an empirically estimable pairwise bound γ.
+  Current replacement is Theorem B/B′ plus schedule-level validation of Q(S) ≈ G(S).
 - **Tag:** `[Adapted from GPT Pro assessment v2]`
 
 ### Resource Allocation Under Budget Constraint
@@ -227,7 +250,7 @@
 |-------|---------|--------|---------------|
 | Approximate additivity |G(S) − ∑ Δ_t| ≤ η_B | Theorem A | `[Depends on approximate additivity]` | Protocol B empirical measurement |
 | Calibrated proxy \|Δ_t − ψ(s_t)\| ≤ ε | Theorem A | `[Depends on calibration]` | Protocol A empirical measurement |
-| Pairwise interaction bound γ | Proposition C | `[Depends on bounded pairwise interaction]` | Protocol B pairwise diagnostic |
+| Pairwise interaction bound γ | Historical Proposition C | `[Depends on bounded pairwise interaction]` | Superseded by ζ_{B,C}, P_B schedule-level validation in Theorem B/B′ |
 | Existence of low-gain region T_low | Proposition B | `[Empirically motivated]` | Protocol A inspection of Δ_t across t |
 | Geometric contraction E_fact · ρ^k | Stretch C2 | `[Conjecture]` `[Needs verification]` | Read Ascolani et al. + Denoising Entropy; check whether discrete-MCMC contraction frameworks apply |
 | ρ(t) admits tractable functional link to s_t | Stretch C2 | `[Conjecture]` | Only relevant if C2 pursued; empirical fit |
@@ -246,11 +269,31 @@
 | Lemma A1 (oracle top-B) | `[Borrowed — standard resource allocation]` |
 | Lemma A2 (calibration regret) | `[Adapted from GPT Pro assessment v2]` |
 | Proposition B (low-gain gating) | `[Adapted from GPT Pro assessment v2]` `[Empirically motivated]` |
-| Proposition C (pairwise interaction) | `[Adapted from GPT Pro assessment v2]` |
+| Historical Proposition C (pairwise interaction) | `[Adapted from GPT Pro assessment v2]` — superseded by Theorem B/B′ + Diagnostic Framework C |
 | Stretch C2 (contraction) | `[Adapted from L&Z + Ascolani 2024]` `[Conjecture]` `[Needs verification]` |
 | Stretch C3 (confidence margin) | `[Novel framing]` `[Empirically motivated]` |
 | MI monotonicity (old C3) | `[Incorrect as stated]` `[Refuted]` — preserved in history only |
 | Systematic-scan citation | `[Incorrect as stated]` — corrected to random-scan |
+
+### Adaptive Extension (added 2026-04-22; extension only — not main-thesis canonical)
+
+| Object | Provenance tags |
+|--------|-----------------|
+| Adaptive object (state z_t, action a_t, budget b_t) | `[Definition]` `[Novel framing in thesis context]` |
+| Theorem A-ad F1 (CMDP threshold regret 2Bε̃+2η̃_B) | `[Adapted from Altman 1999 + Paternain et al. 2019 + open-loop Theorem A structure]` `[Conjecture]` `[Depends on state-conditional calibration ε̃]` `[Depends on adaptive additivity η̃_B]` `[Needs verification]` |
+| Theorem A-ad F3 (conditional SMC + (A-ad F1) with 1/√N + log\|Z\|/β) | `[Adapted from Del Moral 2004 Ch. 7 + Andrieu-Doucet-Holenstein 2010 + A-ad F1]` `[Conjecture]` `[Needs verification]` `[Depends on SMC ergodicity]` |
+| Framework F1 as primary normative frame | `[Borrowed — CMDP textbook]` `[Analogy to open-loop Theorem A]` |
+| Framework F2 as formal glue only | `[Borrowed — Todorov 2009, Kappen et al. 2012, Levine 2018]` `[Definition]` — no independent regret claim attempted |
+| Framework F3 as algorithmic realisation | `[Borrowed — Del Moral 2004, ADH 2010]` `[Empirically motivated via PG-DLM arXiv:2507.08390 and E-SMC arXiv:2512.21336]` |
+| Framework F4 (adaptive submodularity) as foil | `[Borrowed — Golovin-Krause 2011]` `[Refuted for this problem]` — Prop C's γ > 0 falsifies monotone diminishing-returns hypothesis |
+| z_t = (s_t, b_t, phase(t)) sufficient-state heuristic | `[Heuristic]` `[Empirically motivated by 62% within-seed variance]` `[Needs verification]` |
+| Protocol C (pilot, bounded, no new GPU) | `[Definition]` `[Novel — this study]` |
+
+Details: docs/archive/ (archived) and
+`research/adaptive_controller_research_notes.md` (scratch derivations).
+Phase-1 skeptical audit: docs/archive/ (archived).
+
+---
 
 See `docs/gpt_pro_assessment_response.md` for the item-level audit that drove
 these entries.

@@ -50,7 +50,10 @@ echo "=========================================="
 REPO=~/mdm/masked-diffusion-thesis
 CHECKPOINT=~/mdm/checkpoints/proseco_owt
 PROTOCOL_A_DIR=$REPO/results/phase1_proseco_owt_full/protocol_a
-OUT_DIR=$REPO/results/phase2b_proseco_owt
+# K=30 critical replication — write to a new folder (git cf89e00) so the
+# existing canonical results/phase2b_proseco_owt/ are never at risk of
+# being overwritten.  Compare this folder against canonical after the run.
+OUT_DIR=$REPO/results/phase2b_k30_rep_cf89e00
 cd "$REPO"
 
 module load miniconda3
@@ -66,7 +69,7 @@ echo "GPU count: $(nvidia-smi -L | wc -l)"
 export OMP_NUM_THREADS=2
 export MKL_NUM_THREADS=2
 
-mkdir -p out err "$OUT_DIR" figures/phase2b_proseco_owt
+mkdir -p out err "$OUT_DIR" "$OUT_DIR/per_seed" figures/phase2b_proseco_owt
 
 pip install -e . -q --break-system-packages
 pip install scipy matplotlib safetensors einops -q --break-system-packages
@@ -96,7 +99,8 @@ COMMON_ARGS=(
     --seed_start 42
     --corrector_steps 1
     --shard_count 4
-    --resume
+    # --resume intentionally omitted: this is a fresh replication run.
+    # Do not add --resume unless re-submitting a partially-failed job.
 )
 
 echo "=========================================="
@@ -105,6 +109,8 @@ echo "=========================================="
 
 # Launch one shard per GPU as a background process.
 # CUDA_VISIBLE_DEVICES pins each Python process to a single A100.
+# PIDs are captured so we can propagate individual shard failures.
+SHARD_PIDS=()
 for SHARD in 0 1 2 3; do
     (
         export CUDA_VISIBLE_DEVICES=$SHARD
@@ -114,12 +120,22 @@ for SHARD in 0 1 2 3; do
             "${COMMON_ARGS[@]}" \
             --shard_idx $SHARD \
             > "$LOG" 2>&1
-        echo "[shard $SHARD] EXIT=$?"
+        EXIT_CODE=$?
+        echo "[shard $SHARD] EXIT=$EXIT_CODE"
+        exit $EXIT_CODE
     ) &
+    SHARD_PIDS+=($!)
 done
 
-# Block until all four shards finish.
-wait
+# Block until all four shards finish; propagate any failure.
+SHARD_FAILED=0
+for i in "${!SHARD_PIDS[@]}"; do
+    wait "${SHARD_PIDS[$i]}" || { echo "[shard $i] FAILED (PID ${SHARD_PIDS[$i]})"; SHARD_FAILED=1; }
+done
+if [ "$SHARD_FAILED" -ne 0 ]; then
+    echo "One or more shards failed — aborting aggregation. Check shard logs in out/." >&2
+    exit 1
+fi
 
 echo "=========================================="
 echo "All shards done — running aggregation"
@@ -143,6 +159,8 @@ print(f'Aggregated: {len(policy_all)} policy rows, {len(mc_all)} MC rows')
 
 echo "=========================================="
 echo "Done: $(date)"
-echo "Results: $OUT_DIR"
+echo "Results (replication): $OUT_DIR"
+echo "Canonical:             $REPO/results/phase2b_proseco_owt"
 echo "Next:    python scripts/analyze_phase2b.py --results_dir $OUT_DIR"
+echo "Compare: diff replication vs canonical per_seed/ to verify K=30 gate."
 echo "=========================================="

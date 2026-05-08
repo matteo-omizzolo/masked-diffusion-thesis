@@ -1,61 +1,59 @@
 # Signal-Adaptive Corrector Scheduling for Masked Diffusion Language Models
 
-MSc thesis by Matteo Omizzolo, supervised by Prof. Giacomo Zanella (Bocconi University). The thesis now has a clear empirical verdict: fixed-budget corrector allocation is a **combinatorial trajectory-control problem**, and greedy per-step rankers are the wrong solution class. Phase 3a closes the empirical contract on ProSeCo-OWT: coordinate descent and beam-search scheduling both beat uniform, recover most of the Phase 2b oracle headroom, and show that the recoverable structure lives at the schedule level, not in a separable per-step score.
+MSc thesis by Matteo Omizzolo, supervised by Prof. Giacomo Zanella (Bocconi University).
 
-## What to read first
+## Start here
 
-1. `docs/thesis/CURRENT_INDEX.md`
-2. `docs/thesis/CANONICAL_RESEARCH_DIRECTION.md`
-3. `docs/thesis/CANONICAL_EXPERIMENT_OVERVIEW.md`
-4. `docs/thesis/experiments/RESULTS_STATUS.md`
-5. `docs/thesis/experiments/PHASE3A_COMBINATORIAL_RESULTS.md`
-6. `docs/thesis/theory/THEORY_STATUS.md`
+→ **[`START_HERE.md`](START_HERE.md)** — 2-minute orientation.
 
-## Repository map
+## Current-status rule
+
+> `START_HERE.md` and `docs/README.md` are the only entry points.
+> Do not use `docs/archive/`, `archive/`, or `docs/thesis/` to infer current status —
+> those are historical and may contradict current docs.
+
+## Repo map
 
 | Area | Purpose |
 |---|---|
-| `src/mdm_playground/scheduling/` | Current thesis code: signals, budget allocation, schedule evaluation, and backend loaders |
-| `src/mdm_playground/analysis/` | Paired comparisons, bootstrap CIs, and plotting helpers for Phase 2b / Phase 3a |
-| `scripts/run_phase2b_proseco_owt.py` | Phase 2b paired evaluation and MC-oracle sweep |
-| `scripts/run_phase3a_combinatorial.py` | Phase 3a combinatorial scheduling baselines |
-| `scripts/analyze_phase2b.py` / `scripts/analyze_phase3a.py` | Aggregation and result summarisation for the mainline runs |
-| `results/phase2b_proseco_owt/` | Raw Phase 2b paired outputs |
-| `results/phase3a_proseco_owt/` | Raw Phase 3a combinatorial outputs |
-| `results/phase2b/`, `results/phase3a/` | Aggregated summaries used in the thesis write-up |
-| `figures/phase3a/` | Main Phase 3a figures |
-| `thesis/`, `research/`, `docs/thesis/` | Thesis source, proof ledger, and canonical documentation |
-| `archive/` | Legacy framework code, stale experiments, and historical notes |
+| `START_HERE.md` | Orientation — thesis status, results, open items |
+| `docs/` | Active compact docs (`docs/README.md` for index) |
+| `docs/archive/` | Archived historical docs — not current |
+| `thesis/` | LaTeX chapters (`thesis/main.tex`) |
+| `research/` | Theorem worklog, proof ledger, open questions |
+| `src/mdm_playground/` | Main Python package (`pip install -e .`) |
+| `scripts/` | Analysis scripts; `scripts/legacy/` for superseded |
+| `results/` | Raw experiment outputs — never deleted |
+| `hpc/` | Bocconi HPC sbatch scripts and push/pull helpers |
+| `external/` | Clean upstream submodules (MDLM, ReMDM, PRISM, RemeDi, SEDD); ProSeCo-OWT is staged as a checkpoint snapshot |
+| `archive/` | Legacy code and notes from before April 2026 |
 
-## Current mainline
+## Raw results
 
-- **Phase 2b:** paired K-seed evaluation on ProSeCo-OWT, comparing signal-based policies against uniform and MC-oracle baselines.
-- **Phase 3a:** combinatorial schedulers (CD-G and BS-AG) over schedules, not step-wise rankers.
-- **Phase 3b:** theory finalisation only; no new HPC runs.
+| Folder | Phase |
+|---|---|
+| `results/phase1_proseco_owt_full/` | Phase 1 Protocol A — signal calibration |
+| `results/phase2b_proseco_owt/` | Phase 2b — policy comparison + MC-oracle |
+| `results/phase2b/` | Phase 2b — aggregated analysis outputs |
+| `results/phase3a_proseco_owt/` | Phase 3a — CD-G + BS-AG combinatorial search |
+| `results/cross_backbone/` | LLaDA-SFT bounded probe |
+| `results/protocol_c_owt/` | Protocol C — adaptive controller pilot |
 
-The active thesis path is:
-
-`scripts/run_phase2b_proseco_owt.py` → `scripts/run_phase3a_combinatorial.py` → `src/mdm_playground/scheduling/*`
-
-## Main result artifacts
-
-- `results/phase2b_proseco_owt/policy_raw.json`
-- `results/phase2b_proseco_owt/mc_raw.json`
-- `results/phase2b/policy_comparison_paired.json`
-- `results/phase2b/mc_oracle.json`
-- `results/phase3a_proseco_owt/cd_raw.json`
-- `results/phase3a_proseco_owt/bs_raw.json`
-- `results/phase3a_proseco_owt/cd_paired.json`
-- `results/phase3a_proseco_owt/bs_paired.json`
-- `results/phase3a_proseco_owt/oracle_gap_closure.json`
-- `results/phase3a/oracle_gap_closure.json`
+See `docs/04_results_index.md` for the full results map.
 
 ## Reproducibility
 
-The active backend depends on a locally staged **ProSeCo-OWT** HuggingFace snapshot, not on a hidden local source tree. Use `python scripts/stage_proseco_owt.py --dest ~/mdm/checkpoints/proseco_owt` once, then point the thesis scripts at that directory. The backend loader checks for the snapshot files and fails with a clear setup message if they are missing.
+To reproduce Phase 2b or Phase 3a on the HPC, stage the ProSeCo-OWT checkpoint once:
 
-See `REPRODUCIBILITY.md` for the exact setup and run commands.
+```bash
+python scripts/stage_proseco_owt.py --dest ~/mdm/checkpoints/proseco_owt
+```
 
-## Scope
+Then use `hpc/push.sh` to sync and `hpc/phase2b_proseco_owt.sbatch` or
+`hpc/phase3a_combinatorial.sbatch` to submit. See `scripts/README.md` for
+the full script index and `CLAUDE.md` for HPC environment details.
 
-This repository is intentionally focused on the thesis experiments and proofs. It is **not** a generic masked-diffusion benchmarking framework; the older adapter/sampler code and stale exploratory runs are archived or labeled as legacy.
+> **Note:** No full-scale new HPC experiments until the theory scaffold
+> (Theorem A baseline, Theorem B/B′, Diagnostic Framework C) is stable,
+> PF1–PF8 pass, and the K=3 smoke matches qualitatively. See
+> `docs/05_next_steps.md`.

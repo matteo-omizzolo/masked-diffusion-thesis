@@ -39,6 +39,7 @@ addopts = "-m 'not integration'"
 markers = [
   "integration: requires real model checkpoints / internet access (deselected by default)",
   "smoke: fast, no-download smoke tests",
+  "unit: local unit tests",
 ]
 
 [tool.black]

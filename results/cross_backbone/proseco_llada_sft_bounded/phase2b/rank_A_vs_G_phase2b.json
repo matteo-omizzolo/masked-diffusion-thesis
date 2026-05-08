@@ -1,0 +1,77 @@
+{
+  "meta": {
+    "phase": "2b",
+    "stage_name": "rank_A_vs_G_phase2b",
+    "generated_at_utc": "2026-04-22T20:59:08.419622Z",
+    "generated_by": "scripts/analyze_phase2b.py@b2de48794a62",
+    "source_results_paths": [
+      "results/cross_backbone/proseco_llada_sft_bounded/phase2b_raw"
+    ],
+    "config": {
+      "F": "neg_nll"
+    }
+  },
+  "data": {
+    "per_B": {
+      "2": {
+        "pooled_spearman": {
+          "rho": 0.09102872506540761,
+          "ci_lo": -0.15538199830832294,
+          "ci_hi": 0.3202695694226453,
+          "n": 80,
+          "n_resamples": 2000,
+          "alpha": 0.05,
+          "bootstrap_std": 0.12059976167608605
+        },
+        "per_seed_rho": [
+          -0.07804363149155613,
+          0.6923754129077083,
+          -0.8301004440465516,
+          -0.7875311905057029,
+          0.9721230544865804,
+          -0.7378670613747126,
+          0.21994114329438547,
+          -0.5429248952299619
+        ],
+        "per_seed_rho_mean": -0.13650345149497636,
+        "per_seed_rho_se": 0.24922356886585104,
+        "n_points_pooled": 80,
+        "n_seeds_with_rho": 8,
+        "tier": "T3"
+      },
+      "4": {
+        "pooled_spearman": {
+          "rho": 0.07909741747723818,
+          "ci_lo": -0.16682307856627748,
+          "ci_hi": 0.32290697526808965,
+          "n": 80,
+          "n_resamples": 2000,
+          "alpha": 0.05,
+          "bootstrap_std": 0.1261063742184292
+        },
+        "per_seed_rho": [
+          0.08453639444116162,
+          0.39888088480760847,
+          -0.7741647781182827,
+          -0.901721540705724,
+          0.6601871259199973,
+          -0.35252146146457514,
+          0.5213077657204966,
+          -0.43965750967550093
+        ],
+        "per_seed_rho_mean": -0.10039413988435232,
+        "per_seed_rho_se": 0.21226803603138855,
+        "n_points_pooled": 80,
+        "n_seeds_with_rho": 8,
+        "tier": "T3"
+      }
+    }
+  },
+  "decisions": [
+    {
+      "gate_id": "A_ranks_G_cross_policy_B8",
+      "result": "inconclusive",
+      "evidence": "B=8 not evaluated"
+    }
+  ]
+}
