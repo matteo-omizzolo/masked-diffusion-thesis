@@ -97,7 +97,7 @@ for OFFSET in $(seq 0 $((N_PARALLEL - 1))); do
 
   (
     export CUDA_VISIBLE_DEVICES=$OFFSET
-    python -u scripts/run_phase2b_proseco_owt.py \
+    python -u scripts/proseco/reproduction/run_phase2b_proseco_owt.py \
       --checkpoint "$CHECKPOINT" \
       --backend proseco_llada_sft \
       --protocol_a_dir "$PROTO_A_DIR" \

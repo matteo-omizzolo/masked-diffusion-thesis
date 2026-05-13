@@ -1,0 +1,17 @@
+{
+  "families_present": [
+    "T0",
+    "T1",
+    "T2",
+    "T3",
+    "T4_per_position"
+  ],
+  "families_unavailable": [
+    "T5_corrector_action_intensity"
+  ],
+  "per_seed_npz_files": [
+    "per_step_features_seed042.npz",
+    "per_step_features_seed043.npz"
+  ],
+  "scalar_feature_names": 72
+}

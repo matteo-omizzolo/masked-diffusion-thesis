@@ -1,0 +1,710 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+
+\title{\vspace{-1.5em}Corrector Timing as Statistical Intervention Diagnosis\\
+\large A supervisor-facing theory memo}
+\author{Matteo Omizzolo}
+\date{May 2026}
+
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{remark}{Remark}
+
+\newcommand{\calX}{\mathcal X}
+\newcommand{\calT}{\mathcal T}
+\newcommand{\calS}{\mathcal S}
+\newcommand{\calF}{\mathcal F}
+\newcommand{\E}{\mathbb E}
+\newcommand{\R}{\mathbb R}
+\newcommand{\1}{\mathbf 1}
+\newcommand{\TV}{\mathrm{TV}}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\osc}{\mathrm{osc}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This memo locks the thesis direction around a statistical, rather than
+algorithmic, theory of corrector timing.  The central object is the value of a
+corrector call as an intervention in an inhomogeneous generative Markov chain.
+The proposed contribution is a finite-budget diagnostic framework: define
+corrector-timing estimands, decompose schedule gains into marginal and
+interaction effects, state safe regret implications when low-order structure is
+present, and connect the framework to informed correctors, locally balanced
+MCMC proposals, and non-uniform scan Gibbs.  The mathematical claims here are
+deliberately modest.  We do not claim that ProSeCo is locally balanced, that the
+schedule objective is submodular, or that a search procedure is optimal.  The
+framework is model- and corrector-agnostic; ProSeCo-OWT is one empirical
+instantiation used to diagnose a non-marginal, redundant, locally exploitable
+timing regime.
+\end{abstract}
+
+\section{Direction lock}
+
+The thesis should not be framed as ``we designed a better schedule optimizer.''
+That is too close to a model-specific engineering problem.  The more stable
+statistical question is:
+
+\begin{quote}
+For a fixed masked-diffusion predictor, fixed informed corrector, quality
+functional \(F\), and finite corrector-call budget \(B\), can we diagnose when
+corrector timing is marginal, state-dependent, redundant, or interaction-driven?
+\end{quote}
+
+Algorithms then become probes.  A separable ranker probes whether marginal
+effects are sufficient.  Pairwise diagnostics probe whether interactions are
+structured and composable.  Local or true-\(G\) search probes whether useful
+structure remains after low-order summaries fail.  Bayesian optimization is a
+possible downstream method only if the diagnostics reveal a smooth kernel
+structure; it is not a premise of the thesis.
+
+\subsection{The gap}
+
+Existing work answers adjacent but different questions.
+
+\begin{itemize}[leftmargin=1.5em]
+\item Informed-corrector work for discrete diffusion designs better local
+corrector transitions.  Zhao, Shi, Chen, Druckmann, Mackey, and Linderman
+propose predictor-corrector schemes where the corrector uses model information,
+including hollow-transformer modifications, to counter approximation error in
+discrete diffusion sampling \cite{zhao2024informed}.
+\item Locally balanced proposals answer how local MCMC proposals in discrete
+spaces should use local target information.  Zanella characterizes locally
+balanced proposals and proves Peskun-type optimality in high-dimensional
+regimes \cite{zanella2020informed}.
+\item Random-scan, non-uniform, and adaptive Gibbs work studies how update
+schemes or selection probabilities affect MCMC convergence
+\cite{roberts1997updating,chimisov2018adapting}.
+\item Lavenant and Zanella study error bounds and optimal predictor schedule
+sizes for masked diffusions with factorized approximations \cite{lavenant2025}.
+\end{itemize}
+
+The thesis gap is the timing layer:
+
+\begin{quote}
+Given a fixed predictor and a fixed informed corrector kernel, when should a
+limited number of corrector calls be deployed along the generation trajectory?
+\end{quote}
+
+This is not a new corrector-kernel theorem and not a new unmasking-schedule
+theorem.  It is a finite-budget intervention problem over an inhomogeneous
+sequence of local correction opportunities.
+
+\subsection{Candidate theory options}
+
+There are three plausible mathematical directions.  They are not equally safe.
+
+\begin{center}
+\begin{tabular}{p{0.22\linewidth}p{0.34\linewidth}p{0.32\linewidth}}
+\toprule
+Option & What it would prove & Assessment \\
+\midrule
+Kernel theorem & ProSeCo or a Zhao-style corrector is locally balanced,
+contractive, or Peskun-optimal & Too strong for this thesis unless the kernel
+is redesigned and analysed directly \\
+Optimizer theorem & A particular search or greedy scheduler is optimal or
+near-optimal & Not aligned with the diagnostic/statistical direction; risks
+becoming model-specific optimization \\
+Diagnostic theory & Corrector timing has well-defined intervention effects,
+exact interaction decompositions, and safe low-order implications & Most
+promising: mathematically clean, corrector-agnostic, and directly connected to
+the experiments \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The rest of this memo develops the third option.  The stronger kernel and
+optimizer theories appear only as intuition or future work.
+
+\section{Mathematical setup}
+
+Assume a finite or countable state space \(\calX\).  A masked-diffusion sampler
+with fixed predictor is represented as an inhomogeneous Markov chain
+\[
+  X_0 \sim \mu_0,\qquad
+  X_t \sim P_t(X_{t-1},\cdot), \qquad t=1,\ldots,T,
+\]
+where \(P_t\) is the predictor transition at denoising step \(t\).  A fixed
+corrector at time \(t\) is a Markov kernel \(K_t\) on \(\calX\).  A schedule is
+a subset \(S\subseteq [T]:=\{1,\ldots,T\}\).  Under schedule \(S\), the law of
+the terminal sample is
+\[
+  \mu_T^S
+  =
+  \mu_0 P_1 K_1^{\1\{1\in S\}}
+        P_2 K_2^{\1\{2\in S\}}
+        \cdots
+        P_T K_T^{\1\{T\in S\}},
+\]
+where \(K_t^0\) is the identity kernel and \(K_t^1=K_t\).  Let
+\(F:\calX\to\R\) be a bounded terminal quality functional.  Define
+\[
+  J(S) := \E_{\mu_T^S}[F(X_T)],
+  \qquad
+  G(S) := J(S)-J(\varnothing).
+\]
+The fixed-budget timing problem considers schedules with \(|S|=B\).
+
+\begin{remark}[What is abstracted away]
+This notation does not require \(K_t\) to be Gibbs, Metropolis-within-Gibbs, or
+locally balanced.  It only requires that the corrector call can be represented
+as a kernel inserted into the trajectory.  This is why the framework is
+corrector-agnostic.
+\end{remark}
+
+\begin{definition}[Timing estimands]
+For \(t\in[T]\), define the marginal intervention effect
+\[
+  \Delta_t := G(\{t\}).
+\]
+For \(s\ne t\), define the pair interaction
+\[
+  \xi_{s,t}
+  :=
+  G(\{s,t\}) - G(\{s\}) - G(\{t\}).
+\]
+For \(A\subseteq B\subseteq [T]\) and \(x\notin B\), define the diminishing
+returns gap
+\[
+  \mathrm{DR}(A,B,x)
+  :=
+  \bigl[G(A\cup\{x\})-G(A)\bigr]
+  -
+  \bigl[G(B\cup\{x\})-G(B)\bigr].
+\]
+If \(\mathrm{DR}(A,B,x)\ge 0\) for all such triples, then \(G\) is submodular.
+\end{definition}
+
+In the experiments, \(G_i(S)\) is evaluated on a paired seed \(i\) using common
+random numbers: the base trajectory and scheduled trajectories share all
+randomness except the corrector interventions.  This is a design choice for
+variance reduction and causal comparability, not an additional theorem
+assumption.
+
+\section{Exact interaction decomposition}
+
+The first mathematically clean contribution is to treat \(G\) as a finite-set
+response surface.  No approximation is required.
+
+\begin{theorem}[Möbius interaction decomposition]
+Let \(G:2^{[T]}\to\R\) with \(G(\varnothing)=0\).  There exists a unique
+collection of interaction coefficients \(\{I(U):\varnothing\ne U\subseteq[T]\}\)
+such that
+\[
+  G(S)=\sum_{\varnothing\ne U\subseteq S} I(U)
+  \qquad \text{for every } S\subseteq[T].
+\]
+They are given by Möbius inversion:
+\[
+  I(U)=\sum_{V\subseteq U} (-1)^{|U|-|V|}G(V).
+\]
+\end{theorem}
+
+\begin{proof}
+Define \(I(U)\) by the displayed inversion formula for nonempty \(U\), and set
+\(I(\varnothing)=G(\varnothing)=0\) for this proof.  Then
+\[
+  \sum_{\varnothing\ne U\subseteq S} I(U)
+  =
+  \sum_{U\subseteq S}\sum_{V\subseteq U}(-1)^{|U|-|V|}G(V)
+  =
+  \sum_{V\subseteq S} G(V)
+  \sum_{W\subseteq S\setminus V}(-1)^{|W|}.
+\]
+The inner sum equals \(1\) if \(V=S\) and \(0\) otherwise.  Hence the expression
+equals \(G(S)\).  Uniqueness follows by induction on \(|S|\): once all
+coefficients on strict subsets are known, \(I(S)=G(S)-\sum_{U\subsetneq S}I(U)\).
+\end{proof}
+
+The first-order coefficients are \(I(\{t\})=\Delta_t\).  The second-order
+coefficients are \(I(\{s,t\})=\xi_{s,t}\).  Higher-order coefficients quantify
+what remains unexplained by marginal and pair effects.
+
+\subsection{Diagnostic ladder}
+
+The decomposition gives a natural ladder:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Dominant component & Statistical diagnosis & Policy implication \\
+\midrule
+First order \(I(\{t\})\) & marginal regime & separable ranking can work \\
+Second order \(I(\{s,t\})\) & redundancy/complementarity & interaction diagnostics needed \\
+Higher order \(I(U), |U|\ge3\) & non-low-order regime & true-\(G\) search only as probe \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+This table is not a theorem about neural networks.  It is an exact
+decomposition plus a diagnostic interpretation.
+
+\section{Safe surrogate implications}
+
+The next pieces are standard but useful.  They say when a diagnostic object
+would justify a policy class.
+
+\subsection{Marginal validity}
+
+Define the additive surrogate
+\[
+  A(S):=\sum_{t\in S}\Delta_t.
+\]
+
+\begin{proposition}[Marginal regret under uniform additive residual]
+Fix \(B\).  Suppose
+\[
+  \sup_{|S|=B}|G(S)-A(S)|\le \eta_B.
+\]
+Let \(S_A^\star\in\arg\max_{|S|=B}A(S)\) and
+\(S_G^\star\in\arg\max_{|S|=B}G(S)\).  Then
+\[
+  G(S_G^\star)-G(S_A^\star)\le 2\eta_B.
+\]
+\end{proposition}
+
+\begin{proof}
+By the residual bound,
+\[
+G(S_G^\star)\le A(S_G^\star)+\eta_B
+\le A(S_A^\star)+\eta_B
+\le G(S_A^\star)+2\eta_B.
+\]
+\end{proof}
+
+If \(\widehat{\Delta}_t\) is a proxy with
+\(\sup_t|\widehat{\Delta}_t-\Delta_t|\le \varepsilon\), then selecting the
+top-\(B\) times by \(\widehat{\Delta}_t\) adds at most \(2B\varepsilon\) regret
+on \(A\), giving the familiar \(2\eta_B+2B\varepsilon\) bound.  This is the
+right theorem for marginal rankers.  If the bound is vacuous or the empirical
+rankers fail, the regime is not marginal.
+
+\subsection{Pairwise validity}
+
+Define the second-order surrogate
+\[
+  Q(S):=\sum_{t\in S}\Delta_t
+  +\sum_{\{s,t\}\subseteq S}\xi_{s,t}.
+\]
+
+\begin{proposition}[Pairwise surrogate regret]
+Suppose
+\[
+  \sup_{|S|=B}|G(S)-Q(S)|\le \zeta_B.
+\]
+Let \(S_Q^\star\in\arg\max_{|S|=B}Q(S)\).  Then
+\[
+  G(S_G^\star)-G(S_Q^\star)\le 2\zeta_B.
+\]
+If an estimated surrogate \(\widehat Q\) satisfies
+\(\sup_{|S|=B}|Q(S)-\widehat Q(S)|\le\alpha_B\), and
+\(\widehat S\) maximizes \(\widehat Q\), then
+\[
+  G(S_G^\star)-G(\widehat S)\le 2\zeta_B+2\alpha_B.
+\]
+\end{proposition}
+
+\begin{proof}
+The first statement is identical to the marginal proof with \(Q\) replacing
+\(A\).  For the estimated case,
+\[
+Q(\widehat S)
+\ge
+\widehat Q(\widehat S)-\alpha_B
+\ge
+\widehat Q(S_Q^\star)-\alpha_B
+\ge
+Q(S_Q^\star)-2\alpha_B.
+\]
+Thus \(\widehat S\) has \(Q\)-optimization gap at most \(2\alpha_B\).  Apply
+the exact-\(Q\) argument with this optimization gap.
+\end{proof}
+
+This is not a deep optimization theorem.  Its value is diagnostic: it states
+precisely what must be true before a pairwise theory supports scheduling.
+
+\section{Redundancy and diminishing returns}
+
+The pairwise model gives a clean connection between negative interactions and
+diminishing returns.
+
+\begin{proposition}[Second-order submodularity criterion]
+Let
+\[
+  Q(S)=\sum_{t\in S}a_t+\sum_{\{s,t\}\subseteq S}b_{s,t}.
+\]
+Then \(Q\) is submodular if and only if \(b_{s,t}\le 0\) for every pair
+\(\{s,t\}\).
+\end{proposition}
+
+\begin{proof}
+For \(A\subseteq B\) and \(x\notin B\),
+\[
+Q(A\cup\{x\})-Q(A)
+=
+a_x+\sum_{y\in A}b_{x,y},
+\]
+and similarly for \(B\).  Therefore
+\[
+\mathrm{DR}_Q(A,B,x)
+=
+-\sum_{y\in B\setminus A}b_{x,y}.
+\]
+This is nonnegative for all \(A,B,x\) if all \(b_{x,y}\le0\).  Conversely,
+take \(A=\varnothing\), \(B=\{y\}\), \(x\ne y\).  Then
+\(\mathrm{DR}_Q(\varnothing,\{y\},x)=-b_{x,y}\).  Submodularity implies
+\(b_{x,y}\le0\).
+\end{proof}
+
+\begin{corollary}[Robustness to higher-order residuals]
+Write \(G=Q+R\).  For any \(A\subseteq B\), \(x\notin B\),
+\[
+  \mathrm{DR}_G(A,B,x)
+  =
+  \mathrm{DR}_Q(A,B,x)
+  +
+  \mathrm{DR}_R(A,B,x).
+\]
+If \(\sup_S |R(S)|\le \rho\), then
+\[
+  |\mathrm{DR}_R(A,B,x)|\le 4\rho.
+\]
+Hence a positive second-order diminishing-returns gap larger than \(4\rho\)
+survives the higher-order residual.
+\end{corollary}
+
+\begin{proof}
+The first identity follows by linearity.  The second follows because
+\(\mathrm{DR}_R\) is a signed sum of four \(R\)-values.
+\end{proof}
+
+This corollary is useful because it tells us why negative pair interactions
+alone do not prove submodularity of \(G\).  They prove submodularity of the
+second-order approximation.  To transfer the conclusion to \(G\), the
+higher-order residual must be controlled.
+
+\section{Corrector value as error, correctability, and downstream relevance}
+
+The previous sections are exact finite-set/statistical statements.  They do
+not explain why a corrector call is valuable.  For that, we introduce an
+idealized Markov-chain layer.
+
+At time \(t\), suppose there is an ideal local target \(\pi_t\) and current law
+\(\nu_t\).  The corrector kernel \(K_t\) is useful if it contracts discrepancy
+from \(\pi_t\).  Assume an entropy contraction condition:
+\[
+  \KL(\nu K_t\,\|\,\pi_t)
+  \le
+  (1-\kappa_t)\KL(\nu\,\|\,\pi_t),
+  \qquad
+  \kappa_t\in[0,1].
+\]
+This assumption is inspired by Markov-chain convergence theory, including
+entropy contraction for Gibbs samplers under log-concavity
+\cite{ascolani2024entropy}, but it is \emph{not} asserted for ProSeCo without
+separate verification.
+
+\begin{proposition}[Clean contraction-index statement]
+If the local score of interest is negative relative entropy
+\[
+  \Phi_t(\nu):=-\KL(\nu\,\|\,\pi_t),
+\]
+and \(K_t\) satisfies the contraction condition above, then applying the
+corrector improves this idealized score by at least
+\[
+  \Phi_t(\nu K_t)-\Phi_t(\nu)
+  \ge
+  \kappa_t\,\KL(\nu\,\|\,\pi_t).
+\]
+\end{proposition}
+
+\begin{proof}
+\[
+\Phi_t(\nu K_t)-\Phi_t(\nu)
+=
+\KL(\nu\,\|\,\pi_t)-\KL(\nu K_t\,\|\,\pi_t)
+\ge
+\kappa_t \KL(\nu\,\|\,\pi_t).
+\]
+\end{proof}
+
+This is the clean form of the intuition:
+\[
+  \text{ideal corrector value}
+  \quad \gtrsim \quad
+  \text{residual error}\times\text{local contraction strength}.
+\]
+
+For a terminal quality functional \(F\), one also needs downstream relevance.
+Let \(h_t(x)\) be the expected terminal reward from state \(x\) at time \(t\)
+under the remaining predictor/corrector plan.  If \(h_t\) is bounded, then
+Pinsker's inequality gives
+\[
+  |(\nu K_t-\pi_t)h_t|
+  \le
+  \osc(h_t)\sqrt{\frac{1}{2}\KL(\nu K_t\,\|\,\pi_t)}
+  \le
+  \osc(h_t)\sqrt{\frac{1-\kappa_t}{2}\KL(\nu\,\|\,\pi_t)}.
+\]
+This does not prove the sign of the terminal improvement.  It says that a
+contractive corrector reduces a bound on downstream bias relative to the ideal
+local target, with strength governed by three factors:
+\[
+  \boxed{
+  \text{residual error } \KL(\nu_t\|\pi_t)
+  \quad
+  \times
+  \text{correctability } \kappa_t
+  \quad
+  \times
+  \text{downstream sensitivity } \osc(h_t)
+  }.
+\]
+
+This explains why uncertainty signals alone can fail.  High entropy can reflect
+missing context rather than correctable error; a large residual is not useful
+if \(K_t\) cannot contract it; and even a successful local correction has little
+terminal value if downstream sensitivity is low.
+
+\section{Connection to locally balanced proposals}
+
+Zanella's locally balanced proposals are a theory for constructing informed
+local MCMC moves in discrete spaces.  In a neighborhood \(\mathcal N(x)\) of
+state \(x\), a locally informed proposal has the form
+\[
+  q_g(y\mid x)
+  \propto
+  g\!\left(\frac{\pi(y)}{\pi(x)}\right)K_0(x,y),
+  \qquad y\in\mathcal N(x),
+\]
+where \(K_0\) is a base local proposal and \(g\) satisfies a balancing
+condition of the form \(g(r)=r\,g(1/r)\).  Zanella shows that locally balanced
+choices are optimal in a precise high-dimensional Peskun sense
+\cite{zanella2020informed}.
+
+The thesis should use this in the following disciplined way.
+
+\begin{itemize}[leftmargin=1.5em]
+\item Locally balanced proposals answer the \emph{kernel-design} question:
+given a local target, how should the sampler propose local moves?
+\item Informed correctors for discrete diffusion answer a related
+generative-model question: how can a corrector use learned model information
+to counter predictor approximation error?
+\item Corrector timing asks a different question: given such a local kernel
+\(K_t\), when should a finite number of calls to \(K_t\) be spent along an
+inhomogeneous trajectory?
+\end{itemize}
+
+Thus the clean connection is:
+
+\begin{quote}
+An informed corrector is a locally informed Markov kernel.  Corrector timing is
+the finite-budget scan problem of deploying such kernels along a generative
+trajectory.
+\end{quote}
+
+We should not claim that ProSeCo is locally balanced unless this is separately
+proved.  The theory only requires that \(K_t\) be a well-defined correction
+kernel and that its statistical effect can be estimated.
+
+\section{Connection to non-uniform scan Gibbs}
+
+Random-scan Gibbs chooses which coordinate or block to update.  The selection
+probabilities affect convergence.  Roberts and Sahu analyze how updating
+schemes, blocking, and covariance structure affect Gibbs behavior
+\cite{roberts1997updating}.  Chimisov, Latuszynski, and Roberts develop an
+adaptive random-scan Gibbs sampler that adapts selection probabilities using a
+spectral-gap criterion for a Gaussian analogue \cite{chimisov2018adapting}.
+
+The corrector-timing analogy is:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Gibbs / MCMC concept & Corrector-timing analogue \\
+\midrule
+coordinate or block & denoising time / correction opportunity \\
+local update kernel & corrector kernel \(K_t\) \\
+scan probability & timing policy or budget allocation \\
+mixing improvement & terminal gain \(G(S)\) or local contraction index \\
+adaptive scan & state-dependent corrector timing \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The analogy is useful but not literal.  A Gibbs sampler targets one stationary
+distribution.  A masked-diffusion sampler is an inhomogeneous generative chain
+whose intermediate targets change with time.  Therefore scan Gibbs supplies
+vocabulary and motivation, not an off-the-shelf theorem.
+
+In the additive idealization, if a single call at time \(t\) has value
+\(c_t\), then allocating \(B\) deterministic calls to the largest \(c_t\)'s is
+optimal.  The statistical content of this thesis is precisely that real
+corrector calls need not remain additive: early calls change later states,
+later values can become redundant, and pair/higher-order effects determine the
+regime.
+
+\section{Research question and theorem stack}
+
+The recommended locked research question is:
+
+\begin{quote}
+For a fixed masked-diffusion predictor and fixed informed corrector, can
+finite-budget corrector timing be statistically diagnosed from marginal
+effects, conditional trajectory state, and interaction effects; and when is
+timing reducible to marginal ranking versus interaction-driven correction?
+\end{quote}
+
+The corresponding theory stack is:
+
+\begin{enumerate}[leftmargin=1.8em]
+\item \textbf{Intervention setup.} Define \(J(S)\), \(G(S)\), \(\Delta_t\),
+\(\tau_t(z)\), \(\xi_{s,t}\), and \(\mathrm{DR}(A,B,x)\).
+\item \textbf{Exact interaction decomposition.} Use Möbius inversion to define
+marginal, pairwise, and higher-order effects exactly.
+\item \textbf{Safe low-order implications.} Prove marginal and pairwise
+surrogate regret bounds under explicit finite-pool residual assumptions.
+\item \textbf{Redundancy/submodularity diagnostic.} Show negative pair
+coefficients imply submodularity of the second-order model, and quantify the
+higher-order residual needed to transfer this conclusion to \(G\).
+\item \textbf{Correctability index.} Under an idealized contraction assumption,
+derive that local corrector value is governed by residual error, contraction
+strength, and downstream sensitivity.
+\item \textbf{Regime classification.} Classify a model/corrector/\(F\)/\(B\)
+tuple as no-op, marginal, redundant/pairwise, locally searchable, or
+higher-order/black-box.
+\end{enumerate}
+
+\section{How ProSeCo-OWT fits}
+
+ProSeCo-OWT should be used as one empirical case study, not as universal
+evidence.  The current diagnostics say:
+
+\begin{itemize}[leftmargin=1.5em]
+\item Corrector timing has positive headroom over uniform timing.
+\item Tested separable rankers fail, so the regime is not purely marginal.
+\item Pair interactions are structured and mostly negative, indicating
+redundancy.
+\item Cheap pairwise surrogates help at \(B=2\) but fail at \(B=3,4\), so
+low-dimensional pairwise composition is insufficient.
+\item Exact diminishing-return gaps are mildly positive on average, but not
+strong enough for a clean submodularity claim.
+\item One-swap neighborhoods contain many improvements, so local true-\(G\)
+search is a useful probe.
+\item Bayesian optimization remains unclear because the schedule-distance
+kernel signal is weak.
+\end{itemize}
+
+Therefore ProSeCo-OWT is best described as an
+\emph{interaction-driven, locally exploitable corrector-timing regime}.  This
+is an empirical classification inside a model-agnostic framework.
+
+\section{What is proved, what is borrowed, what is intuition}
+
+\begin{center}
+\begin{tabular}{p{0.30\linewidth}p{0.31\linewidth}p{0.28\linewidth}}
+\toprule
+Item & Status in this thesis & Source / inspiration \\
+\midrule
+Intervention estimands \(G,\Delta,\xi,\mathrm{DR}\) & Defined here; mathematically direct & potential-outcome/statistical response-surface viewpoint \\
+Möbius decomposition & Exact theorem & finite Boolean-lattice inversion \\
+Marginal and pairwise regret bounds & Exact under explicit sup residual assumptions & standard surrogate-regret argument \\
+Second-order submodularity criterion & Exact for quadratic set functions & elementary set-function algebra \\
+Contraction-index proposition & Exact under stated KL contraction assumption & Markov-chain contraction/Gibbs theory intuition \\
+Locally balanced proposal connection & Conceptual bridge; not assumed for ProSeCo & Zanella informed proposals \\
+Scan Gibbs connection & Conceptual bridge; not theorem transfer & Roberts--Sahu; adaptive scan Gibbs \\
+ProSeCo-OWT classification & Empirical case study only & current diagnostics \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Recommended thesis claim}
+
+A careful final claim would be:
+
+\begin{quote}
+This thesis develops a statistical diagnostic framework for finite-budget
+corrector timing in masked diffusion.  It treats corrector calls as
+interventions in an inhomogeneous generative Markov chain, decomposes schedule
+gain into marginal and interaction effects, and connects corrector timing to
+the scan-design problem for locally informed Markov kernels.  On ProSeCo-OWT,
+the framework identifies a non-marginal, redundant, locally exploitable regime:
+separable marginal timing fails, pair interactions are mostly negative, weak
+diminishing returns are present but not theorem-grade, and true-\(G\) search is
+useful as an empirical probe.
+\end{quote}
+
+Claims to avoid:
+
+\begin{itemize}[leftmargin=1.5em]
+\item ProSeCo is locally balanced.
+\item Corrector timing is submodular in general.
+\item Bayesian optimization is justified by current diagnostics.
+\item ProSeCo-OWT proves model-agnostic empirical behavior.
+\item Search is the theoretical contribution.
+\end{itemize}
+
+\begin{thebibliography}{9}
+
+\bibitem{zhao2024informed}
+Yixiu Zhao, Jiaxin Shi, Feng Chen, Shaul Druckmann, Lester Mackey, and Scott
+Linderman.
+\newblock \emph{Informed Correctors for Discrete Diffusion Models}.
+\newblock arXiv:2407.21243, 2024/2025.
+\newblock \url{https://arxiv.org/abs/2407.21243}.
+
+\bibitem{zanella2020informed}
+Giacomo Zanella.
+\newblock Informed proposals for local MCMC in discrete spaces.
+\newblock \emph{Journal of the American Statistical Association},
+115(530):852--865, 2020.
+\newblock \url{https://arxiv.org/abs/1711.07424}.
+
+\bibitem{roberts1997updating}
+Gareth O. Roberts and Sujit K. Sahu.
+\newblock Updating schemes, covariance structure, blocking and parameterization
+for the Gibbs sampler.
+\newblock \emph{Journal of the Royal Statistical Society: Series B},
+59(2):291--317, 1997.
+\newblock \url{https://ideas.repec.org/a/bla/jorssb/v59y1997i2p291-317.html}.
+
+\bibitem{chimisov2018adapting}
+Cyril Chimisov, Krzysztof Latuszynski, and Gareth Roberts.
+\newblock \emph{Adapting the Gibbs Sampler}.
+\newblock arXiv:1801.09299, 2018.
+\newblock \url{https://arxiv.org/abs/1801.09299}.
+
+\bibitem{ascolani2024entropy}
+Filippo Ascolani, Hugo Lavenant, and Giacomo Zanella.
+\newblock \emph{Entropy Contraction of the Gibbs Sampler under Log-Concavity}.
+\newblock arXiv:2410.00858, 2024.
+\newblock \url{https://arxiv.org/abs/2410.00858}.
+
+\bibitem{secchi2025mwg}
+Cecilia Secchi and Giacomo Zanella.
+\newblock \emph{Spectral Gap of Metropolis-within-Gibbs under Log-Concavity}.
+\newblock arXiv:2509.26175, 2025.
+\newblock \url{https://arxiv.org/abs/2509.26175}.
+
+\bibitem{lavenant2025}
+Hugo Lavenant and Giacomo Zanella.
+\newblock \emph{Error Bounds and Optimal Schedules for Masked Diffusions with
+Factorized Approximations}.
+\newblock arXiv:2510.25544, 2025.
+\newblock \url{https://arxiv.org/abs/2510.25544}.
+
+\end{thebibliography}
+
+\end{document}

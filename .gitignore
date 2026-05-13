@@ -35,6 +35,13 @@ results/**/generated_sequences.json
 results/**/samples_*.json
 results/**/*.pt
 results/**/*.ckpt
+# Large per-seed/per-shard raw JSON and NPZ features (multi-MB each).
+# Summaries (metrics.json, interpretation.md, config.json, manifests) stay tracked.
+results/**/validation_rows.json
+results/**/neighborhood_raw*.json
+results/**/triples_raw*.json
+results/**/per_step_features_seed*.npz
+results/**/*.npz
 
 # Data & checkpoints (keep dir structure, not the files)
 data/
@@ -42,6 +49,11 @@ checkpoints/*
 !checkpoints/.gitkeep
 !checkpoints/README.md
 external/proseco/
+
+# External upstream clones used for backend validation (e.g.
+# lindermanlab/informed-correctors). Pinned commit is recorded in
+# docs/08_backend_feasibility_audit.md, not via git.
+external_repos/
 
 # Model weight files (never commit)
 *.ckpt
@@ -72,6 +84,9 @@ thesis/*.pdf
 thesis/*.toc
 thesis/*.run.xml
 thesis/*.synctex.gz
+# latexmk save-error stubs left when a build is interrupted mid-write.
+thesis/*-SAVE-ERROR
+thesis/**/*-SAVE-ERROR
 
 # Claude Code
 .claude/

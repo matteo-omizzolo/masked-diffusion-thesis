@@ -1,0 +1,35 @@
+{
+  "n_scalar_features": 72,
+  "per_seed": {
+    "42": {
+      "entropy_per_pos_max": 8.793800354003906,
+      "entropy_per_pos_min": 5.079973561805673e-06,
+      "finite_feature_share_min": 1.0,
+      "margin_per_pos_max": 0.9999999403953552,
+      "margin_per_pos_min": 0.0,
+      "n_scalar_features": 72,
+      "quantile_ordering_violations": 0,
+      "steps_checked": 64,
+      "top1_per_pos_max": 1.0,
+      "top1_per_pos_min": 0.006622314453125,
+      "unique_scalar_feature_names": 72,
+      "warnings": []
+    },
+    "43": {
+      "entropy_per_pos_max": 9.114715576171875,
+      "entropy_per_pos_min": 9.278232937504072e-06,
+      "finite_feature_share_min": 1.0,
+      "margin_per_pos_max": 0.9999999403953552,
+      "margin_per_pos_min": 0.0,
+      "n_scalar_features": 72,
+      "quantile_ordering_violations": 0,
+      "steps_checked": 64,
+      "top1_per_pos_max": 1.0,
+      "top1_per_pos_min": 0.005950927734375,
+      "unique_scalar_feature_names": 72,
+      "warnings": []
+    }
+  },
+  "total_seconds": 225.763601064682,
+  "total_seeds": 2
+}

@@ -1,0 +1,529 @@
+{
+  "schema_version": 1,
+  "description": "Structured index of major experiments for the corrector-timing thesis on ProSeCo-OWT. Entries are append-only; do not delete or rewrite past entries.",
+  "experiments": [
+    {
+      "experiment_id": "phase1_protocol_a",
+      "date": "2026-04",
+      "result_dir": "results/phase1_proseco_owt_full/protocol_a/",
+      "status": "complete",
+      "backend": "ProSeCo-OWT",
+      "research_question": "Measure per-step single-step correction value Delta_t and per-step pre-correction state signals along the base trajectory.",
+      "targets": [
+        "Delta_t per (seed, t)"
+      ],
+      "methods": [
+        "Paired CRN single-correction branching, 50 seeds x T=64"
+      ],
+      "main_metrics": {
+        "ranker_spearman_signal_delta": "0.10-0.15",
+        "low_gain_phase": "early T_low (R_t approximately empty)"
+      },
+      "interpretation": "Establishes the per-step delta dataset and the basic per-step state features (entropy, inverse_margin, quality_mass_proxy, unmasked_fraction, n_revisable, n_masked). The base evidence used by every downstream audit.",
+      "supports": [
+        "Existence of per-step Delta_t signal",
+        "Definition of trajectory state features"
+      ],
+      "does_not_support": [
+        "A deployable per-step trigger from these signals"
+      ],
+      "decision_enabled": "Phase 2b policy/MC-oracle.",
+      "follow_up": "Phase 2b."
+    },
+    {
+      "experiment_id": "phase2b_policy_and_mc_oracle",
+      "date": "2026-04",
+      "result_dir": "results/phase2b_proseco_owt/, results/phase2b/",
+      "status": "complete",
+      "backend": "ProSeCo-OWT",
+      "research_question": "Does the corrector schedule matter? Do separable signal rankers recover MC-oracle headroom over uniform?",
+      "targets": [
+        "G(S) for fixed B in {2,3,4,8,16}"
+      ],
+      "methods": [
+        "K=30 paired seeds; 10 greedy signal rankers; MC oracle = best of 100 random schedules"
+      ],
+      "main_metrics": {
+        "MC_oracle_minus_uniform_canonical": "+0.45 (B in {2,3,4})",
+        "MC_oracle_minus_uniform_K30_replication": "+0.37",
+        "ranker_recovery": "All separable rankers underperform; mean_delta_oracle saturates by B=8",
+        "sigma_xi_B2_3_4": "0.174 / 0.240 / 0.309",
+        "rho_A_G": "0.601 / 0.542 / 0.462"
+      },
+      "interpretation": "Timing matters: there is a substantial MC-oracle headroom over uniform. Separable rankers do not recover it. Establishes the Empirical Ranker-Class Limitation.",
+      "supports": [
+        "Schedule headroom exists",
+        "Marginal rankers fail"
+      ],
+      "does_not_support": [
+        "Universal failure beyond the tested ranker class"
+      ],
+      "decision_enabled": "Phase 3a search baselines and Theorem A baseline.",
+      "follow_up": "Phase 3a."
+    },
+    {
+      "experiment_id": "phase3a_combinatorial_search",
+      "date": "2026-04",
+      "result_dir": "results/phase3a_proseco_owt/",
+      "status": "complete",
+      "backend": "ProSeCo-OWT",
+      "research_question": "Can a non-greedy search procedure with true-G feedback recover the MC-oracle headroom?",
+      "targets": [
+        "G(S) at B in {2,3,4,8}"
+      ],
+      "methods": [
+        "CD-G (coordinate descent, true-G feedback); BS-AG (beam search, cheap-A pruning + true-G rollouts)"
+      ],
+      "main_metrics": {
+        "CD_G_recovery_vs_canonical_0_45_at_B_2_3_4": "78.9 / 74.1 / 84.3 %",
+        "BS_AG_recovery_vs_canonical_0_45_at_B_2_3_4": "64.1 / 57.1 / 48.8 %",
+        "p_value_against_uniform": "< 0.001 at all tested B"
+      },
+      "interpretation": "Search using true-G feedback delivers most of the MC-oracle headroom. This is an existence result; CD-G/BS-AG are not deployable (use true G).",
+      "supports": [
+        "Schedule-value function has exploitable structure that true-G search captures"
+      ],
+      "does_not_support": [
+        "A deployable scheduler from cheap features"
+      ],
+      "decision_enabled": "Interaction diagnostics to explain why rankers failed where search succeeded.",
+      "follow_up": "Phase 1 Gate 3 interactions."
+    },
+    {
+      "experiment_id": "gate3_pair_interaction_diagnostics",
+      "date": "2026-05",
+      "result_dir": "results/phase1_interaction_diag_nogit/ (Gate 3a); results/phase1_schedule_validation_b2_0c39079/, results/phase1_schedule_validation_b34_0c39079/ (Gate 3b)",
+      "status": "complete",
+      "backend": "ProSeCo-OWT",
+      "research_question": "Are pair interactions xi_{s,t} = G({s,t}) - Delta_s - Delta_t non-zero and structured? Does a cheap pairwise surrogate Q(S) compose at schedule level?",
+      "targets": [
+        "xi_{s,t}",
+        "G(S) via pairwise Q at B in {2,3,4}"
+      ],
+      "methods": [
+        "30 seeds x 73 stratified pairs (Gate 3a); no-leakage schedule-level Q validation (Gate 3b)"
+      ],
+      "main_metrics": {
+        "mean_xi": -0.0662,
+        "ci95_mean_xi": "[-0.1174, -0.0157]",
+        "p_xi_positive": 0.37,
+        "corr_A_pair_xi": -0.7,
+        "Gate3b_B2_eta_minus_zeta_phase_distance_a_ridge": "+0.054 [+0.030, +0.081]",
+        "Gate3b_B3_4_best_deployable_Q": "INCREASES held-out error"
+      },
+      "interpretation": "Pair interactions are real and predominantly negative/redundant. Cheap low-d pairwise Q works at B=2 but fails at B=3,4 with the tested estimator family.",
+      "supports": [
+        "Timing structure is partly interaction-driven",
+        "Redundancy is the dominant pair phenomenon"
+      ],
+      "does_not_support": [
+        "A direct cheap-pairwise scheduler at B>=3",
+        "Submodularity or BO-readiness"
+      ],
+      "decision_enabled": "Set-function / neighborhood diagnostics + state-predictability audits.",
+      "follow_up": "Gates 4-6."
+    },
+    {
+      "experiment_id": "gate4_gate5_set_function_and_neighborhood",
+      "date": "2026-05",
+      "result_dir": "results/set_function_structure_0c39079/, results/schedule_landscape_geometry_0c39079/, results/phase4_schedule_neighborhood_0c39079/",
+      "status": "complete",
+      "backend": "ProSeCo-OWT",
+      "research_question": "Does G(S) have a submodular/BO-ready structure or a clean local-neighborhood story?",
+      "targets": [
+        "G(S) set-function diagnostics; one-swap neighborhood; DR triples"
+      ],
+      "methods": [
+        "Monotonicity comparisons; one-swap neighborhood; exact DR triples (Gate 5 K=10 HPC)"
+      ],
+      "main_metrics": {
+        "monotonicity_nonnegative_share": 0.796,
+        "one_swap_mean_abs_delta_G": 0.137,
+        "p_one_swap_improves": 0.397,
+        "search_finals_local_optima_share": "CD-G 0.267 / BS-AG 0.067 / top-MC 0.133",
+        "DR_triples_mean_gap": "+0.0365 [+0.0229, +0.0505]",
+        "P_DR_gap_nonneg": 0.607,
+        "BO_verdict": "BO_unclear"
+      },
+      "interpretation": "Local structure exists but is weak; weak submodularity is not identifiable; BO is not justified as a thesis mainline.",
+      "supports": [
+        "True-G search is the empirically successful family",
+        "Modest local smoothness"
+      ],
+      "does_not_support": [
+        "Weak-submodular guarantees",
+        "BO scheduler thesis claim"
+      ],
+      "decision_enabled": "State-predictability audit.",
+      "follow_up": "Gate 6 marginal state audit."
+    },
+    {
+      "experiment_id": "gate6_state_predictability_marginal",
+      "date": "2026-05-11",
+      "result_dir": "results/state_predictability_0c39079/",
+      "status": "complete",
+      "backend": "ProSeCo-OWT",
+      "research_question": "Do the 6 aggregate pre-correction state features improve held-out prediction of Delta_t beyond time alone?",
+      "targets": [
+        "Delta_t = G({t})"
+      ],
+      "methods": [
+        "Grouped 5-fold by seed; cubic-time ridge baseline; state-augmented ridge; per-seed bootstrap CI on MSE reduction"
+      ],
+      "main_metrics": {
+        "ridge_time_MSE": 0.016893,
+        "ridge_time_state_MSE": 0.016975,
+        "mean_per_seed_MSE_reduction": -8.2e-05,
+        "ci95": "[-0.000267, +0.000111]",
+        "pct_seeds_improved": 0.54,
+        "spearman_time_vs_time_state": "0.340 vs 0.342",
+        "verdict": "state_predictability_not_supported"
+      },
+      "interpretation": "Under the tested linear class and current 6 aggregate state features, state does not add incremental signal to time for predicting Delta_t.",
+      "supports": [
+        "No deployable single-step trigger from current 6 features under linear regression"
+      ],
+      "does_not_support": [
+        "State carries no timing info in general",
+        "Adaptive scheduling is impossible"
+      ],
+      "decision_enabled": "Pair-level state audit and enriched-feature audit.",
+      "follow_up": "Pair-level audit + enriched audit."
+    },
+    {
+      "experiment_id": "state_predictability_pair",
+      "date": "2026-05-12",
+      "result_dir": "results/state_predictability_pair_0c39079/",
+      "status": "complete",
+      "backend": "ProSeCo-OWT",
+      "research_question": "Does pre-correction state at (s,t) predict pair interaction xi_{s,t} and G({s,t}) beyond pair geometry and A_pair?",
+      "targets": [
+        "xi_{s,t}",
+        "G({s,t})"
+      ],
+      "methods": [
+        "Grouped 5-fold seed CV; ridge baselines (geom, geom+A_pair, geom+A_pair+state); poly-2 ridge non-linear probe"
+      ],
+      "main_metrics": {
+        "ridge_geom_apair_MSE_xi": 0.025984,
+        "ridge_geom_apair_state_MSE_xi": 0.026699,
+        "ridge_geom_apair_vs_geom_mean_xi_reduction": "+0.0282 [+0.017, +0.040], 90% seeds",
+        "state_vs_geom_apair_xi_reduction": "-0.0007 [-0.00194, +0.00023], 43% seeds",
+        "poly2_vs_geom_apair_state_xi_reduction": "-0.0018 [-0.0037, -0.0005], 33% seeds",
+        "verdict_xi": "state_predictability_not_supported",
+        "verdict_g_pair": "state_predictability_not_supported"
+      },
+      "interpretation": "Geom + A_pair is a strong held-out predictor of xi (Spearman 0.69). The original 6 aggregate state features add nothing on top, and degree-2 polynomial expansion overfits with negative incremental signal.",
+      "supports": [
+        "xi is predictable from (time geometry, A_pair) on held-out seeds",
+        "Aggregate pre-correction state adds nothing incremental at pair level under linear ridge"
+      ],
+      "does_not_support": [
+        "Richer feature classes are useless",
+        "Token-level features cannot help"
+      ],
+      "decision_enabled": "Enriched-feature audit covering derivatives, ratios, forward look, schedule-level.",
+      "follow_up": "enriched audit (this experiment)."
+    },
+    {
+      "experiment_id": "tokenlevel_preflight_k2",
+      "date": "2026-05-12",
+      "result_dir": "results/archive/2026-05-13_repo_cleanup/tokenlevel_features_proseco_preflight_0c39079/, results/archive/2026-05-13_repo_cleanup/tokenlevel_state_predictability_preflight_0c39079/",
+      "status": "complete",
+      "hpc_job_id": 493107,
+      "backend": "ProSeCo-OWT on A100 MIG (Bocconi gnode, SLURM job 493107)",
+      "research_question": "Does the prepared extraction pipeline produce T0 aggregate features that match canonical Phase 1 trajectory_*.json values within abs-tolerance 1e-3 on K=2 seeds (RNG alignment gate)?",
+      "targets": [
+        "alignment.rng_aligned == true on Phase 1 T0 fields"
+      ],
+      "methods": [
+        "extract_tokenlevel_features_proseco.py on seeds 42, 43, T=64, CUDA; analyze_tokenlevel_state_predictability.py --alignment-tol 1e-3"
+      ],
+      "main_metrics": {
+        "rng_aligned": true,
+        "rows_compared": 128,
+        "seeds_compared": 2,
+        "max_abs_dev_entropy": 9.5e-07,
+        "max_abs_dev_inverse_margin": 1.3e-07,
+        "max_abs_dev_quality_mass_proxy": 8.2e-08,
+        "max_abs_dev_n_masked": 0.0,
+        "max_abs_dev_n_revisable": 0.0,
+        "max_abs_dev_unmasked_fraction": 0.0,
+        "verdict": "PREFLIGHT_PASS"
+      },
+      "interpretation": "All T0 aggregate features match canonical Phase 1 trajectory_*.json within 1e-6 (tolerance 1e-3). RNG is aligned on A100 CUDA. K=30 run authorised. Output archived as provenance during 2026-05-13 cleanup because the K=30 token-level run supersedes it.",
+      "supports": [
+        "K=30 token-level targets (xi_raw.json) are reusable without joint rerun"
+      ],
+      "does_not_support": [],
+      "decision_enabled": "K=30 token-level job authorised.",
+      "follow_up": "tokenlevel_k30."
+    },
+    {
+      "experiment_id": "tokenlevel_k30",
+      "date": "2026-05-12",
+      "result_dir": "results/tokenlevel_features_proseco_k30_0c39079/, results/tokenlevel_state_predictability_k30_0c39079/",
+      "status": "complete",
+      "hpc_job_id": 493108,
+      "backend": "ProSeCo-OWT on A100 MIG (Bocconi gnode, SLURM job 493108)",
+      "research_question": "Does token-level / model-internal pre-correction information (masked-position uncertainty shape, revisable-set uncertainty shape, concentration, pair-level Jaccard/cosine overlaps) improve held-out prediction of pair-level corrector-timing targets (xi and G_pair) beyond pair geometry + A_pair?",
+      "targets": [
+        "xi_{s,t}",
+        "G_pair"
+      ],
+      "methods": [
+        "extract_tokenlevel_features_proseco.py seeds 42-71 T=64 CUDA; grouped 5-fold seed CV; ablation P0..P6; ridge; per-seed bootstrap CI on MSE reduction"
+      ],
+      "main_metrics": {
+        "rng_aligned": true,
+        "seeds": 30,
+        "rows": 2190,
+        "extraction_total_time_s": 2832.5,
+        "xi_P0_MSE": 0.054121,
+        "xi_P0_spearman": -0.024,
+        "xi_P1_MSE": 0.025972,
+        "xi_P1_spearman": 0.693,
+        "xi_P6_MSE": 0.034128,
+        "xi_P6_spearman": 0.581,
+        "xi_P1_vs_P0_mean_mse_reduction": 0.02815,
+        "xi_P1_vs_P0_ci95": "[+0.017, +0.040]",
+        "xi_P1_vs_P0_pct_seeds_improved": 0.9,
+        "xi_P6_vs_P1_mean_mse_reduction": -0.008157,
+        "xi_P6_vs_P1_ci95": "[-0.0108, -0.0055]",
+        "xi_P6_vs_P1_pct_seeds_improved": 0.133,
+        "g_pair_P1_MSE": 0.025971,
+        "g_pair_P1_spearman": 0.374,
+        "g_pair_P6_MSE": 0.034125,
+        "g_pair_P6_spearman": 0.211,
+        "g_pair_P6_vs_P1_mean_mse_reduction": -0.008154,
+        "g_pair_P6_vs_P1_ci95": "[-0.0108, -0.0055]",
+        "verdict": "tokenlevel_not_supported"
+      },
+      "interpretation": "Strong, clean negative. P1 (geometry + A_pair) achieves Spearman 0.693 on xi with MSE reduced 2.8 pp vs geometry alone. Every token-level family (T1-T4) reliably increases MSE relative to P1: CI [-0.0108, -0.0055] excludes zero, only 4/30 seeds improve. The negative effect is monotone across family additions. On G_pair the result is identical. Conclusion: correction timing on ProSeCo-OWT is captured by temporal geometry + additive marginal redundancy (A_pair). Model-internal token-level features (uncertainty shape, revisable-set, concentration, overlap) carry no incremental held-out signal under the tested ridge class.",
+      "supports": [
+        "Pairwise timing interactions (xi) are strongly predicted by A_pair = Delta_s + Delta_t (Spearman 0.693)",
+        "Token-level model-internal features add no incremental held-out signal beyond A_pair on ProSeCo-OWT"
+      ],
+      "does_not_support": [
+        "Token-level features are useless on all backbones",
+        "Non-linear models cannot use this signal",
+        "Feature families beyond T0-T4 cannot help"
+      ],
+      "decision_enabled": "Stop feature search on ProSeCo-OWT. Four independent state-predictability negatives documented (Gate 6 marginal, pair, enriched, token-level). Write the ProSeCo-OWT diagnostic case study.",
+      "follow_up": "Write / synthesise. ProSeCo-OWT case study: geometry + marginal-redundancy (A_pair) accounts for pairwise timing structure; search (CD-G/BS-AG) is the empirically successful scheduler family."
+    },
+    {
+      "experiment_id": "state_predictability_enriched",
+      "date": "2026-05-12",
+      "result_dir": "results/state_predictability_enriched_0c39079/",
+      "status": "complete",
+      "backend": "ProSeCo-OWT",
+      "research_question": "Does a richer family of locally derived pre-correction features (intensity ratios, causal derivatives, forward curvature, pair contrasts, schedule summaries) improve held-out prediction of corrector timing value at marginal, pair, and schedule levels beyond time geometry and marginal/additive baselines?",
+      "targets": [
+        "Delta_t",
+        "xi_{s,t}",
+        "G_pair",
+        "G(S) at B in {2,3,4}"
+      ],
+      "methods": [
+        "Grouped 5-fold seed CV; ridge ablation across feature families S0/S1/S2/S3; curated poly-2 non-linear probe; per-seed bootstrap CI"
+      ],
+      "main_metrics": {
+        "marginal_M4_vs_M0_mean_reduction": "-0.000187 [-0.000465, +0.000099], 42% seeds",
+        "pair_xi_P5_vs_P1_mean_reduction": "-0.00163 [-0.00314, -0.00045], 30% seeds",
+        "pair_g_P5_vs_P1_mean_reduction": "-0.00163 [-0.00314, -0.00045], 30% seeds",
+        "schedule_B2_state_vs_geom_AofS": "-0.000511 [-0.00153, +0.00042], 40% seeds",
+        "schedule_B3_state_vs_geom_AofS": "-0.00225 [-0.00458, -0.00035], 43% seeds",
+        "schedule_B4_state_vs_geom_AofS": "-0.00346 [-0.00655, -0.00103], 23% seeds",
+        "sanity_pair_apair_vs_geom": "+0.0282 [+0.017, +0.040], 90% seeds",
+        "sanity_schedule_AofS_vs_geom_B2_3_4": "+0.0103 / +0.0107 / +0.0091 (all CIs exclude 0)"
+      },
+      "interpretation": "Enriched aggregate features (ratios, causal derivatives, forward differences, curvature, pair contrasts, schedule summaries) do not improve held-out prediction at any of the three target levels under the tested ridge / polynomial-ridge class. At B>=3 in the schedule audit, adding state on top of geometry + A(S) significantly HURTS held-out MSE. Sanity baselines (A_pair, A(S)) confirm the audit detects real signal where it exists. This is a triple-confirmed negative for aggregate observable state predictability of correction timing on ProSeCo-OWT.",
+      "supports": [
+        "No incremental held-out signal from derived aggregate trajectory features beyond temporal geometry + marginal/additive baselines on this backbone, under the tested model class",
+        "Geometry + A_pair / A(S) are strong held-out predictors"
+      ],
+      "does_not_support": [
+        "Token-level / model-internal features cannot help",
+        "Non-aggregate features cannot help",
+        "Adaptive timing is impossible on other backbones"
+      ],
+      "decision_enabled": "Either (a) targeted token-level / logit-quantile inference pass on a tightly bounded HPC budget, or (b) writing the diagnostic case study with three independent state-predictability negatives.",
+      "follow_up": "Next decision is supervisor-elective: token-level pilot vs. write."
+    },
+    {
+      "experiment_id": "phase_a_saturation_structure",
+      "date": "2026-05-12",
+      "result_dir": "results/saturation_structure_0c39079/",
+      "status": "complete",
+      "backend": "ProSeCo-OWT (local analysis of existing xi_raw.json, n=2190)",
+      "research_question": "Does the pairwise interaction data reveal a saturation structure: do high-A_pair pairs show systematic redundancy (negative xi) while low-A_pair pairs retain genuine complementarity? Is G_pair a sublinear function of A_pair?",
+      "targets": [
+        "G_pair ~ A_pair composition",
+        "xi stratified by A_pair quartile",
+        "partial R2 of G_pair",
+        "per-seed robustness"
+      ],
+      "methods": [
+        "OLS G_pair ~ A_pair; bootstrap CIs; quartile stratification; nested partial R2 (M0-M5); seed-level slope distribution; phase/distance stratification; baseline comparison"
+      ],
+      "main_metrics": {
+        "G_vs_A_slope": 0.247,
+        "G_vs_A_slope_ci95": "[0.212, 0.285]",
+        "G_vs_A_r2": 0.0925,
+        "xi_vs_A_spearman": -0.671,
+        "Q1_mean_xi": 0.109,
+        "Q4_mean_xi": -0.277,
+        "Q1_p_gpair_pos_posA": 0.814,
+        "Q4_p_gpair_pos": 0.854,
+        "partial_r2_M1_Apair": 0.0925,
+        "partial_r2_M3_plus_phase": 0.1499,
+        "pct_positive_seed_slopes": 0.867,
+        "gate_C1_sublinear_slope": "PASS (0.247 in (0,1))",
+        "gate_C2_r2_ge_010": "BORDERLINE FAIL (0.0925 vs 0.10; see note)",
+        "gate_C3_Q4_neg_xi": "PASS (-0.277 < 0)",
+        "gate_C4_Q1_complementarity": "PASS (0.814 >= 0.70)",
+        "gate_C5_seed_robust": "PASS (86.7% >= 80%)"
+      },
+      "interpretation": "Saturation structure is empirically confirmed on 4/5 gates. G_pair grows sublinearly in A_pair (slope=0.247, well below 1), Spearman(A_pair,xi)=-0.671. Q4 pairs are strongly redundant (mean xi=-0.277). Positive-A_pair Q1 pairs show genuine complementarity (P(G>0)=0.814). 86.7% of seeds show positive G_vs_A slope. C2 is borderline: R2=0.0925 vs threshold 0.10; this is due to phase being a large confounder (adding phase boosts R2 to 0.150). The saturation story is solid. Phase B (corrector-strength experiment) is the natural next step but requires supervisor sign-off given the borderline C2.",
+      "supports": [
+        "Sublinear G_pair composition = saturation signature",
+        "High-A_pair redundancy is real and strong",
+        "Low-A_pair complementarity is genuine when A_pair>0",
+        "Saturation is consistent across seeds and phase/distance strata"
+      ],
+      "does_not_support": [
+        "A deployable pairwise scheduler from A_pair alone",
+        "Linear R2 is a sufficient saturation diagnostic (phase confound masks it)"
+      ],
+      "decision_enabled": "Phase B (corrector-strength experiment) pending C2 threshold discussion with supervisor.",
+      "follow_up": "Discuss C2 borderline with supervisor. If proceeding: implement Phase B corrector-steps={0,1,2,3} experiment."
+    },
+    {
+      "experiment_id": "corrector_strength_preflight",
+      "date": "2026-05-12",
+      "result_dir": "results/archive/2026-05-13_repo_cleanup/corrector_strength_preflight_0c39079/",
+      "hpc_job": "493167",
+      "hpc_node": "gnode04",
+      "status": "complete",
+      "backend": "ProSeCo-OWT (HPC A100, T=64)",
+      "research_question": "Do corrector strength variants (corrector_steps in {0,1,2}) produce meaningfully different correction behaviours, and does strength_1 reproduce canonical Protocol A values?",
+      "targets": [
+        "Delta_t per (seed,t,strength)",
+        "G_pair per (seed,pair,strength)",
+        "corrector_n_changed"
+      ],
+      "methods": [
+        "TrackedGenerator wrapper tracks per-call token changes without consuming RNG",
+        "CRN: predictor steps unchanged across strength variants (corrector is deterministic)",
+        "Canonical reproduction check: max |Delta_t(strength_1) - Protocol_A_Delta_t| < 1e-3",
+        "Seeds 42,43; T=64; 3 pairs per A_pair stratum (low/mid/high); all 4 strength levels"
+      ],
+      "preflight_gates": {
+        "G1_canonical_reproduction": "PASS (max_abs_error=0.0, n_checked=30)",
+        "G2_standard_nontrivial": "PASS (max_corrector_n_changed_strength_1=64)",
+        "G3_strength_variants_differ": "PASS (s0=4.07, s1=32.57, s2=46.03 mean changed tokens)",
+        "G4_no_correction_noop": "PASS (max_abs_delta=0.0)",
+        "G5_crn_consistent": "PASS (f_base identical across all strengths per seed)"
+      },
+      "main_metrics": {
+        "strength_0_mean_delta_t": 0.0426,
+        "strength_0_mean_G_pair": 0.0721,
+        "strength_0_mean_xi": -0.025,
+        "strength_0_p_xi_pos": 0.0,
+        "strength_1_mean_delta_t": 0.1638,
+        "strength_1_mean_G_pair": 0.2292,
+        "strength_1_mean_xi": -0.0909,
+        "strength_1_p_xi_pos": 0.222,
+        "strength_2_mean_delta_t": 0.2282,
+        "strength_2_mean_G_pair": 0.3246,
+        "strength_2_mean_xi": -0.1304,
+        "strength_2_p_xi_pos": 0.222,
+        "wall_s": 995.9
+      },
+      "interpretation": "All 5 preflight gates pass. Strength variants produce meaningfully different behaviours: corrector_n_changed jumps 8x from s0 (4.07) to s1 (32.57), then 1.4x from s1 to s2 (46.03). Stronger correction increases G_pair but xi becomes more negative (-0.025 -> -0.091 -> -0.130), confirming that stronger correction amplifies additive marginal effects faster than interaction gains. Output archived as provenance during 2026-05-13 cleanup because the K=30 corrector-strength run supersedes it. CRN is perfectly preserved (G5 pass, G1 max_error=0.0).",
+      "supports": [
+        "Strength variants are scientifically non-trivial and distinguishable",
+        "CRN preservation confirmed: corrector is deterministic, f_base identical across strengths",
+        "Saturation signature (negative \u03be) deepens monotonically with corrector strength",
+        "Canonical Protocol A \u0394_t values reproduced exactly by strength_1"
+      ],
+      "does_not_support": [
+        "Stronger correction reduces interaction redundancy",
+        "strength_0 shows complementarity (P(\u03be>0)=0.0 in preflight)"
+      ],
+      "decision_enabled": "Main Phase B K=30 experiment authorised (all 5 preflight gates pass).",
+      "follow_up": "Main Phase B K=30 experiment: job 493234. See corrector_strength_k30 entry."
+    },
+    {
+      "experiment_id": "corrector_strength_k30",
+      "date": "2026-05-13",
+      "result_dir": "results/corrector_strength_k30_0c39079/",
+      "hpc_job": "493234",
+      "hpc_node": "gnode01",
+      "status": "complete",
+      "backend": "ProSeCo-OWT (HPC A100, T=64)",
+      "research_question": "Does corrector strength (corrector_steps \u2208 {0,1,2}) modulate the pairwise interaction structure (\u03be, G_pair, A_pair) in a scientifically interpretable way across 30 seeds?",
+      "targets": [
+        "Delta_t per (seed, t, strength)",
+        "G_pair, A_pair, xi per (seed, pair_id, strength)",
+        "corrector_n_changed per (seed, t, strength)"
+      ],
+      "methods": [
+        "CorrectorStrengthGenerator: TrackedGenerator subclass, corrector is deterministic \u2192 CRN preserved",
+        "30 seeds (42-71), T=64, 9 pairs per seed (3 per A_pair stratum), 4 strength levels",
+        "Single-shot model load, corrector_steps mutated between strengths"
+      ],
+      "preflight_gates": {
+        "G1_canonical_reproduction": "PASS (max_abs_error=0.0, n_checked=466)",
+        "G2_standard_nontrivial": "PASS (max corrector_n_changed_s1=72)",
+        "G3_strength_variants_differ": "PASS (s0=3.02, s1=30.82, s2=42.46 mean changed tokens)",
+        "G4_no_correction_noop": "PASS (max_abs_delta=0.0)",
+        "G5_crn_consistent": "PASS"
+      },
+      "main_metrics": {
+        "n_delta_rows": 1864,
+        "n_pair_rows": 1080,
+        "strength_0_mean_delta_t": 0.0164,
+        "strength_0_mean_corrector_n_changed": 3.0172,
+        "strength_0_mean_G_pair": 0.0273,
+        "strength_0_mean_xi": -0.0086,
+        "strength_0_p_xi_pos": 0.1259,
+        "strength_1_mean_delta_t": 0.0998,
+        "strength_1_mean_corrector_n_changed": 30.8197,
+        "strength_1_mean_G_pair": 0.162,
+        "strength_1_mean_xi": -0.0289,
+        "strength_1_p_xi_pos": 0.3074,
+        "strength_2_mean_delta_t": 0.1368,
+        "strength_2_mean_corrector_n_changed": 42.4571,
+        "strength_2_mean_G_pair": 0.2382,
+        "strength_2_mean_xi": -0.029,
+        "strength_2_p_xi_pos": 0.3667,
+        "wall_s": 15292
+      },
+      "interpretation": "Corrector strength modulates G_pair and A_pair proportionally but does NOT change mean \u03be between s1 and s2 (\u22120.0289 vs \u22120.0290, essentially identical). The s0\u2192s1 jump is 10\u00d7 in corrector_n_changed (3.02\u219230.82) \u2014 the annealed refinement step is where the bulk of token-changing work occurs. P(\u03be>0) grows monotonically: 0.126 (s0) \u2192 0.307 (s1) \u2192 0.367 (s2), showing more correction reveals more complementarity. But mean \u03be saturates: going from s1 to s2 does not shift the average interaction structure, only rescales amplitudes uniformly. The saturation hypothesis is confirmed: the corrector operates within a fixed interaction geometry; scaling its strength neither resolves nor deepens cross-timestep redundancy beyond the s1 operating point.",
+      "supports": [
+        "Corrector strength increases G_pair and A_pair in proportion (\u03be unchanged at s1\u2192s2)",
+        "P(\u03be>0) grows with strength: more correction reveals more complementarity",
+        "Corrector efficacy is non-linear: 10\u00d7 jump s0\u2192s1 in corrector_n_changed, only 1.4\u00d7 s1\u2192s2",
+        "CRN perfectly preserved across all strength levels (G1 max_error=0.0, G5 pass)",
+        "No_correction is a perfect no-op (G4 pass, max_abs_delta=0.0)"
+      ],
+      "does_not_support": [
+        "Stronger correction resolves pairwise redundancy (mean \u03be unchanged s1\u2192s2)",
+        "Corrector strength is a lever for improving interaction structure beyond s1"
+      ],
+      "decision_enabled": "Phase B conclusion: corrector strength does not provide a new lever for improving pairwise complementarity beyond the canonical s1 setting. The interaction geometry is fixed; scheduling strategy (when to apply the corrector) remains the key variable.",
+      "follow_up": "Synthesise Phase A + Phase B into thesis narrative. Write ProSeCo-OWT diagnostic case study: saturation structure is fixed by trajectory geometry (A_pair), not by corrector intensity."
+    }
+  ],
+  "repository_structure": {
+    "status_date": "2026-05-13",
+    "proseco_scripts_root": "scripts/proseco/",
+    "backend_validation_scripts_root": "scripts/backend_validation/",
+    "proseco_hpc_root": "hpc/proseco/",
+    "backend_validation_hpc_root": "hpc/backend_validation/",
+    "tests_root": "tests/proseco/",
+    "canonical_results_moved": false
+  }
+}

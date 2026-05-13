@@ -2,8 +2,8 @@
 """Generate Protocol-A trajectories for a staged ProSeCo-family snapshot.
 
 Outputs `trajectory_{i}.json` rows compatible with:
-  - scripts/run_phase2b_proseco_owt.py
-  - scripts/run_phase3a_combinatorial.py
+  - scripts/proseco/reproduction/run_phase2b_proseco_owt.py
+  - scripts/proseco/reproduction/run_phase3a_combinatorial.py
 """
 
 from __future__ import annotations

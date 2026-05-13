@@ -1,0 +1,217 @@
+{
+  "improvements_g_pair": {
+    "P1_geom_apair_vs_P0_geom": {
+      "ci95_hi": -0.00010014967377190015,
+      "ci95_lo": -0.02327009302987386,
+      "mean_mse_reduction": -0.01168512135182288,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.0
+    },
+    "P2_plus_T0_vs_P1_geom_apair": {
+      "ci95_hi": -4.991463534970847e-05,
+      "ci95_lo": -0.0003671985987000956,
+      "mean_mse_reduction": -0.00020855661702490202,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.0
+    },
+    "P3_plus_T1_vs_P1_geom_apair": {
+      "ci95_hi": 0.008631908033829301,
+      "ci95_lo": -0.010094058514334873,
+      "mean_mse_reduction": -0.0007310752402527858,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.5
+    },
+    "P4_plus_T2_vs_P1_geom_apair": {
+      "ci95_hi": 0.012194062715220735,
+      "ci95_lo": -0.016088514780276075,
+      "mean_mse_reduction": -0.0019472260325276696,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.5
+    },
+    "P5_plus_T3_vs_P1_geom_apair": {
+      "ci95_hi": 0.017516108724612133,
+      "ci95_lo": -0.029238653769356065,
+      "mean_mse_reduction": -0.005861272522371966,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.5
+    },
+    "P6_plus_T4_overlaps_vs_P1_geom_apair": {
+      "ci95_hi": 0.017343717663861547,
+      "ci95_lo": -0.03386088837758107,
+      "mean_mse_reduction": -0.008258585356859761,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.5
+    },
+    "P6_plus_T4_overlaps_vs_P5_plus_T3": {
+      "ci95_hi": -0.00017239106075058602,
+      "ci95_lo": -0.004622234608225008,
+      "mean_mse_reduction": -0.002397312834487797,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.0
+    }
+  },
+  "improvements_xi": {
+    "P1_geom_apair_vs_P0_geom": {
+      "ci95_hi": 0.05679270380915565,
+      "ci95_lo": 0.04429782993640286,
+      "mean_mse_reduction": 0.05054526687277926,
+      "n_seeds": 2,
+      "pct_seeds_improved": 1.0
+    },
+    "P2_plus_T0_vs_P1_geom_apair": {
+      "ci95_hi": -0.000337137746127961,
+      "ci95_lo": -0.0003742027886685234,
+      "mean_mse_reduction": -0.0003556702673982422,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.0
+    },
+    "P3_plus_T1_vs_P1_geom_apair": {
+      "ci95_hi": 0.008943977879939433,
+      "ci95_lo": -0.009582747511179044,
+      "mean_mse_reduction": -0.0003193848156198059,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.5
+    },
+    "P4_plus_T2_vs_P1_geom_apair": {
+      "ci95_hi": 0.011918734087449992,
+      "ci95_lo": -0.013853194765489843,
+      "mean_mse_reduction": -0.0009672303390199253,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.5
+    },
+    "P5_plus_T3_vs_P1_geom_apair": {
+      "ci95_hi": 0.016933010180325003,
+      "ci95_lo": -0.025100490369870124,
+      "mean_mse_reduction": -0.00408374009477256,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.5
+    },
+    "P6_plus_T4_overlaps_vs_P1_geom_apair": {
+      "ci95_hi": 0.0169585854478168,
+      "ci95_lo": -0.029742420349344316,
+      "mean_mse_reduction": -0.006391917450763758,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.5
+    },
+    "P6_plus_T4_overlaps_vs_P5_plus_T3": {
+      "ci95_hi": 2.5575267491795978e-05,
+      "ci95_lo": -0.004641929979474192,
+      "mean_mse_reduction": -0.002308177355991198,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.5
+    }
+  },
+  "meta": {
+    "alignment_status": {
+      "alignment_tol": 0.001,
+      "max_abs_deviation_by_feature": {
+        "entropy": 9.5367431640625e-07,
+        "inverse_margin": 1.2665987014770508e-07,
+        "n_masked": 0.0,
+        "n_revisable": 0.0,
+        "quality_mass_proxy": 8.195638656616211e-08,
+        "unmasked_fraction": 0.0
+      },
+      "rng_aligned": true,
+      "rows_compared": 128,
+      "seeds_compared": 2
+    },
+    "generated_at_utc": "2026-05-12T05:37:48.407793+00:00",
+    "n_rows": 146,
+    "n_seeds": 2
+  },
+  "metrics_g_pair": {
+    "P0_geom": {
+      "mae": 0.10349500628412639,
+      "mse": 0.018425285880887828,
+      "spearman_pred_target": 0.5552752410786654
+    },
+    "P1_geom_apair": {
+      "mae": 0.12833379451160784,
+      "mse": 0.030110407232710704,
+      "spearman_pred_target": 0.34453745058356205
+    },
+    "P2_plus_T0": {
+      "mae": 0.1309301390228518,
+      "mse": 0.03031896384973561,
+      "spearman_pred_target": 0.33903291826152293
+    },
+    "P3_plus_T1": {
+      "mae": 0.1355055915694845,
+      "mse": 0.030841482472963495,
+      "spearman_pred_target": 0.3219216312709459
+    },
+    "P4_plus_T2": {
+      "mae": 0.13536848250512823,
+      "mse": 0.032057633265238375,
+      "spearman_pred_target": 0.2871206475887021
+    },
+    "P5_plus_T3": {
+      "mae": 0.15250215094323294,
+      "mse": 0.035971679755082676,
+      "spearman_pred_target": 0.22121857427885294
+    },
+    "P6_plus_T4_overlaps": {
+      "mae": 0.15895349389810332,
+      "mse": 0.03836899258957047,
+      "spearman_pred_target": 0.23312610199195752
+    }
+  },
+  "metrics_xi": {
+    "P0_geom": {
+      "mae": 0.23298652375159334,
+      "mse": 0.08147903181704205,
+      "spearman_pred_target": -0.557940828860036
+    },
+    "P1_geom_apair": {
+      "mae": 0.12986745429301114,
+      "mse": 0.030933764944262802,
+      "spearman_pred_target": 0.5240929238260381
+    },
+    "P2_plus_T0": {
+      "mae": 0.1326376136240131,
+      "mse": 0.03128943521166105,
+      "spearman_pred_target": 0.4658773041151034
+    },
+    "P3_plus_T1": {
+      "mae": 0.13640031115024037,
+      "mse": 0.03125314975988261,
+      "spearman_pred_target": 0.5351621452763087
+    },
+    "P4_plus_T2": {
+      "mae": 0.13472269229225228,
+      "mse": 0.03190099528328273,
+      "spearman_pred_target": 0.5431805813024801
+    },
+    "P5_plus_T3": {
+      "mae": 0.14935975173481372,
+      "mse": 0.03501750503903536,
+      "spearman_pred_target": 0.48325636747918665
+    },
+    "P6_plus_T4_overlaps": {
+      "mae": 0.15638541667060968,
+      "mse": 0.03732568239502655,
+      "spearman_pred_target": 0.3986636029952903
+    }
+  },
+  "predictor_names": [
+    "P0_geom",
+    "P1_geom_apair",
+    "P2_plus_T0",
+    "P3_plus_T1",
+    "P4_plus_T2",
+    "P5_plus_T3",
+    "P6_plus_T4_overlaps"
+  ],
+  "verdict": {
+    "comparison": {
+      "ci95_hi": 0.0169585854478168,
+      "ci95_lo": -0.029742420349344316,
+      "mean_mse_reduction": -0.006391917450763758,
+      "n_seeds": 2,
+      "pct_seeds_improved": 0.5
+    },
+    "interpretation": "Pre-registered expansion gate. tokenlevel_supported = expand to K=30 (HPC). tokenlevel_weak = expand cautiously after feature importance review. tokenlevel_not_supported = stop and write the ProSeCo-OWT case study.",
+    "label": "tokenlevel_not_supported"
+  }
+}

@@ -10,7 +10,7 @@ Runs five checks (same structure as debug_mdlm_conf_load.py):
 
 Usage:
     conda activate remdm311
-    python scripts/debug_proseco_owt_load.py \
+    python scripts/legacy/debug_proseco_owt_load.py \
         --checkpoint /home/3316152/mdm/checkpoints/proseco_owt \
         --device cpu --T 4
 """

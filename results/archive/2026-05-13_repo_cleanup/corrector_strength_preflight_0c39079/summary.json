@@ -1,0 +1,89 @@
+{
+  "per_strength": {
+    "no_correction": {
+      "n_delta_rows": 30,
+      "n_pair_rows": 18,
+      "mean_delta_t": 0.0,
+      "mean_abs_delta_t": 0.0,
+      "mean_corrector_n_changed": 0.0,
+      "mean_final_n_changed": 0.0,
+      "mean_G_pair": 0.0,
+      "mean_A_pair": 0.0,
+      "mean_xi": 0.0,
+      "p_xi_pos": 0.0
+    },
+    "strength_0": {
+      "n_delta_rows": 30,
+      "n_pair_rows": 18,
+      "mean_delta_t": 0.04259317715962728,
+      "mean_abs_delta_t": 0.04259317715962728,
+      "mean_corrector_n_changed": 4.066666666666666,
+      "mean_final_n_changed": 21.466666666666665,
+      "mean_G_pair": 0.07212718327840169,
+      "mean_A_pair": 0.09715202119615343,
+      "mean_xi": -0.025024837917751737,
+      "p_xi_pos": 0.0
+    },
+    "strength_1": {
+      "n_delta_rows": 30,
+      "n_pair_rows": 18,
+      "mean_delta_t": 0.1638370196024577,
+      "mean_abs_delta_t": 0.166390323638916,
+      "mean_corrector_n_changed": 32.56666666666667,
+      "mean_final_n_changed": 228.03333333333333,
+      "mean_G_pair": 0.22917834917704263,
+      "mean_A_pair": 0.3200516700744629,
+      "mean_xi": -0.09087332089742024,
+      "p_xi_pos": 0.2222222222222222
+    },
+    "strength_2": {
+      "n_delta_rows": 30,
+      "n_pair_rows": 18,
+      "mean_delta_t": 0.2282398541768392,
+      "mean_abs_delta_t": 0.25769287745157876,
+      "mean_corrector_n_changed": 46.03333333333333,
+      "mean_final_n_changed": 336.56666666666666,
+      "mean_G_pair": 0.32462390263875324,
+      "mean_A_pair": 0.4549877908494737,
+      "mean_xi": -0.13036388821072048,
+      "p_xi_pos": 0.2222222222222222
+    }
+  },
+  "gates": {
+    "G1_canonical_reproduction": {
+      "pass": true,
+      "max_abs_error": 0.0,
+      "n_checked": 30,
+      "threshold": 0.001
+    },
+    "G2_standard_nontrivial": {
+      "pass": true,
+      "max_corrector_n_changed_strength_1": 64
+    },
+    "G3_strength_variants_differ": {
+      "pass": true,
+      "mean_corrector_n_changed_s0": 4.066666666666666,
+      "mean_corrector_n_changed_s1": 32.56666666666667,
+      "mean_corrector_n_changed_s2": 46.03333333333333,
+      "note": "variants are non-idempotent if they differ"
+    },
+    "G4_no_correction_noop": {
+      "pass": true,
+      "max_abs_delta_no_correction": 0.0
+    },
+    "G5_crn_consistent": {
+      "pass": true
+    }
+  },
+  "gate_pass": true,
+  "sha": "unknown",
+  "T": 64,
+  "debug": false,
+  "seeds": [
+    42,
+    43
+  ],
+  "total_wall_s": 995.9171059131622,
+  "n_deltas": 120,
+  "n_pairs": 72
+}

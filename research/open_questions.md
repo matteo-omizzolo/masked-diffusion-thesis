@@ -5,10 +5,12 @@
 
 # Open Questions — Current
 
-**Updated:** 2026-05-06 (post theory-correction pass).
-The theorem stack is formalized; remaining questions concern empirical
-estimation of bound constants, statistical stability of regime diagnostics,
-and the literature-freshness check before the final thesis claim.
+**Updated:** 2026-05-11 (post Gate 6).
+The direction is locked around statistical correction timing:
+estimate correction value, test state predictability, and use interaction /
+search diagnostics to explain failures of simple timing rules. Gate 6 is a
+held-out state-predictability negative on ProSeCo-OWT; online scheduler work is
+not justified from current features.
 
 ---
 
@@ -19,11 +21,15 @@ and the literature-freshness check before the final thesis claim.
 Theorem B can be instantiated at three levels (`candidate_theorems.md` §2.4):
 Level 1 diagnostic (uses true counterfactual G({t,t'})), Level 2 population
 (optimises Q̄ for one global schedule), Level 3 feature-conditioned (Q̂_i
-from observable features, no true G_i at inference). Open: at which level
-does Theorem B's hypothesis hold for ProSeCo-OWT? The thesis can claim a
-deployable scheduler **only at Level 3**.
+from observable features, no true G_i at inference). Gate 3b answer so far:
+useful at B=2 for one held-out estimator, but not useful for the tested
+deployable low-dimensional Q models at B ∈ {3,4}. The thesis can claim a
+deployable scheduler **only at Level 3**, and the current evidence does not
+authorize that claim.
 
-Tests: Phase 1 settles Levels 1–2; Phase 2b settles Level 3.
+Status: Phase 1 settles this as an honest negative for cheap pairwise
+composition at B=3/4. A new Theorem-B scheduler attempt would need a new spec,
+not a continuation of the current gate.
 
 ### OQ-T2 — Estimating ζ_{B,C}, α_{B,δ}, ω_B, κ_B without leakage; no-leakage pool construction
 
@@ -43,8 +49,47 @@ pools selected using held-out G or by an optimizer with G-feedback on test
 seeds. If C_B depends on training data, evaluate on held-out seeds; if it
 depends on test G, the bound does not apply.
 
-Open: a clean estimation protocol that reports each constant separately with
-paired BCa CIs and a no-leakage pool construction.
+Status: a clean local protocol now exists for B=2 and B=3/4. The open part is
+not protocol correctness; it is whether denser pair measurements or richer
+surrogates can overcome the B=3/4 failure. Do not spend more HPC on this
+without a new theory/spec.
+
+### OQ-T2b — What set-function structure does G(S) have?
+
+After Gate 3b, the central technical question is no longer whether sparse
+pairwise residuals exist, but what kind of set function G(S) is:
+
+- approximately monotone or non-monotone;
+- diminishing-returns / weakly submodular, or genuinely non-submodular;
+- high curvature, so greedy still works only with degraded guarantees;
+- locally smooth under one-swap schedule neighborhoods;
+- dominated by higher-order residuals that cannot be recovered by summed
+  pairwise penalties.
+
+Tests should use existing Phase 2b / Phase 3a / Gate 3b artifacts first. Only
+after local diagnostics should any new HPC job be proposed.
+
+Status: Gate 4 and Gate 5 are complete. True-G search should be reported as
+an empirical probe showing that exploitable structure exists, not as the next
+method to implement. Exact Gate 5 DR triples are mildly positive on average,
+but the evidence is region-dependent and insufficient for a model-agnostic
+submodularity claim.
+
+### OQ-T2c — Is Bayesian schedule optimization more principled than greedy search?
+
+Bayesian optimization is appealing because G(S) is expensive and schedules are
+discrete. Open: can we define a kernel or acquisition function over schedules
+that respects budget B, phase/distance structure, and uncertainty over G(S)
+without becoming an engineering-heavy detour? This direction is attractive for
+a Zanella-facing principled story, but it should follow set-function
+diagnostics that clarify whether the search landscape is smooth enough for BO
+to be useful.
+
+Status: Gate 5 verdict is `BO_unclear`. A candidate GP over schedules can be
+stated formally, but empirical support remains insufficient: distance/|ΔG|
+rank signal is borderline and many high-quality anchors still have sampled
+one-swap improvements. BO stays future work unless a later diagnostic shows a
+stronger kernel-smoothness story.
 
 ### OQ-T3 — Statistical stability of Diagnostic Framework C at K=30 (with pair / pool sampling)
 
@@ -53,27 +98,39 @@ over seeds. But P_B^{level} and ζ_{B,C} also depend on pair / schedule
 sampling; bootstrapping only over seeds while pair / schedule samples are
 sparse understates uncertainty. Open:
 
-- At K=30 paired seeds and the planned pair-pool size, does the **nested
-  bootstrap** (seeds × sampled pairs/schedules) CI for P_B − R_B exclude 0?
-- If borderline, K=60 may be needed; alternatively grow the pair pool.
-- Do not classify Regime III vs IV unless the CI for P_B − R_B (or
-  ζ_{B,C} − η_{B,C}) is stable under both seed-bootstrap and pair-pool
-  resampling.
+Status: mostly closed for the current thesis scope. Gate 3b gives a positive
+B=2 result and a negative B=3/4 result for the tested deployable Q family; Gate
+5 gives targeted local and DR diagnostics but not a theorem-grade positive.
+Further nested-bootstrap work is only useful if a new surrogate family is
+proposed.
 
 ### OQ-T4 — Online-state sufficiency for Theorem D
 
 Theorem D is useful only if some compact z_t admits small ‖V − V̂‖_∞.
-Protocol C (bucketed (signal_quartile, phase) state) found this fails.
-Open: does adding (b_t, u_t, continuous H_t/M_t^{-1}) recover predictive
-value? Appendix-grade unless Phase 4 demonstrates it.
+Protocol C (bucketed (signal_quartile, phase) state) found this fails. Gate 3b
+also suggests that cheap offline pairwise composition is insufficient at
+B=3/4. Open: does a value-function view V_t(b,z_t) recover predictive value
+using budget b, phase, continuous signals, and trajectory summaries?
+Appendix-grade unless set-function diagnostics justify moving from offline
+search to online value approximation.
 
-### OQ-T5 — Secondary backbone for Diagnostic Framework C external validity
+Status: Gate 6 tested held-out prediction of single-step correction value
+using current Protocol A state features. Time+state ridge did not improve over
+time-only ridge (MSE 0.016975 vs 0.016893; mean seed-level MSE reduction
+−0.000082, 95 % CI [−0.000267,+0.000111]). This closes the simple online
+trigger path for the current feature set.
+
+### OQ-T5 — Secondary backbone external validity
 
 Which (model, corrector) pair is feasible **and** likely to lie in a
 different regime than ProSeCo-OWT? Candidates: ReMDM-conf, MDLM with a
 non-Gibbs partial-resample corrector, LLaDA-SFT (only after the Tier 3
 protocol issue is fixed). Required: enough headroom (U_B > 0) to make
 the diagnostic comparison meaningful.
+
+Status: open only if Prof. Zanella requires external validity. The next
+experiment should be a small headroom/metric/corrector-degeneracy gate, not a
+full scheduling run.
 
 ### OQ-T6 — PRISM feasibility (decision rule)
 
@@ -85,16 +142,9 @@ ruled out by the Empirical Ranker-Class Limitation (`candidate_theorems.md` §1.
 
 ### OQ-T7 — Minimum experiment set for August writing freeze
 
-Working candidate: Phase 0 + Phase 1 sparse pairwise + Phase 2a population
-pairwise. Phase 2b feature-conditioned runs if either population pairwise
-structure is positive (P_B^pop > R_B^pop with CI excluding 0) or
-feature-predictable interaction structure exists on held-out seeds under a
-pre-specified R² or rank-correlation threshold.
-If Phase 2a fails, the thesis claim becomes "tested separable rankers do not
-recover MC-oracle headroom; pairwise also fails on this regime; Diagnostic
-Framework C explains why; CD-G provides an existence proof." Do not enter
-Phase 4 (Theorem D / online controller) unless Phase 1/2 succeed and time
-remains.
+Minimum set is now complete for the ProSeCo-OWT case study: Phase 0, K=30,
+Gate 3a/3b, Gate 4/5, and Gate 6 state-predictability audit. The next step is
+writing and supervisor approval of scope, not another scheduler.
 
 ### OQ-L1 — Literature freshness check before final thesis claim
 
@@ -134,6 +184,7 @@ Status: deferred until July; flagged here to avoid forgetting.
 | Budget unit? | B = corrector-placement budget; B_NFE = c_corr · B (c_corr = 2 for ProSeCo) |
 | Budget sensitivity? | B ∈ {2,3,4,8,16}; ranker saturation at B=8 |
 | Adaptive (Protocol C) shrinkage? | ε̃/ε ∈ [0.983, 0.986] — no shrinkage; honest negative |
+| Held-out state predictability? | Gate 6 negative: time+state ridge MSE 0.016975 vs time-only 0.016893; no support for simple online trigger |
 | Theorem B exact-Q form? | Proved (`candidate_theorems.md` §2.1) |
 | Theorem B estimated-Q̂ constant? | 2 α_B (not 4 α_B); proof in §2.2 |
 | Theorem B′ high-prob form? | Proved over fixed, no-leakage candidate pool C_B (§2.3); κ_B against MC pool, never the exhaustive oracle |

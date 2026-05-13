@@ -1,0 +1,16 @@
+[
+  {
+    "seed": 42,
+    "T": 64,
+    "out_file": "per_step_features_seed042.npz",
+    "elapsed_seconds": 130.80768036842346,
+    "sanity_warnings": []
+  },
+  {
+    "seed": 43,
+    "T": 64,
+    "out_file": "per_step_features_seed043.npz",
+    "elapsed_seconds": 94.95585775375366,
+    "sanity_warnings": []
+  }
+]

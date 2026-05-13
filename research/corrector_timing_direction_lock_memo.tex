@@ -1,0 +1,455 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\setlist[itemize]{leftmargin=1.35em,itemsep=0.25em,topsep=0.25em}
+\setlist[enumerate]{leftmargin=1.45em,itemsep=0.25em,topsep=0.25em}
+\emergencystretch=3em
+
+\newcommand{\Tset}{\mathcal T}
+\newcommand{\CB}{\mathcal C_B}
+\newcommand{\E}{\mathbb E}
+\newcommand{\argmax}{\operatorname*{arg\,max}}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+
+\title{\vspace{-1.5em}Research Direction Memo\\
+\large When to Correct? Statistical Timing of Corrective Refinement}
+\author{Supervisor-facing draft}
+\date{11 May 2026}
+
+\begin{document}
+\maketitle
+
+\vspace{-1.0em}
+\section*{Proposed thesis question}
+
+The thesis studies correction timing in masked diffusion as a finite-budget
+statistical decision problem.  The predictor schedule, corrector mechanism,
+and quality metric are fixed.  The object of study is when a limited number of
+corrective refinement steps should be spent along the generation trajectory.
+
+\medskip
+\noindent
+The main research question is:
+
+\begin{quote}
+When should a masked diffusion sampler spend a limited correction budget, and
+can correction timing be predicted from the current generation state?
+\end{quote}
+
+\noindent
+A more formal version is:
+
+\begin{quote}
+For masked diffusion language models with a finite number of corrective
+refinement steps, can the time steps at which correction is most valuable be
+characterized and predicted using observable uncertainty and error signals
+from the generation trajectory?
+\end{quote}
+
+\noindent
+The interaction question remains part of the thesis, but as an explanatory
+sub-question rather than the headline:
+
+\begin{quote}
+Are correction gains approximately additive over time, or do redundancy and
+interactions between correction steps explain why simple timing rules fail?
+\end{quote}
+
+\section*{Why this is the right framing}
+
+This framing keeps the thesis close to statistics.  The core quantities are
+potential outcomes, conditional expectations, held-out prediction error,
+finite-budget regret certificates, and interaction diagnostics.  Search
+algorithms are useful, but they are not the main contribution.  They act as
+empirical probes showing whether useful correction-timing structure exists
+beyond simple uncertainty rankers.
+
+It also separates three questions that should not be conflated:
+\begin{enumerate}
+\item \textbf{Correction value:} where in generation does correction help?
+\item \textbf{State predictability:} can observable trajectory statistics
+predict that value beyond absolute time?
+\item \textbf{Interaction structure:} if simple marginal rules fail, is the
+failure caused by redundancy, higher-order interactions, or lack of stable
+local structure?
+\end{enumerate}
+
+This is different from training a new corrector or studying which tokens to
+revise.  PRISM, locally balanced proposals, and informed-corrector kernels are
+important related work for how to design informed correction moves.  Here the
+correction move is fixed; the thesis studies allocation of that move across
+time.
+
+\section*{Statistical setup}
+
+Let \(\Tset=\{1,\ldots,T\}\).  A correction schedule is a subset
+\(S\subseteq\Tset\), with \(|S|=B\).  Fix a masked-diffusion predictor, a
+corrector kernel, a coupling variable \(\omega\) for common random numbers, and
+an integrable terminal utility \(F:\mathcal Y\to\mathbb R\).  The final sample
+under schedule \(S\) is
+\[
+Y^S=\Phi(S,\omega),
+\]
+and the population schedule value is
+\[
+J(S)=\E[F(Y^S)], \qquad G(S)=J(S)-J(\emptyset).
+\]
+
+For paired experiments, seed-level potential outcomes are
+\[
+G_i(S)=F(Y_i^S)-F(Y_i^\emptyset),
+\]
+where the same seed \(i\) is reused across schedules.  This makes correction
+timing a potential-outcome problem: the counterfactual is what the same
+generation trajectory would have produced with a correction inserted at a
+different time.
+
+\paragraph{Marginal correction value.}
+For a single correction at time \(t\),
+\[
+\Delta_t=J(\{t\})-J(\emptyset), \qquad
+\delta_{i,t}=G_i(\{t\}).
+\]
+\(\Delta_t\) answers the descriptive question: at which generation stages is a
+single correction most valuable on average?
+
+\paragraph{State-predictive correction value.}
+Let \(Z_{i,t}\) be observable state features before deciding whether to
+correct at time \(t\): diffusion phase, mask ratio, entropy, top-1/top-2
+margin, recently unmasked fraction, token instability, likelihood change, or
+pre/post prediction disagreement when available.  The statistical target is
+\[
+m(t,z)=\E[\delta_t \mid t, Z_t=z].
+\]
+The key question is whether \(Z_t\) improves prediction of \(\delta_t\) beyond
+time \(t\) alone.
+
+\paragraph{Budgeted timing rule.}
+Given a predictor \(\widehat m(t,Z_t)\), the simplest offline timing rule
+selects the top \(B\) time steps by predicted correction value.  An online
+trigger is the sequential version: spend correction budget only when
+\(\widehat m(t,Z_t)\) is high enough relative to the remaining time and
+remaining budget.
+
+\section*{Theorem candidates}
+
+\begin{proposition}[State information as prediction gain]
+Let \(\delta\in L^2\) be the marginal correction value for a randomly sampled
+trajectory-time pair.  Let \(\mathcal F_0=\sigma(t)\) be the information in
+time alone and let \(\mathcal F_1=\sigma(t,Z_t)\), with
+\(\mathcal F_0\subseteq\mathcal F_1\).  The Bayes predictors under squared loss
+are
+\[
+m_0(t)=\E[\delta\mid\mathcal F_0],
+\qquad
+m_1(t,Z_t)=\E[\delta\mid\mathcal F_1].
+\]
+Their mean-squared prediction errors satisfy
+\[
+\E[(\delta-m_0)^2]-\E[(\delta-m_1)^2]
+= \E[(m_1-m_0)^2]\ge 0.
+\]
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+Conditional expectation is the \(L^2\) projection onto the corresponding
+information set.  Since \(\mathcal F_0\subseteq\mathcal F_1\), the
+Pythagorean identity for nested projections gives the displayed equality.
+\end{proof}
+
+\noindent
+\textbf{Use in the thesis.}  This gives the clean statistical meaning of the
+state-predictability question.  If held-out prediction using \(Z_t\) does not
+beat time-only prediction, then a state-adaptive trigger is not justified.  If
+it does, the improvement measures how much information the current generation
+state carries about correction value.
+
+\begin{proposition}[Finite-pool regret certificate for predicted marginal timing]
+Let \(\CB\subseteq\{S\subseteq\Tset: |S|=B\}\) be a fixed candidate pool and
+let
+\[
+A(S)=\sum_{t\in S}\Delta_t,\qquad
+\widehat A(S)=\sum_{t\in S}\widehat m(t,Z_t).
+\]
+Assume
+\[
+\sup_{S\in\CB}|G(S)-A(S)|\le \eta,
+\qquad
+\sup_{S\in\CB}|A(S)-\widehat A(S)|\le \alpha.
+\]
+If \(S_G^\star\in\argmax_{S\in\CB}G(S)\) and
+\(\widehat S\in\argmax_{S\in\CB}\widehat A(S)\), then
+\[
+G(S_G^\star)-G(\widehat S)\le 2\eta+2\alpha .
+\]
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+Apply the generic finite-pool surrogate argument with surrogate \(A\) and
+estimated surrogate \(\widehat A\).  The factor \(2\) appears because the
+surrogate error is paid once at the oracle schedule and once at the selected
+schedule.
+\end{proof}
+
+\noindent
+\textbf{Use in the thesis.}  This theorem clarifies when a lightweight timing
+rule can be defended: correction gains must be approximately additive on the
+candidate schedules and the state predictor must be accurate enough on
+held-out trajectories.  If either condition fails, the failure is a
+statistical result, not an implementation failure.
+
+\begin{lemma}[Interaction diagnostic]
+For \(s\neq t\), define the pair interaction
+\[
+\xi_{s,t}=G(\{s,t\})-\Delta_s-\Delta_t .
+\]
+For a quadratic approximation
+\[
+Q_2(S)=\sum_{t\in S}a_t+\sum_{\{s,t\}\subseteq S}b_{s,t},
+\]
+the diminishing-return gap for \(A\subseteq B\subseteq\Tset\) and
+\(x\notin B\) is
+\[
+\bigl[Q_2(A\cup\{x\})-Q_2(A)\bigr]
+-
+\bigl[Q_2(B\cup\{x\})-Q_2(B)\bigr]
+=-\sum_{t\in B\setminus A}b_{x,t}.
+\]
+Thus negative pair coefficients imply diminishing returns for the quadratic
+approximation, but not automatically for the true \(G\).
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+The marginal gain of adding \(x\) to \(A\) is
+\(a_x+\sum_{t\in A}b_{x,t}\).  Subtract the corresponding expression for
+\(B\).  A claim about \(G\) needs residual control between \(G\) and \(Q_2\).
+\end{proof}
+
+\noindent
+\textbf{Use in the thesis.}  This is the formal bridge from state-predicted
+marginal timing to interaction diagnostics.  If marginal or state-adaptive
+timing fails, \(\xi_{s,t}\), additivity residuals, and one-swap neighborhoods
+explain whether the failure is due to redundancy, higher-order effects, or an
+essentially black-box landscape.
+
+\section*{Empirical plan}
+
+\paragraph{RQ1: Where is correction valuable?}
+Estimate \(\Delta_t\) over generation time using paired common-random-number
+runs.  Report curves, confidence intervals, and phase summaries.
+
+\paragraph{RQ2: Is correction value predictable from state?}
+Compare time-only prediction \(m_0(t)\) against state-based prediction
+\(m_1(t,Z_t)\).  Features can include mask ratio, entropy, margin, recently
+unmasked fraction, token instability, likelihood change, and prediction
+disagreement.  Use held-out trajectories; do not evaluate a trigger on the
+same data used to choose it.
+
+\paragraph{RQ3: Can simple timing rules spend budget well?}
+Compare uniform, early-heavy, late-heavy, marginal-greedy,
+state-triggered, and oracle schedules under the same budget \(B\).  A learned
+logistic or small MLP trigger is optional and only justified if RQ2 shows
+held-out predictive signal.
+
+\paragraph{RQ4: Why do simple rules fail?}
+Measure additivity residuals, pair interactions, diminishing-return gaps, and
+one-swap neighborhood improvements.  This is the interaction/redundancy part
+of the thesis.
+
+\section*{What current evidence already answers}
+
+Many of the empirical questions are already partly answered on ProSeCo-OWT.
+The thesis does not need to pretend these are open; the supervisor-facing
+story can present the current evidence as the beginning of the result.
+
+\begin{center}
+\small
+\begin{tabular}{p{0.20\linewidth}p{0.51\linewidth}p{0.21\linewidth}}
+\toprule
+Question & Current answer on ProSeCo-OWT & Status \\
+\midrule
+Is correction timing non-vacuous? &
+Yes.  Existing paired experiments show MC-oracle headroom over uniform of
+about \(+0.45\) at \(B\in\{2,3,4\}\), with a K=30 replication around \(+0.37\). &
+Answered for ProSeCo-OWT. \\
+\addlinespace
+Do simple uncertainty/ranker signals recover the headroom? &
+No.  Tested separable rankers fail to recover the MC-oracle headroom.  The
+mean marginal envelope becomes weak by larger budgets. &
+Answered negatively for tested signals. \\
+\addlinespace
+Can simple adaptive state conditioning solve it? &
+Current evidence says no.  The bucketed adaptive-controller pilot shrinks
+calibration error by less than \(1.7\%\) and does not recover headroom.  The
+held-out state-predictability audit also finds no improvement from adding
+current state features to time-only prediction. &
+Answered negatively for current features. \\
+\addlinespace
+Is there useful structure beyond simple rankers? &
+Yes.  True-\(G\) search procedures recover much of the oracle headroom:
+CD-G about \(74\)--\(84\%\), BS-AG about \(49\)--\(64\%\) of the canonical
+headroom at \(B\in\{2,3,4\}\). &
+Answered positively. \\
+\addlinespace
+Are interactions present? &
+Yes.  Pair interactions are structured and mostly negative / redundant.
+Cheap pairwise composition helps at \(B=2\) but fails at \(B=3,4\). &
+Answered as diagnostic result. \\
+\addlinespace
+Is the landscape smooth enough for BO or submodular theory? &
+Not clearly.  One-swap smoothness exists but is weak, diminishing-return gaps
+are mildly positive but region-dependent, and BO remains unclear. &
+Answered conservatively. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+This means the current thesis is not a speculative proposal from zero.  It is
+closer to a synthesis and formalization of an empirical story already visible
+in the results:
+
+\begin{quote}
+Correction timing matters on ProSeCo-OWT.  Simple observable uncertainty
+signals do not reliably predict the best timing.  The failure is not random:
+there is structured redundancy and local search structure, but not enough
+evidence for a clean submodular or Bayesian-optimization theory.
+\end{quote}
+
+\section*{Model choice and external validity}
+
+\begin{center}
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.18\linewidth}p{0.47\linewidth}}
+\toprule
+Model / codebase & Role & Reason \\
+\midrule
+ProSeCo-OWT & Main case study &
+Best fit.  It is a self-correcting masked-diffusion backend with an available
+small OpenWebText checkpoint and a fixed correction mechanism.  It lets the
+thesis study timing without training a corrector from scratch. \\
+\addlinespace
+MDLM-OWT & Baseline only &
+Feasible and instrumentable, but only relevant if a meaningful correction
+intervention is defined.  Without that, it is a predictor model rather than a
+self-correction timing platform. \\
+\addlinespace
+Informed-correctors code & Controlled fallback &
+Theoretically aligned with predictor-corrector sampling and informed
+correctors.  Less aligned with language-scale ProSeCo, so best as a small
+controlled appendix if needed. \\
+\addlinespace
+SEDD & Optional comparison &
+Important discrete diffusion model, but not naturally a ProSeCo-style
+self-correcting masked sampler. \\
+\addlinespace
+ProSeCo-LLaDA / LLaDA 8B & Stretch only &
+Scientifically relevant but infrastructure-heavy.  Existing LLaDA evidence in
+this project did not show clear positive oracle headroom, so it should not be
+the core model. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Does it make sense to try the heavier model?}
+Only as an external-validity gate, not as the main path.  The heavier
+LLaDA/ProSeCo-LLaDA direction is scientifically attractive, but it has high
+infrastructure risk and current local evidence is inconclusive: the bounded
+LLaDA-SFT probe did not transfer the positive MC-oracle headroom at tested
+resolution.  Before running a full heavy-model scheduling study, the necessary
+gate is a small pilot showing:
+\begin{itemize}
+\item positive correction headroom over uniform with a meaningful confidence
+interval;
+\item non-degenerate corrector behavior;
+\item a stable and interpretable utility metric.
+\end{itemize}
+Without this gate, a heavier model is likely to consume time without improving
+the thesis argument.
+
+\section*{What is model-agnostic, and what is not}
+
+The theory is model-agnostic in a precise but limited sense.  The definitions
+of \(J(S)\), \(G(S)\), \(\Delta_t\), \(m(t,z)\), additivity error, pair
+interactions, and finite-pool regret apply to any fixed tuple:
+\[
+\text{(predictor, corrector, utility }F\text{, budget }B\text{)}.
+\]
+They do not require ProSeCo, reversibility, detailed balance, or a specific
+neural architecture.
+
+The empirical classification is not model-agnostic.  The statement
+``simple signals fail and search recovers headroom'' is currently a
+ProSeCo-OWT result.  A different model/corrector/metric could lie in a
+different regime:
+\begin{itemize}
+\item no-op: correction has no measurable headroom;
+\item marginal: time or uncertainty signals predict correction value well;
+\item interaction/redundancy: marginal signals are insufficient but
+interactions are structured;
+\item higher-order/search: only direct true-\(G\) search finds the good
+schedules.
+\end{itemize}
+
+\noindent
+Thus the model-agnostic output of the thesis is the diagnostic framework and
+the finite-pool certificates.  The ProSeCo-OWT output is a case-study
+classification within that framework.
+
+\section*{Recommended next steps}
+
+Given the work already completed, the evidence does not support starting a
+major new online scheduler project.  The simple online/state conditioning and
+held-out state-predictability tests are negative, and the landscape evidence
+says Bayesian optimization is still unclear.  The most defensible next steps
+are:
+
+\begin{enumerate}
+\item \textbf{Write the thesis story around the results already obtained.}
+The current results already answer the main diagnostic questions on
+ProSeCo-OWT.  The immediate task is synthesis, not another large experiment.
+\item \textbf{Do not build an online scheduler from the current feature set.}
+An online scheduler is justified only if current-state features add held-out
+predictive information beyond time.  The completed audit does not show this.
+\item \textbf{Use the state-predictability negative as a result.}
+The negative audit is useful evidence: it shows that the current observable
+uncertainty/error features do not explain correction timing enough to support
+a simple adaptive trigger.
+\item \textbf{Use heavier models only for a feasibility gate.}
+Run LLaDA/ProSeCo-LLaDA only if external validity becomes mandatory and only
+after a small headroom pilot passes.
+\item \textbf{Prepare the supervisor discussion around scope.}
+The key decision is whether a ProSeCo-OWT case study plus model-agnostic
+diagnostic framework is accepted as the thesis contribution, or whether the
+supervisor requires one additional external-validity check.
+\end{enumerate}
+
+\section*{Source anchors}
+
+\begin{itemize}
+\item Zhao, Shi, Chen, Druckmann, Mackey, and Linderman,
+\emph{Informed Correctors for Discrete Diffusion Models},
+\href{https://arxiv.org/abs/2407.21243}{arXiv:2407.21243}.
+\item Zanella, \emph{Informed proposals for local MCMC in discrete spaces},
+\href{https://arxiv.org/abs/1711.07424}{arXiv:1711.07424} / JASA 2020.
+\item Lavenant and Zanella,
+\emph{Error Bounds and Optimal Schedules for Masked Diffusions with Factorized
+Approximations},
+\href{https://arxiv.org/abs/2510.25544}{arXiv:2510.25544}.
+\item Kim et al.,
+\emph{Fine-Tuning Masked Diffusion for Provable Self-Correction},
+\href{https://arxiv.org/abs/2510.01384}{arXiv:2510.01384}.
+\item Schiff et al.,\\
+\emph{Learn from Your Mistakes: Self-Correcting Masked Diffusion Models},\\
+\href{https://arxiv.org/abs/2602.11590}{arXiv:2602.11590}.
+\end{itemize}
+
+\end{document}

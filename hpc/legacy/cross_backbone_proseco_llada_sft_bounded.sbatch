@@ -88,7 +88,7 @@ python -u scripts/run_protocol_a_proseco_snapshot.py \
   --out_dir "$PROTO_A_DIR" 2>&1 | tee "out/${SLURM_JOB_NAME}_${SLURM_JOB_ID}_protocol_a.log"
 
 echo "Running Phase 2b bounded..."
-python -u scripts/run_phase2b_proseco_owt.py \
+python -u scripts/proseco/reproduction/run_phase2b_proseco_owt.py \
   --checkpoint "$CHECKPOINT" \
   --backend proseco_llada_sft \
   --protocol_a_dir "$PROTO_A_DIR" \
@@ -118,13 +118,13 @@ for f in sorted(out.glob('mc_raw.shard*-of-*.json')):
 print(f'Aggregated phase2b: {len(policy_all)} policy rows, {len(mc_all)} MC rows')
 " 2>&1
 
-python -u scripts/analyze_phase2b.py \
+python -u scripts/proseco/reproduction/analyze_phase2b.py \
   --results_dir "$PHASE2B_RAW" \
   --out_dir "$PHASE2B_AGGR" \
   --figures_dir "$FIG_ROOT/phase2b" 2>&1 | tee "out/${SLURM_JOB_NAME}_${SLURM_JOB_ID}_phase2b_analysis.log"
 
 echo "Running Phase 3a bounded..."
-python -u scripts/run_phase3a_combinatorial.py \
+python -u scripts/proseco/reproduction/run_phase3a_combinatorial.py \
   --checkpoint "$CHECKPOINT" \
   --backend proseco_llada_sft \
   --protocol_a_dir "$PROTO_A_DIR" \
@@ -155,7 +155,7 @@ for f in sorted(out.glob('bs_raw.shard*-of-*.json')):
 print(f'Aggregated phase3a: {len(cd_all)} CD rows, {len(bs_all)} BS rows')
 " 2>&1
 
-python -u scripts/analyze_phase3a.py \
+python -u scripts/proseco/reproduction/analyze_phase3a.py \
   --results_dir "$PHASE3A_RAW" \
   --phase2b_dir "$PHASE2B_RAW" \
   --phase2b_aggr "$PHASE2B_AGGR" \

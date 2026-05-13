@@ -1,0 +1,30 @@
+{
+  "T": 64,
+  "checkpoint": "/home/3316152/mdm/checkpoints/proseco_owt",
+  "debug": false,
+  "default_quantiles": [
+    0.1,
+    0.25,
+    0.5,
+    0.75,
+    0.9
+  ],
+  "device": "cuda",
+  "entropy_thresholds": [
+    1.0,
+    2.0,
+    3.0
+  ],
+  "git_sha": "unknown",
+  "margin_low_thresholds": [
+    0.05,
+    0.1,
+    0.2
+  ],
+  "out_dir": "results/tokenlevel_features_proseco_preflight_0c39079",
+  "seeds": [
+    42,
+    43
+  ],
+  "use_synthetic": false
+}

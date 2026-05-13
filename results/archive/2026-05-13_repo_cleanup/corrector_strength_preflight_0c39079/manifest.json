@@ -1,0 +1,19 @@
+{
+  "sha": "unknown",
+  "T": 64,
+  "debug": false,
+  "seeds": [
+    42,
+    43
+  ],
+  "strength_levels": [
+    "no_correction",
+    "strength_0",
+    "strength_1",
+    "strength_2"
+  ],
+  "checkpoint": "/home/3316152/mdm/checkpoints/proseco_owt",
+  "device": "cuda",
+  "total_wall_s": 995.9171059131622,
+  "gate_pass": true
+}

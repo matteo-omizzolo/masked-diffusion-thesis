@@ -1,89 +1,52 @@
-# Theory — Summary
+# Theory
 
-> **Current source of truth.** Updated 2026-05.
-> Full formal statements: `research/candidate_theorems.md` §0–§7.
-> Derivation entries: `research/proof_worklog.md`.
+## Current Framework
 
----
+The thesis theory is a finite-budget intervention framework for corrector timing.
 
-## Active theorem stack (theory-first programme — 2026-05)
+For a fixed predictor schedule and fixed corrector-placement budget `B`, define a schedule utility `G(S)` and study:
 
-The stack has been reframed for the theory-first phase. Detailed statements,
-proofs, and theory-to-experiment map are in `research/candidate_theorems.md`
-§0–§7; this file is a one-page summary.
+- marginal intervention gain `Delta_t = G({t})`;
+- pair gain `G({s,t})`;
+- interaction residual `xi(s,t) = G({s,t}) - Delta_s - Delta_t`;
+- schedule-level behavior `G(S)` under rankers, search, and oracle procedures.
 
-The framework is **model- and corrector-agnostic**: fix a predictor, informed
-corrector, quality functional F, and placement budget B, then define G(S),
-Δ_t, A(S), ξ_{t,t′}, Q(S), and the regime diagnostics. ProSeCo-OWT is the
-primary empirical case study, not a theory assumption.
+This framing separates corrector timing from token selection, predictor schedule design, and corrector-kernel design.
 
-| § | Object | Status | Role |
-|---|---|---|---|
-| §1.1–§1.2 | **Theorem A** — marginal proxy regret 2Bε + 2η_B (uniform form) | Proved | Baseline; tested by (A2)/(A3) on candidate pool C_B |
-| §1.3 | **Diagnostics A′ (additivity scale), A″ (rankability)** | **Empirical diagnostics** (not unconditional regret refinements) | Demoted from previous "proved" status; do not control selected-schedule regret without finite-pool conversion |
-| §1.4 | Theorem A as a special case of B′ (safe finite-pool ranking corollary) | Corollary of B′ | The rigorous selected-schedule consequence of A |
-| §1.5 | **Empirical Ranker-Class Limitation** (replaces "Negative-Result Corollary") | Formal part for time-only separable ψ; empirical part on tested rankers | Tested separable rankers do not recover MC-oracle headroom; does not bound feature-conditioned, pairwise, or online policies |
-| §2.1 | Theorem B exact: G(S_B*) − G(Ŝ) ≤ 2ζ_B + ω_B | Proved | Generic surrogate-regret inequality |
-| §2.2 | Theorem B estimated: ≤ 2ζ_B + 2α_B + ω_B | Proved (constant 2) | Operational uniform form |
-| §2.3 | **Theorem B′** finite-pool / high-probability + κ_B; data-dependence caveat | Proved | **Experimentally usable form** |
-| §2.4 | Levels 1 / 2 / 3 hierarchy | Definition | Diagnostic / population / feature-conditioned |
-| §2.6 | Level-specific metrics (P_B^seed, P_B^pop, P_B^feat, C_B^pop, C_B^feat) | Definitions | Match metric to level of claim |
-| §2.7 | Theorem A as B′(Q := A) | Corollary | Safe finite-pool form of A |
-| §3 | **Diagnostic Framework C** — regimes with U_B^{MC,N}, R_B, I_B, P_B, C_B^{MC,N} | Definition + protocol | Renamed from Proposition C |
-| §4 | Theorem D — online controller 2Tδ ADP loss | Proof sketch | Optional / appendix; first to cut |
-| §5 | Lemma E — burn-in exclusion under clipped F_C only | Conditional sketch | Optional; F = −GPT-2 NLL is **not** Lipschitz without clipping |
+## What Is Proved
 
-**Backbone:** Theorem A baseline → Theorem B / B′ central → Diagnostic Framework C.
-A′, A″ are diagnostics. Empirical Ranker-Class Limitation scopes the negative
-result to the tested class. D and E are appendix.
+The current proved baseline is Theorem A: a marginal/uniform proxy regret statement that formalizes when marginal schedules can be competitive and when the proxy can fail.
 
-Plan: `docs/06_theory_first_research_plan.md`.
+The former stronger negative-result framing has been replaced by a more careful empirical ranker-class limitation:
 
----
+- a formal time-only part where assumptions are explicit;
+- empirical evidence on the tested ProSeCo-OWT rankers;
+- no universal impossibility claim.
 
-## Active theorem stack — full statements
+## What Is Empirical
 
-The full statements, proofs, and theory-to-experiment map live in
-`research/candidate_theorems.md` §0–§7. To avoid drift this summary file does
-not duplicate them. Quick pointers:
+The main ProSeCo-OWT findings are empirical:
 
-- §0 — Formal setup (trajectory, schedules, Δ_t, A(S), ξ_{t,t'}, Q(S), levels).
-- §1.1–§1.2 — Theorem A statement and proof.
-- §1.3 — Diagnostics A′ (additivity scale), A″ (rankability) — **demoted**
-  from prior proof status to empirical diagnostics. The legacy scaling formulas
-  are not used as theorem constants in active claims.
-- §1.4 — Theorem A as a special case of Theorem B′ (the safe finite-pool
-  selected-schedule form; replaces what A′/A″ tried to provide).
-- §1.5 — Empirical Ranker-Class Limitation (replaces "Negative-Result
-  Corollary"): formal part for time-only / seed-averaged separable ψ;
-  empirical part on tested rankers.
-- §2.1–§2.7 — Theorem B exact / estimated (constant 2α_B) / B′ finite-pool
-  high-probability with κ_B + no-leakage caveat; Levels 1/2/3 hierarchy and
-  level-specific metrics; Theorem A as B′(Q := A).
-- §3 — Diagnostic Framework C with disciplined U_B^{MC,N} / U_B^{pool} / U_B^*
-  notation.
-- §4 — Theorem D online controller (appendix-grade).
-- §5 — Lemma E burn-in (clipped F_C only; F = −GPT-2 NLL is not Lipschitz
-  without clipping; appendix-grade).
+- marginal rankers fail on the tested backend and protocol;
+- direct search over `G(S)` recovers much of the MC-oracle headroom;
+- pair interactions are mostly redundant/negative;
+- geometry and `A_pair = Delta_s + Delta_t` explain much of the pair structure;
+- aggregate, enriched, and token-level state features do not add predictive signal;
+- `G_pair` composes sublinearly as `A_pair` grows;
+- stronger correctors rescale amplitude but do not remove the cross-time interaction pattern.
 
-## What NOT to pursue
+These support a redundancy/saturation interpretation for ProSeCo-OWT, not a theorem about all masked diffusion models.
 
-- Any unconditional regret-refinement claim from A′ or A″ (they are
-  diagnostics, not unconditional bounds).
-- Any universal ranker-failure statement (the formal scope of the
-  ranker-class limitation is time-only / seed-averaged separable ψ; the
-  empirical scope is the tested ranker class).
-- Reporting the unobservable U_B^* (exhaustive oracle headroom) — only the
-  MC-oracle / pool-oracle headrooms are observable.
-- Stretch C2 (Gibbs contraction). Not on critical path.
+## Saturation And Sublinear Composition
 
-## Remaining theory tasks (LaTeX prose)
+The current empirical picture is that high marginal gains do not combine additively. When `A_pair` is large, `G({s,t})` grows sublinearly and `xi` tends to become more negative. This is the best current explanation for why direct `G(S)` search can outperform marginal ranking even when pair interactions are not strongly synergistic.
 
-`thesis/chapters/ch6_contribution.tex` now has a full self-contained
-mathematical draft covering Theorem A, Diagnostics A′/A″, the finite-pool
-form, the Empirical Ranker-Class Limitation, Theorem B/B′, levels of analysis,
-and Diagnostic Framework C.
+## No ProSeCo Locally Balanced Theorem
 
-Remaining work is polish, not theorem redesign: after Phase 0 and Phase 1,
-check empirical anchors, cross-references, and final wording against the
-verified results.
+There is no current theorem showing that ProSeCo-OWT implements an exact locally balanced corrector with tractable true conditionals. ProSeCo remains the empirical case study.
+
+## Informed-Correctors/Text8 As Cleaner Backend
+
+informed-correctors/Text8 is attractive because the hollow transformer gives architecturally valid learned conditional logits: coordinate `d` is excluded from the input used to predict coordinate `d`. This is a cleaner object for locally informed correctors than ProSeCo-OWT.
+
+This must be stated precisely. The hollow transformer gives model conditionals/logits with structural exclusion, not true data conditionals. The model still has to be trained, and the learned conditional quality must be empirically checked.
