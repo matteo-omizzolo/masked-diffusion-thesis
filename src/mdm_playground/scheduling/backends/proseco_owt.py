@@ -9,7 +9,7 @@ Corrector action set: UNMASKED (committed) positions.
 Signal extraction: entropy / inverse_margin / quality_mass_proxy over the
 committed positions — the corrector's action set.
 
-Use ``scripts/stage_proseco_owt.py`` to download and patch the snapshot before
+Use ``scripts/proseco/reproduction/stage_proseco_owt.py`` to download and patch the snapshot before
 running the thesis scripts.
 """
 
@@ -41,7 +41,7 @@ def _validate_snapshot_dir(snapshot_path: Path) -> Path:
             "Missing ProSeCo-OWT snapshot files in "
             f"{snapshot_path}: {', '.join(missing)}. "
             "Stage the snapshot with "
-            "`python scripts/stage_proseco_owt.py --dest <proseco_owt_snapshot_dir>` "
+            "`python scripts/proseco/reproduction/stage_proseco_owt.py --dest <proseco_owt_snapshot_dir>` "
             "or point --checkpoint to an existing staged directory."
         )
     return snapshot_path

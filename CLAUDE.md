@@ -115,7 +115,7 @@ This rule applies even if the sbatch script has been previously reviewed in anot
 ### 3. `flash_attn` — cannot build on this cluster
 System CUDA is 13.0 but PyTorch compiled with 12.8 → nvcc mismatch.
 **Current rule:** external repos stay clean upstream. The active ProSeCo-OWT path
-uses `scripts/stage_proseco_owt.py`, which applies the documented fallback patch
+uses `scripts/proseco/reproduction/stage_proseco_owt.py`, which applies the documented fallback patch
 to the staged HuggingFace snapshot, not to `external/`.
 
 ### 4. cuda-nvcc conda package breaks sbatch
@@ -143,7 +143,7 @@ Checkpoint was saved with `transformers==4.38.2`. Newer versions moved
 
 ### 9. ProSeCo snapshot fallback — rotary embedding shape
 The staged `modeling_proseco.py` patch must keep flash-attn and pure-PyTorch
-rotary shapes distinct. This is handled in `scripts/stage_proseco_owt.py`.
+rotary shapes distinct. This is handled in `scripts/proseco/reproduction/stage_proseco_owt.py`.
 
 ### 10. NumPy 2.0 `np.array(copy=False)` behavior change in datasets 2.18
 `datasets==2.18` uses `np.array(array, copy=False)` which raises ValueError in NumPy 2.x
@@ -200,8 +200,8 @@ Key points:
 - K=3 smoke: job 489457 on gnode01 A100. Qualitative pattern matches prior K=30 results.
 - K=30 Phase 2b replication: job 490106 on gnode01, completed 2026-05-07.
 - K=30 Phase 3a canonical: job 479941 on gnode02, complete and intact.
-- K=30 gate is closed. Do not resubmit `hpc/phase2b_proseco_owt.sbatch` or
-  `hpc/phase3a_combinatorial.sbatch` for the closed gate.
+- K=30 gate is closed. Do not resubmit `hpc/proseco/reproduction/phase2b_proseco_owt.sbatch`
+  or `hpc/proseco/reproduction/phase3a_combinatorial.sbatch` for the closed gate.
 - Debug: `python scripts/legacy/debug_proseco_owt_load.py --checkpoint ~/mdm/checkpoints/proseco_owt --device cpu --T 4`
 
 ### Writing status (2026-05-06)

@@ -20,7 +20,7 @@ Phase 2b Refinement A′ σ_ξ to deliver:
                 vs. true G gap.
 - Hamming overlap — diagnostic of σ_λ vs. best Phase-2b MC schedule per seed.
 
-The module is pure (no I/O); see ``scripts/run_protocol_c_owt.py`` for the
+The module is pure (no I/O); see ``scripts/proseco/reproduction/run_protocol_c_owt.py`` for the
 artefact-loading entry script.
 
 References

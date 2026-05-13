@@ -46,12 +46,13 @@ See `docs/04_results_index.md` for the full results map.
 To reproduce Phase 2b or Phase 3a on the HPC, stage the ProSeCo-OWT checkpoint once:
 
 ```bash
-python scripts/stage_proseco_owt.py --dest ~/mdm/checkpoints/proseco_owt
+python scripts/proseco/reproduction/stage_proseco_owt.py --dest ~/mdm/checkpoints/proseco_owt
 ```
 
-Then use `hpc/push.sh` to sync and `hpc/phase2b_proseco_owt.sbatch` or
-`hpc/phase3a_combinatorial.sbatch` to submit. See `scripts/README.md` for
-the full script index and `CLAUDE.md` for HPC environment details.
+Then use `hpc/push.sh` to sync and `hpc/proseco/reproduction/phase2b_proseco_owt.sbatch`
+or `hpc/proseco/reproduction/phase3a_combinatorial.sbatch` to submit. See
+`scripts/README.md` for the full script index and `CLAUDE.md` for HPC
+environment details.
 
 > **Note:** No full-scale new HPC experiments until the theory scaffold
 > (Theorem A baseline, Theorem B/B′, Diagnostic Framework C) is stable,

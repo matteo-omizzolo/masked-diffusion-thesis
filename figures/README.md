@@ -10,7 +10,7 @@ Current status starts at `../START_HERE.md`.
 | `cross_backbone/` | `results/cross_backbone/` | 33 plots: LLaDA-SFT bounded probe (Phase 2b-equivalent) |
 
 None are currently referenced in LaTeX. Figures for ch5 will be selected from these
-during writing. To regenerate: `python scripts/analyze_phase2b.py` / `analyze_phase3a.py`.
+during writing. To regenerate: `python scripts/proseco/reproduction/analyze_phase2b.py` / `scripts/proseco/reproduction/analyze_phase3a.py`.
 
 Legacy figures from abandoned Phase 1 (MDLM/ReMDM) and Phase 2a were deleted
 in the May 2026 cleanup. Git history preserves them.

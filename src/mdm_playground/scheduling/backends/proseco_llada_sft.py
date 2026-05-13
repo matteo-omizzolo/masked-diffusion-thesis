@@ -27,7 +27,7 @@ def _validate_snapshot_dir(snapshot_path: Path) -> Path:
             "Missing ProSeCo-LLaDA-SFT snapshot files in "
             f"{snapshot_path}: {', '.join(missing)}. "
             "Stage the snapshot with "
-            "`python scripts/stage_proseco_llada_sft.py --dest <snapshot_dir>` "
+            "`python scripts/legacy/stage_proseco_llada_sft.py --dest <snapshot_dir>` "
             "or point --checkpoint to an existing staged directory."
         )
     has_weights = (snapshot_path / "model.safetensors.index.json").exists() or any(
