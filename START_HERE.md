@@ -38,12 +38,25 @@ Author email in `docs/email_informed_correctors_authors.md` was sent
 **2026-05-14**. Two parallel tracks:
 
 - **Author track:** wait for reply; follow up after 7-10 days if none.
-- **No-author-response track:** drive Stage 0 environment smoke for
-  informed-correctors/Text8. The first attempt surfaced a known blocker
-  (`remdm311` lacks the JAX/Flax/TF ecosystem); remediation is in
-  `docs/09_informed_correctors_training_contingency.md §Stage 0 known blocker`.
+- **No-author-response track (current state, 2026-05-14):**
+  - **Stage 0** ✅ passed (job 494221, gnode01): 14/14 imports OK, JAX sees
+    GPU, HollowMD4 config loads, Text8 staged. Resolved the
+    `remdm311`-lacks-JAX-ecosystem blocker by installing pinned versions
+    (jax/flax/orbax/distrax compatible set + tensorflow-cpu + tf-keras +
+    tensorboard + seaborn + wandb 0.26.1). See
+    `docs/09_informed_correctors_training_contingency.md §Stage 0`.
+  - **Stage 1** 🚫 blocked (jobs 494239 and 494245, gnode02):
+    `ExitCode=120:0` ~3.5 min after `Using Hollow MD4`, no Python
+    traceback. The Bocconi `stud` A100s run in MIG mode under CUDA-13
+    driver while JAX 0.4.30 ships a cuda12 plugin. The
+    `XLA_PYTHON_CLIENT_PREALLOCATE=false`/`MEM_FRACTION=0.5`/`JAX_PLATFORMS=cuda`
+    workaround did not help. See CLAUDE.md known issue #14 +
+    `docs/09 §Stage 1 — current blocker` for the deferred resolution
+    paths (non-MIG queue request, `jax[cuda13]` wait, CPU fallback,
+    author-track checkpoint).
 
-Do not launch Stage 1 or full training without explicit approval.
+Do not launch Stage 2 or full training without explicit approval. Stage 1
+should be re-attempted only after one of the resolution paths is in place.
 
 ## Canonical ProSeCo Result Folders
 

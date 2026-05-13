@@ -74,6 +74,14 @@ export TEXT8_WORD_VOCAB_PKL
 export IC_STAGE1_STEPS
 export IC_STAGE1_BATCH_SIZE
 
+# JAX / CUDA workaround for A100 MIG mode under CUDA-13 driver: disable
+# allocator preallocation so JAX cooperates with MIG-partitioned memory.
+# See CLAUDE.md known issue #14 and
+# docs/09_informed_correctors_training_contingency.md §Stage 1 current blocker.
+export XLA_PYTHON_CLIENT_PREALLOCATE="${XLA_PYTHON_CLIENT_PREALLOCATE:-false}"
+export XLA_PYTHON_CLIENT_MEM_FRACTION="${XLA_PYTHON_CLIENT_MEM_FRACTION:-0.5}"
+export JAX_PLATFORMS="${JAX_PLATFORMS:-cuda}"
+
 python3 "$RUN_DIR/text8/md4/main.py" \
   --config="$REPO/scripts/backend_validation/informed_correctors/hollow_text8_stage1_config.py" \
   --workdir="$OUT_DIR/workdir" \

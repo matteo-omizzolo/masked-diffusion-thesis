@@ -671,12 +671,15 @@ Email the informed-correctors authors for the Text8 HollowMD4 checkpoint, exact 
 
 This is the highest-value next action because informed-correctors/Text8 is the principled backend, but the repo has no public weights and has enough config rough edges that immediate training would risk wasting engineering time. If weights are unavailable, proceed to Stage 0/1/2 only, then decide whether a full 1M-step run is worth it.
 
-*Update 2026-05-14: the author email was sent. Stage 0 has been launched on
-HPC in parallel and surfaced the `remdm311`-lacks-JAX-ecosystem blocker;
-remediation steps are in
-`docs/09_informed_correctors_training_contingency.md §Stage 0 known blocker`.
-The "follow up after 7-10 days if no reply" guidance applies if no response
-arrives by 2026-05-21 to 2026-05-24.*
+*Update 2026-05-14: the author email was sent. Stage 0 has since passed
+cleanly on HPC (job 494221) after a pinned-versions JAX/Flax/TF install
+documented in
+`docs/09_informed_correctors_training_contingency.md §Stage 0 environment setup`.
+Stage 1 is currently blocked by an A100-MIG / CUDA-13 / JAX-cuda12-plugin
+interaction (jobs 494239 and 494245, ExitCode 120:0); see CLAUDE.md issue
+#14 and docs/09 §Stage 1 for the resolution paths. The "follow up after
+7-10 days if no reply" author-track guidance applies if no response arrives
+by 2026-05-21 to 2026-05-24.*
 
 ## Files Created/Modified by Independent Audit
 

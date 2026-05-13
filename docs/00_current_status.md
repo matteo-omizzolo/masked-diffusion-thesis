@@ -36,12 +36,19 @@ weights were not found.
 
 1. Author email in `docs/email_informed_correctors_authors.md` — **sent
    2026-05-14**. Follow-up guidance: re-ping after 7-10 days if no reply.
-2. In parallel, run Stage 0 informed-correctors/Text8 environment smoke. The
-   first attempt (job 494155 on gnode01, 2026-05-13) surfaced a clean blocker:
-   `remdm311` lacks the JAX/Flax/TF ecosystem and Text8 zip is not staged.
-   Remediation steps are documented in
-   `docs/09_informed_correctors_training_contingency.md §Stage 0 known blocker`.
-3. Run Stage 1 tiny training-loop smoke **only** after Stage 0 passes
-   cleanly, and **only** as a loop check.
+2. **Stage 0** environment smoke — ✅ passed (job 494221, gnode01,
+   2026-05-14). The initial blocker (`remdm311` lacked the JAX/Flax/TF
+   ecosystem; Text8 not staged) was resolved by installing pinned versions
+   on a login node and staging Text8. Steps retained in
+   `docs/09_informed_correctors_training_contingency.md §Stage 0 environment setup`.
+3. **Stage 1** tiny training-loop smoke — 🚫 currently blocked (jobs 494239
+   and 494245). Exit 120:0 after `Using Hollow MD4`, no Python traceback;
+   the Bocconi `stud` A100s run in MIG mode under CUDA-13 while JAX 0.4.30
+   ships a cuda12 plugin. `XLA_PYTHON_CLIENT_PREALLOCATE=false`/
+   `MEM_FRACTION=0.5`/`JAX_PLATFORMS=cuda` workaround did not help. See
+   CLAUDE.md known issue #14 and
+   `docs/09_informed_correctors_training_contingency.md §Stage 1 — current blocker`
+   for the resolution paths (cluster admin / `jax[cuda13]` / CPU fallback /
+   author-track checkpoint).
 
 No long training is approved yet.

@@ -64,12 +64,14 @@ Pass criteria:
 - Text8 zip is staged at `$TEXT8_DATA_DIR/text8/text8.zip`;
 - config loads.
 
-#### Stage 0 known blocker (job 494155, 2026-05-13)
+#### Stage 0 environment setup (resolved 2026-05-14)
 
-The `remdm311` conda env on the Bocconi cluster was built for the
-PyTorch/ProSeCo line and does not contain the JAX ecosystem. Job 494155
-correctly produced a feasibility report and exited 1; the report shows the
-following remediation steps are required before Stage 0 can pass:
+Initially, `remdm311` on the Bocconi cluster (built for PyTorch/ProSeCo)
+did not contain the JAX ecosystem. Stage 0 job 494155 (2026-05-13)
+correctly produced a feasibility report and exited 1. The remediation
+below was applied on a login node and Stage 0 job 494221 (2026-05-13)
+subsequently passed with all criteria green. Steps retained for future
+sessions / re-building the env:
 
 **Manual install (from a login node, since compute nodes have no outbound
 internet — see CLAUDE.md known issue #12):**
@@ -97,6 +99,85 @@ curl -L http://mattmahoney.net/dc/text8.zip -o ~/mdm/data/text8_md4/text8/text8.
 After both steps, re-launch Stage 0 to confirm a clean pass before
 proceeding to Stage 1. CUDA-enabled JAX (`jax[cuda12]`) may also be needed if
 GPU enumeration fails on the JAX install above.
+
+#### Stage 0 environment setup — resolution log (2026-05-14)
+
+Stage 0 job 494221 on gnode01 (commit `ec580a8-dirty`) returned exit 0:0 in
+1m32s with all pass criteria met: 14/14 imports succeed, JAX reports
+`devices=['cuda:0']` with `local_device_count=1`, `model_type=hollow_md4`
+config loads, Text8 data resolves at the preferred layout, no downloads.
+
+Pinned versions on remdm311 needed to make the JAX/Flax stack co-exist with
+distrax 0.1.8 (the latest published distrax):
+
+- jax / jaxlib / jax-cuda12-* = 0.4.30
+- flax = 0.8.5
+- optax = 0.2.3
+- chex = 0.1.86
+- orbax-checkpoint = 0.5.20
+- distrax = 0.1.8
+- tensorflow-cpu = 2.21.0 (then full `tensorflow` 2.21.0 was pulled in as a
+  dependency of `tf-keras`, which `tensorflow_probability` requires)
+- tensorflow-datasets = 4.9.10
+- tensorflow-probability latest
+- tf-keras 2.21.0 (TFP requires it via lazy_loader validation)
+- tensorboard 2.20.0 (clu.metric_writers requires it; not in tensorflow-cpu)
+- wandb 0.26.1 (upgrade from 0.25.0 was required because the
+  JAX-ecosystem install bumped protobuf to 7.x, which broke wandb 0.25.0)
+- seaborn 0.13.2 (upstream `text8/md4/utils.py` imports it at module load)
+
+Disk-quota note: the conda env grew to ~13G during these installs. The
+~3.4G `~/.conda/pkgs` and `~/.cache/pip` caches were purged with
+`conda clean -a && pip cache purge` to make headroom. If quota becomes
+tighter, consider freeing space outside this env (e.g. the 15G
+`~/mdm/checkpoints/proseco_llada_sft` checkpoint from the closed
+cross-backbone line).
+
+### Stage 1 — current blocker (2026-05-14)
+
+Stage 1 job 494239 on gnode02 (after Stage 0 passed) entered the training
+script, printed `Using Hollow MD4` from `utils.py:81`, and then died after
+~3m30s of silent JIT compilation with `ExitCode=120:0`, no Python traceback,
+no stdout, and an empty Orbax `checkpoints/` directory. SLURM accounting
+shows `MaxRSS=5G` (well under the 48G request) so it is not an OOM kill.
+
+Suspected cause: a CUDA 13.0 driver / JAX-cuda12 plugin compatibility issue
+specific to the A100 80GB cards running in **MIG (Multi-Instance GPU)** mode
+on the Bocconi `stud` partition (confirmed via `nvidia-smi` on gnode02:
+`MIG M. Enabled`). JAX 0.4.30's GPU allocator may not negotiate cleanly
+against MIG-partitioned A100s under driver 580.95.05 / CUDA 13.0. Stage 0
+succeeds because `jax.devices()` returns the device handle but never
+allocates compiled kernels.
+
+Diagnostic next steps tried so far (2026-05-14):
+
+1. **`XLA_PYTHON_CLIENT_PREALLOCATE=false` + `XLA_PYTHON_CLIENT_MEM_FRACTION=0.5`
+   + `JAX_PLATFORMS=cuda`** — added to the Stage 1 sbatch. Job 494245
+   re-ran with these env vars set; **still failed identically** with
+   ExitCode 120:0 after the same `Using Hollow MD4` log line and similar
+   wallclock (3m47s). The workaround is left in place in the sbatch since
+   it's harmless and may help on other cluster configurations.
+
+Deferred diagnostic next steps (none auto-runnable, require user action):
+
+2. **Ask cluster admins for a non-MIG queue or to disable MIG on `stud`
+   nodes.** This is the cleanest fix if available.
+3. **Wait for `jax[cuda13]` wheels** to be released (the cuda12 wheels are
+   currently the only JAX flavor against CUDA 13 drivers; an official
+   cuda13 wheel would skip the cross-version mismatch entirely).
+4. **CPU fallback for the timing-diagnostics work.** Run the corrector
+   scheduling primitives on a CPU-only JAX setup with a much smaller
+   HollowMD4 config. Text8 char-level training would be slow but the
+   scheduling primitives (Δ_t, G({s,t}), ξ, G(S)) don't need GPU.
+5. **Author-track path.** The 2026-05-14 email requested a shareable
+   Text8 HollowMD4 checkpoint. If the authors share one, the timing
+   diagnostics can skip training entirely.
+
+The Stage 1 sbatch and python-loop sampler design themselves are sound:
+exit-120 happens deep inside JAX/CUDA after model instantiation, well past
+any script-level concern. The `external_repos/` upstream clone was NOT
+modified — Stage 1 only patches the copied tree at
+`results/backend_validation/informed_correctors/stage1_tiny_train_<sha>/upstream_copy/`.
 
 ### Stage 1: Tiny Overfit / Training-Loop Smoke
 

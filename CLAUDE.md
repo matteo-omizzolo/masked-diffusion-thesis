@@ -161,14 +161,32 @@ preamble attempted PyPI access from gnode02. It died before any shard launched
 and wrote no files. Future sbatches must use the pre-provisioned `remdm311`
 environment or offline-safe install steps; do not assume PyPI access on `gnode*`.
 
-### 13. `remdm311` lacks the JAX ecosystem
-The conda env `remdm311` was built for PyTorch/ProSeCo work and does not
-contain JAX, Flax, ml_collections, tensorflow, tensorflow-datasets,
+### 13. `remdm311` JAX-ecosystem install (resolved 2026-05-14)
+The conda env `remdm311` was originally built for PyTorch/ProSeCo work and
+did not contain JAX, Flax, ml_collections, tensorflow, tensorflow-datasets,
 orbax-checkpoint, optax, distrax, clu, grain, or absl-py. Job 494155
-(informed-correctors Stage 0) confirmed this on 2026-05-13.
-**Fix:** install from a login node into `remdm311` per
-`docs/09_informed_correctors_training_contingency.md` §Stage 0 known blocker
-before re-running Stage 0.
+(informed-correctors Stage 0, 2026-05-13) surfaced this. Resolved on
+2026-05-14 by installing pinned versions from a login node; Stage 0 job
+494221 then passed with all 14 imports OK, JAX GPU enumeration OK, HollowMD4
+config OK, Text8 staged. Exact pinned versions and the install commands are
+recorded in
+`docs/09_informed_correctors_training_contingency.md §Stage 0 environment setup`.
+
+### 14. A100 MIG mode + CUDA-13 driver / JAX 0.4.30 cuda12 plugin
+Stage 1 jobs 494239 and 494245 (2026-05-14, gnode02) both failed with
+`ExitCode=120:0` after ~3m30s of silent JIT compilation following the
+`Using Hollow MD4` log line. No Python traceback. The Bocconi A100 80GB
+cards in the `stud` partition are running in MIG (Multi-Instance GPU)
+mode under CUDA driver 580.95.05 / CUDA 13.0, while JAX 0.4.30's GPU
+allocator is built against CUDA 12. Stage 0 passes because device
+enumeration completes; only compiled-kernel allocation trips the issue.
+Adding `XLA_PYTHON_CLIENT_PREALLOCATE=false` /
+`XLA_PYTHON_CLIENT_MEM_FRACTION=0.5` / `JAX_PLATFORMS=cuda` env vars
+(job 494245) did **not** fix it. The workaround env vars are kept in the
+sbatch as harmless and potentially helpful elsewhere. Resolution requires
+either a non-MIG queue, `jax[cuda13]` wheels, or a CPU fallback. Full
+diagnostic in `docs/09_informed_correctors_training_contingency.md`
+§Stage 1 current blocker.
 
 ---
 
