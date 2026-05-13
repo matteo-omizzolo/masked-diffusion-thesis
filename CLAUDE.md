@@ -93,7 +93,7 @@ Before submitting **any** sbatch job, Claude must:
 1. Invoke Codex (via `/codex:rescue`) to review the proposed work, including:
    - The exact sbatch script content and any changed files since last push.
    - `git status` and `git diff --check` output.
-   - Validation commands that will be run (e.g., `pytest tests/test_phase0_preflight.py -q`).
+   - Validation commands that will be run (e.g., `pytest tests/proseco/reproduction/test_phase0_preflight.py -q`).
    - Expected output folder and which gate is being opened or closed.
    - Confirmation that no K=3 smoke numbers are being elevated to thesis evidence.
 2. Address any BLOCKING or WARNING findings before submitting.

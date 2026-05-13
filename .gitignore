@@ -76,6 +76,10 @@ thesis/*.synctex.gz
 # Claude Code
 .claude/
 
+# HPC push.sh writes the current short SHA here so sbatches can tag outputs
+# when .git is excluded from rsync. Never commit this transient file.
+.hpc_git_sha
+
 # Experiment scratch / ad hoc runs
 runs/
 smoke_*/

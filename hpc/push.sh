@@ -23,6 +23,22 @@ cd "$REPO_ROOT"
 echo "Local repo: $REPO_ROOT"
 echo ""
 
+# Record commit SHA so HPC sbatches can stamp output folders with provenance.
+# .git/ is excluded from rsync (saves bandwidth and avoids submodule issues),
+# so this fallback file is the only SHA source on the cluster. If the worktree
+# has uncommitted tracked changes, append "-dirty" so output folder names make
+# it obvious that the run used unpushed code.
+if git rev-parse --short HEAD >/dev/null 2>&1; then
+    SHA="$(git rev-parse --short HEAD)"
+    if ! git diff --quiet HEAD -- 2>/dev/null; then
+        SHA="${SHA}-dirty"
+    fi
+    printf '%s\n' "$SHA" > .hpc_git_sha
+    echo "Wrote .hpc_git_sha: $SHA"
+else
+    echo "warning: not a git repo or no HEAD; .hpc_git_sha not written" >&2
+fi
+
 # Create remote directory if it doesn't exist
 echo "Creating remote directory..."
 ssh "${REMOTE_USER}@${REMOTE_HOST}" "mkdir -p ${REMOTE_DIR}"
@@ -61,8 +77,8 @@ echo "✅ Push complete!"
 echo "=========================================="
 echo ""
 echo "Next steps:"
-echo "  1. Phase 0 complete (PF1-PF8 ✅, K=3 smoke ✅). K=30 replication is open."
+echo "  1. ProSeCo-OWT is closed as a case study; no K=30 replication is currently open."
 echo "     Before any sbatch, run a Codex pre-submit review (see hpc/README.md)."
-echo "     K=30 entry points: hpc/phase2b_proseco_owt.sbatch then hpc/phase3a_combinatorial.sbatch"
+echo "     Current backend-validation entry point: hpc/backend_validation/informed_correctors/stage0_env_smoke.sbatch"
 echo "  2. Monitor: ssh ${REMOTE_USER}@${REMOTE_HOST} 'squeue -u ${REMOTE_USER}'"
 echo "  3. Fetch results: bash hpc/pull.sh"
