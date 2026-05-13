@@ -24,7 +24,11 @@ cd "$REPO"
 
 module load miniconda3
 source "$(conda info --base)/etc/profile.d/conda.sh"
-conda activate "${CONDA_ENV:-remdm311}"
+# Default to the dedicated CUDA13 JAX env. The old remdm311 env is reserved
+# for PyTorch/ProSeCo work and is known to fail Stage 1 under the
+# cuda12-on-cuda13-MIG combination (CLAUDE.md issue #14). Override via
+# `CONDA_ENV=...` only if explicitly testing another env.
+conda activate "${CONDA_ENV:-ic_text8_jax13}"
 
 SHA="$(git rev-parse --short HEAD 2>/dev/null || cat .hpc_git_sha 2>/dev/null || echo nogit)"
 OUT_DIR="$REPO/results/backend_validation/informed_correctors/stage1_tiny_train_${SHA}"

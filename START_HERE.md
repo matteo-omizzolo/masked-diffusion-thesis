@@ -34,29 +34,42 @@ validated in this repo.
 
 ## Current Next Action
 
-Author email in `docs/email_informed_correctors_authors.md` was sent
-**2026-05-14**. Two parallel tracks:
+**Working assumption (2026-05-14):** do **not** assume the informed-correctors
+authors or the Bocconi HPC admins will reply in time. The active execution
+plan is engineered to be self-sufficient.
 
-- **Author track:** wait for reply; follow up after 7-10 days if none.
-- **No-author-response track (current state, 2026-05-14):**
-  - **Stage 0** ✅ passed (job 494221, gnode01): 14/14 imports OK, JAX sees
-    GPU, HollowMD4 config loads, Text8 staged. Resolved the
-    `remdm311`-lacks-JAX-ecosystem blocker by installing pinned versions
-    (jax/flax/orbax/distrax compatible set + tensorflow-cpu + tf-keras +
-    tensorboard + seaborn + wandb 0.26.1). See
-    `docs/09_informed_correctors_training_contingency.md §Stage 0`.
-  - **Stage 1** 🚫 blocked (jobs 494239 and 494245, gnode02):
-    `ExitCode=120:0` ~3.5 min after `Using Hollow MD4`, no Python
-    traceback. The Bocconi `stud` A100s run in MIG mode under CUDA-13
-    driver while JAX 0.4.30 ships a cuda12 plugin. The
-    `XLA_PYTHON_CLIENT_PREALLOCATE=false`/`MEM_FRACTION=0.5`/`JAX_PLATFORMS=cuda`
-    workaround did not help. See CLAUDE.md known issue #14 +
-    `docs/09 §Stage 1 — current blocker` for the deferred resolution
-    paths (non-MIG queue request, `jax[cuda13]` wait, CPU fallback,
-    author-track checkpoint).
+**Primary path — clean Bocconi `ic_text8_jax13` env (`jax[cuda13]`):**
 
-Do not launch Stage 2 or full training without explicit approval. Stage 1
-should be re-attempted only after one of the resolution paths is in place.
+1. Set up the dedicated env on a Bocconi login node via
+   `hpc/backend_validation/informed_correctors/setup_ic_text8_jax13.sh`.
+2. Stage 0 (now includes a JIT compute probe that catches CUDA/driver/MIG
+   issues at Stage 0 time, not Stage 1 time):
+   `sbatch hpc/backend_validation/informed_correctors/stage0_env_smoke.sbatch`.
+3. Stage 1 (tiny training-loop smoke) **iff Stage 0 passes**:
+   `sbatch hpc/backend_validation/informed_correctors/stage1_tiny_train.sbatch`.
+4. Both sbatches default to `CONDA_ENV=ic_text8_jax13`; the older
+   `remdm311` env is reserved for ProSeCo/PyTorch work and is deprecated
+   for Text8 training (CLAUDE.md issue #14).
+
+**Fallback path — external GPU rental (only if Bocconi remains blocked):**
+see `docs/10_external_gpu_text8_fallback.md` for machine recommendation,
+setup, Stage 0/1 commands, ~$1.50 cost estimate, and stop criteria.
+
+**Outgoing communications already sent:**
+
+- Author email in `docs/email_informed_correctors_authors.md` — sent
+  2026-05-14. Follow up after 7-10 days if no reply, but do **not** block
+  on it.
+
+**Historical state (2026-05-14, `remdm311` path — deprecated):**
+Stage 0 eventually passed (job 494221) after installing JAX/Flax/TF into
+`remdm311`; Stage 1 jobs 494239 and 494245 then failed with `ExitCode 120:0`
+after `Using Hollow MD4` because JAX 0.4.30's cuda12 plugin crashed against
+the A100 MIG + CUDA-13 driver on `stud`. Documented in CLAUDE.md issue #14
+and `docs/09 §Stage 1`. The new `ic_text8_jax13` env uses `jax[cuda13]`,
+which sidesteps this entirely.
+
+Do not launch Stage 2 or full training without explicit approval.
 
 ## Canonical ProSeCo Result Folders
 

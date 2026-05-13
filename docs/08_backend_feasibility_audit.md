@@ -671,15 +671,22 @@ Email the informed-correctors authors for the Text8 HollowMD4 checkpoint, exact 
 
 This is the highest-value next action because informed-correctors/Text8 is the principled backend, but the repo has no public weights and has enough config rough edges that immediate training would risk wasting engineering time. If weights are unavailable, proceed to Stage 0/1/2 only, then decide whether a full 1M-step run is worth it.
 
-*Update 2026-05-14: the author email was sent. Stage 0 has since passed
-cleanly on HPC (job 494221) after a pinned-versions JAX/Flax/TF install
-documented in
-`docs/09_informed_correctors_training_contingency.md §Stage 0 environment setup`.
-Stage 1 is currently blocked by an A100-MIG / CUDA-13 / JAX-cuda12-plugin
-interaction (jobs 494239 and 494245, ExitCode 120:0); see CLAUDE.md issue
-#14 and docs/09 §Stage 1 for the resolution paths. The "follow up after
-7-10 days if no reply" author-track guidance applies if no response arrives
-by 2026-05-21 to 2026-05-24.*
+*Update 2026-05-14: the author email was sent and is treated as
+non-blocking. The active execution path no longer depends on either an
+author reply or a Bocconi HPC admin reply. Concretely:
+
+- **Primary**: dedicated `ic_text8_jax13` env (`jax[cuda13]`) set up via
+  `hpc/backend_validation/informed_correctors/setup_ic_text8_jax13.sh`,
+  documented in `docs/09 §Stage 0 environment setup`. The Stage 0 sbatch
+  now runs a JIT compute probe in addition to import / enumeration / data
+  checks.
+- **Fallback**: external GPU rental as documented in
+  `docs/10_external_gpu_text8_fallback.md`.
+- **Deprecated**: `remdm311` for Text8 training (ProSeCo/PyTorch-only).
+  Historical: Stage 0 eventually passed on remdm311 (job 494221) but
+  Stage 1 jobs 494239 and 494245 hit the cuda12-on-cuda13-MIG bug
+  (CLAUDE.md issue #14) — `ic_text8_jax13` uses cuda13 PJRT and sidesteps
+  this.*
 
 ## Files Created/Modified by Independent Audit
 

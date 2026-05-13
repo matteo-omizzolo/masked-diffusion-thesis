@@ -34,16 +34,22 @@ were not found.
 
 ## Current Next Action
 
-Author email in `docs/email_informed_correctors_authors.md` was sent
-**2026-05-14**. Two parallel tracks:
+**Working assumption (2026-05-14):** do **not** assume the informed-correctors
+authors or the Bocconi HPC admins will reply in time. The active path below
+is self-sufficient.
 
-- **Author track:** wait for reply; follow up after 7-10 days if none.
-- **No-author-response track:** drive the staged path below.
-  1. Stage 0 environment/data/config smoke. First attempt (job 494155,
-     2026-05-13) surfaced the `remdm311`-lacks-JAX-ecosystem blocker.
-     Remediation in `docs/09_informed_correctors_training_contingency.md`.
-  2. Stage 1 tiny training-loop smoke only if Stage 0 passes.
-  3. Stage 2 throughput benchmark before any full training.
+- Author email sent 2026-05-14 (informational only; non-blocking).
+- **Primary path — Bocconi `ic_text8_jax13` env (`jax[cuda13]`):**
+  1. `bash hpc/backend_validation/informed_correctors/setup_ic_text8_jax13.sh`
+     on a login node (idempotent).
+  2. Stage 0 sbatch: now includes a JIT compute probe; defaults to the new
+     env.
+  3. Stage 1 sbatch (tiny training-loop only) defaults to the new env.
+- **Fallback path — external GPU rental** if Bocconi remains blocked. See
+  `docs/10_external_gpu_text8_fallback.md`.
+- **Deprecated:** `remdm311` for Text8 training. It is ProSeCo/PyTorch-only
+  and is known to fail Stage 1 under the cuda12-on-cuda13-MIG combination
+  (CLAUDE.md issue #14).
 
 ## Canonical Result Folders
 

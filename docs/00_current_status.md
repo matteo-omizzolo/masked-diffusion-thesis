@@ -34,21 +34,28 @@ weights were not found.
 
 ## Current Actions
 
-1. Author email in `docs/email_informed_correctors_authors.md` — **sent
-   2026-05-14**. Follow-up guidance: re-ping after 7-10 days if no reply.
-2. **Stage 0** environment smoke — ✅ passed (job 494221, gnode01,
-   2026-05-14). The initial blocker (`remdm311` lacked the JAX/Flax/TF
-   ecosystem; Text8 not staged) was resolved by installing pinned versions
-   on a login node and staging Text8. Steps retained in
-   `docs/09_informed_correctors_training_contingency.md §Stage 0 environment setup`.
-3. **Stage 1** tiny training-loop smoke — 🚫 currently blocked (jobs 494239
-   and 494245). Exit 120:0 after `Using Hollow MD4`, no Python traceback;
-   the Bocconi `stud` A100s run in MIG mode under CUDA-13 while JAX 0.4.30
-   ships a cuda12 plugin. `XLA_PYTHON_CLIENT_PREALLOCATE=false`/
-   `MEM_FRACTION=0.5`/`JAX_PLATFORMS=cuda` workaround did not help. See
-   CLAUDE.md known issue #14 and
-   `docs/09_informed_correctors_training_contingency.md §Stage 1 — current blocker`
-   for the resolution paths (cluster admin / `jax[cuda13]` / CPU fallback /
-   author-track checkpoint).
+**Working assumption (2026-05-14):** do **not** assume the informed-correctors
+authors or the Bocconi HPC admins will reply in time. The current execution
+plan is self-sufficient.
 
-No long training is approved yet.
+1. Author email in `docs/email_informed_correctors_authors.md` — sent
+   2026-05-14. Follow up after 7-10 days if no reply, but do not block on it.
+2. **Primary path — Bocconi `ic_text8_jax13` (`jax[cuda13]`):**
+   - Set up the dedicated env on a login node via
+     `hpc/backend_validation/informed_correctors/setup_ic_text8_jax13.sh`
+     (idempotent; safe to re-run).
+   - Stage 0 sbatch defaults to `CONDA_ENV=ic_text8_jax13` and now runs a
+     JIT compute probe in addition to import + enumeration checks (catches
+     CUDA/driver mismatches at Stage 0 time).
+   - Stage 1 sbatch also defaults to `ic_text8_jax13`. Tiny training loop
+     only (≤50 steps, batch_size=8, hidden_dim=128, 2 layers).
+3. **Fallback path — external GPU rental:** see
+   `docs/10_external_gpu_text8_fallback.md`. Trigger only when the Bocconi
+   clean-env path is exhausted; expected cost ~$1.50 for Stage 0+1+2.
+4. **Deprecated path — `remdm311` for Text8 training:** historical Stage 0
+   eventually passed (job 494221) but Stage 1 jobs 494239 and 494245 hit
+   the cuda12-on-cuda13-MIG bug (CLAUDE.md issue #14). `remdm311` is now
+   ProSeCo/PyTorch-only.
+
+No long training is approved yet. Stage 2 + useful-checkpoint training
+remain explicitly out of scope until Stage 1 passes cleanly.

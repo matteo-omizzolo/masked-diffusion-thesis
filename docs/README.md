@@ -13,6 +13,7 @@ Current source-of-truth reading order:
 9. `docs/07_experiment_log.md`
 10. `docs/08_backend_feasibility_audit.md`
 11. `docs/09_informed_correctors_training_contingency.md`
+12. `docs/10_external_gpu_text8_fallback.md`
 
 Email draft:
 

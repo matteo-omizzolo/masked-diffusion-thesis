@@ -133,7 +133,19 @@ tighter, consider freeing space outside this env (e.g. the 15G
 `~/mdm/checkpoints/proseco_llada_sft` checkpoint from the closed
 cross-backbone line).
 
-### Stage 1 — current blocker (2026-05-14)
+### Stage 1 — historical blocker (resolved-by-redirect 2026-05-14)
+
+The remdm311-path Stage 1 attempts described below are kept as
+provenance. The **active** Stage 1 path is the dedicated `ic_text8_jax13`
+env (`jax[cuda13]`) set up via
+`hpc/backend_validation/informed_correctors/setup_ic_text8_jax13.sh`.
+That env uses cuda13 PJRT plugins, which match the Bocconi A100 driver
+(580.95.05 / CUDA 13.0) and should avoid the MIG/cross-driver crash
+documented below. If the new env's Stage 1 still fails, fall through to
+the external-GPU fallback in `docs/10_external_gpu_text8_fallback.md`
+rather than reverting to remdm311.
+
+#### Original remdm311 Stage 1 failure log
 
 Stage 1 job 494239 on gnode02 (after Stage 0 passed) entered the training
 script, printed `Using Hollow MD4` from `utils.py:81`, and then died after

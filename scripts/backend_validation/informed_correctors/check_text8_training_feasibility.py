@@ -142,9 +142,56 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
                 "devices": [str(d) for d in jax.devices()],
                 "local_device_count": jax.local_device_count(),
                 "process_count": jax.process_count(),
+                "version": getattr(jax, "__version__", None),
             }
         except Exception as exc:  # pragma: no cover - environment smoke
             report["jax"] = {"ok": False, "error": repr(exc)}
+
+    if args.check_compute:
+        # End-to-end JIT-compile + allocate + execute + read-back probe.
+        # jax.devices() returns a handle from the enumeration interface alone;
+        # it does not exercise compiled-kernel allocation. On A100 MIG nodes
+        # with a cuda-12 plugin against a cuda-13 driver this can pass at
+        # enumeration time and silently crash later. The probe below catches
+        # that interaction at Stage 0 time. Tensor stays tiny (64x64 fp32 =
+        # 16 KB) and runs in well under one second on any working GPU.
+        #
+        # The probe REQUIRES a GPU device by default. CPU-only execution
+        # would silently false-pass the Stage 0 gate even if CUDA failed,
+        # so any non-gpu device is rejected unless --allow-cpu-probe is
+        # passed (used only for local Mac CI / debugging).
+        try:
+            import jax
+            import jax.numpy as jnp
+
+            devices = jax.devices()
+            device_kinds = sorted({d.platform for d in devices})
+            x = jnp.ones((64, 64), dtype=jnp.float32)
+            f = jax.jit(lambda y: (y @ y).sum())
+            out_arr = f(x)
+            out = float(out_arr.block_until_ready())
+            expected = 64.0 * 64.0 * 64.0  # 64x64 ones @ 64x64 ones -> sum
+            # In modern JAX `jax.Array.device` is a property; the legacy
+            # callable was removed. Prefer `.devices()` (a set) since the
+            # property behavior differs across the jax 0.4 / 0.5 / 0.10
+            # bumps and across SDA vs MDA arrays.
+            try:
+                probe_devices = list(out_arr.devices())
+            except AttributeError:
+                probe_devices = [getattr(out_arr, "device", devices[0])]
+            probe_device = str(probe_devices[0]) if probe_devices else "unknown"
+            on_gpu = any(k in {"gpu", "cuda", "rocm"} for k in device_kinds)
+            report["compute_probe"] = {
+                "ok": True,
+                "result": out,
+                "expected": expected,
+                "matches": abs(out - expected) <= 1e-3 * expected,
+                "device_kinds": device_kinds,
+                "probe_device": probe_device,
+                "on_gpu": on_gpu,
+            }
+        except Exception as exc:  # pragma: no cover - environment smoke
+            report["compute_probe"] = {"ok": False, "error": repr(exc)}
 
     if args.check_data:
         data_ok = _safe_exists(data_zip) or _safe_exists(upstream_hardcoded_zip)
@@ -174,17 +221,30 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--check-imports", action="store_true")
     parser.add_argument("--check-jax", action="store_true")
+    parser.add_argument(
+        "--check-compute",
+        action="store_true",
+        help="Run a tiny JIT-compile + matmul + readback probe on the JAX "
+        "default device. Catches CUDA/driver/MIG mismatches that pass "
+        "device enumeration but break compiled-kernel allocation. By "
+        "default, requires a GPU device (CPU-only false-passes are "
+        "rejected). Use --allow-cpu-probe to relax for local debugging.",
+    )
+    parser.add_argument(
+        "--allow-cpu-probe",
+        action="store_true",
+        help="Allow the compute probe to pass on a CPU-only JAX backend. "
+        "Off by default because Stage 0 on HPC must require a real GPU.",
+    )
     parser.add_argument("--check-data", action="store_true")
     parser.add_argument("--write-report", type=Path)
     args = parser.parse_args(argv)
 
     report = build_report(args)
-    text = json.dumps(report, indent=2, sort_keys=True)
-    print(text)
-    if args.write_report:
-        args.write_report.parent.mkdir(parents=True, exist_ok=True)
-        args.write_report.write_text(text + "\n")
 
+    # Compute hard_fail BEFORE serializing so that annotated diagnostic
+    # fields (e.g. compute_probe.forced_fail_reason) are persisted in
+    # feasibility.json instead of only affecting the exit code.
     hard_fail = (
         not report["repo_exists"]
         or not report["hollow_config_exists"]
@@ -197,6 +257,26 @@ def main(argv: list[str] | None = None) -> int:
         hard_fail = True
     if args.check_jax and not report.get("jax", {}).get("ok", False):
         hard_fail = True
+    if args.check_compute:
+        probe = report.get("compute_probe", {})
+        if not probe.get("ok", False) or not probe.get("matches", False):
+            hard_fail = True
+        elif not args.allow_cpu_probe and not probe.get("on_gpu", False):
+            # Probe technically ran and matched, but on a CPU backend. On
+            # HPC this would be a false-pass: Stage 0 is supposed to gate
+            # GPU readiness for Stage 1.
+            probe["forced_fail_reason"] = (
+                "compute probe ran on CPU; pass --allow-cpu-probe to permit"
+            )
+            hard_fail = True
+    report["hard_fail"] = hard_fail
+
+    text = json.dumps(report, indent=2, sort_keys=True)
+    print(text)
+    if args.write_report:
+        args.write_report.parent.mkdir(parents=True, exist_ok=True)
+        args.write_report.write_text(text + "\n")
+
     return 1 if hard_fail else 0
 
 
