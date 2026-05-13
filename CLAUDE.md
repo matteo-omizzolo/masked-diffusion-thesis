@@ -161,6 +161,15 @@ preamble attempted PyPI access from gnode02. It died before any shard launched
 and wrote no files. Future sbatches must use the pre-provisioned `remdm311`
 environment or offline-safe install steps; do not assume PyPI access on `gnode*`.
 
+### 13. `remdm311` lacks the JAX ecosystem
+The conda env `remdm311` was built for PyTorch/ProSeCo work and does not
+contain JAX, Flax, ml_collections, tensorflow, tensorflow-datasets,
+orbax-checkpoint, optax, distrax, clu, grain, or absl-py. Job 494155
+(informed-correctors Stage 0) confirmed this on 2026-05-13.
+**Fix:** install from a login node into `remdm311` per
+`docs/09_informed_correctors_training_contingency.md` §Stage 0 known blocker
+before re-running Stage 0.
+
 ---
 
 ## Current status (May 2026)
