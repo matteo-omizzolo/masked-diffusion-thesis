@@ -38,38 +38,35 @@ validated in this repo.
 authors or the Bocconi HPC admins will reply in time. The active execution
 plan is engineered to be self-sufficient.
 
-**Primary path — clean Bocconi `ic_text8_jax13` env (`jax[cuda13]`):**
+**Bocconi path — exhausted (2026-05-14):** three independent env attempts
+all hit structural blockers documented in CLAUDE.md known issue #14. The
+remaining outcome: Stage 0 (job 494412) finally passes cleanly on
+`ic_text8_jax13` with `jax[cuda12]` 0.10.0 — 13/13 imports, GPU compute
+probe matches=True, no false-pass on CPU. But Stage 1 then hits an
+upstream `informed-correctors` codebase + `tensorflow_probability` + JAX
+0.10 API-removal incompatibility (`jax.interpreters.xla.pytype_aval_mappings`)
+that requires patching multiple upstream modules. The cuda13 path on
+Bocconi is blocked at Stage 0 because Bocconi exposes no CUDA-13 toolkit
+module; the cuda12 path either crashes on MIG (older JAX) or breaks
+upstream code at import time (newer JAX). See `docs/09 §Stage 1 — Bocconi
+env path documented blocked` for full diagnostics.
 
-1. Set up the dedicated env on a Bocconi login node via
-   `hpc/backend_validation/informed_correctors/setup_ic_text8_jax13.sh`.
-2. Stage 0 (now includes a JIT compute probe that catches CUDA/driver/MIG
-   issues at Stage 0 time, not Stage 1 time):
-   `sbatch hpc/backend_validation/informed_correctors/stage0_env_smoke.sbatch`.
-3. Stage 1 (tiny training-loop smoke) **iff Stage 0 passes**:
-   `sbatch hpc/backend_validation/informed_correctors/stage1_tiny_train.sbatch`.
-4. Both sbatches default to `CONDA_ENV=ic_text8_jax13`; the older
-   `remdm311` env is reserved for ProSeCo/PyTorch work and is deprecated
-   for Text8 training (CLAUDE.md issue #14).
-
-**Fallback path — external GPU rental (only if Bocconi remains blocked):**
-see `docs/10_external_gpu_text8_fallback.md` for machine recommendation,
-setup, Stage 0/1 commands, ~$1.50 cost estimate, and stop criteria.
+**Active path — external GPU rental:** `docs/10_external_gpu_text8_fallback.md`
+is the documented next-step. A fresh cloud GPU with a matching driver/toolkit
+avoids all three Bocconi-specific constraints, costs ~$1.50 for Stage 0 +
+Stage 1 + Stage 2, and is the cleanest path. The repo state (commits on
+`codex/informed-correctors-backend-validation`) is ready to be cloned on a
+rental machine, including the strengthened Stage 0 JIT compute probe and
+the setup script.
 
 **Outgoing communications already sent:**
 
 - Author email in `docs/email_informed_correctors_authors.md` — sent
-  2026-05-14. Follow up after 7-10 days if no reply, but do **not** block
-  on it.
+  2026-05-14. Follow up after 7-10 days if no reply, but **non-blocking**.
 
-**Historical state (2026-05-14, `remdm311` path — deprecated):**
-Stage 0 eventually passed (job 494221) after installing JAX/Flax/TF into
-`remdm311`; Stage 1 jobs 494239 and 494245 then failed with `ExitCode 120:0`
-after `Using Hollow MD4` because JAX 0.4.30's cuda12 plugin crashed against
-the A100 MIG + CUDA-13 driver on `stud`. Documented in CLAUDE.md issue #14
-and `docs/09 §Stage 1`. The new `ic_text8_jax13` env uses `jax[cuda13]`,
-which sidesteps this entirely.
-
-Do not launch Stage 2 or full training without explicit approval.
+Do not launch Stage 2 or full training without explicit approval. Stage 1
+should be retried only on the external-GPU fallback or after an authors'
+checkpoint is shared.
 
 ## Canonical ProSeCo Result Folders
 

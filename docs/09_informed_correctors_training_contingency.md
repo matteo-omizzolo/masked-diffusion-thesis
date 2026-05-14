@@ -2,7 +2,15 @@
 
 ## A. Can We Train Without Author Reply?
 
-Classification: **PROBABLY YES**.
+Classification (2026-05-14 revised): **PROBABLY YES on an external/non-Bocconi
+GPU; structurally blocked on Bocconi.** The original assessment below was
+written before the 2026-05-14 HPC execution sequence; it remains accurate
+in principle (the codebase has everything needed for Text8 HollowMD4
+training) but the Bocconi GPU stack itself is incompatible with the
+upstream dependency matrix — see §Stage 1 — Bocconi env path documented
+blocked. The external-GPU fallback in `docs/10_external_gpu_text8_fallback.md`
+preserves the "probably yes" verdict by sidestepping the Bocconi-specific
+constraints.
 
 The informed-correctors repo contains the key ingredients for Text8 HollowMD4
 training: a Text8 HollowMD4 config, Text8 tokenizer/preprocessing logic,
@@ -133,17 +141,48 @@ tighter, consider freeing space outside this env (e.g. the 15G
 `~/mdm/checkpoints/proseco_llada_sft` checkpoint from the closed
 cross-backbone line).
 
-### Stage 1 — historical blocker (resolved-by-redirect 2026-05-14)
+### Stage 1 — Bocconi env path documented blocked (2026-05-14)
 
-The remdm311-path Stage 1 attempts described below are kept as
-provenance. The **active** Stage 1 path is the dedicated `ic_text8_jax13`
-env (`jax[cuda13]`) set up via
-`hpc/backend_validation/informed_correctors/setup_ic_text8_jax13.sh`.
-That env uses cuda13 PJRT plugins, which match the Bocconi A100 driver
-(580.95.05 / CUDA 13.0) and should avoid the MIG/cross-driver crash
-documented below. If the new env's Stage 1 still fails, fall through to
-the external-GPU fallback in `docs/10_external_gpu_text8_fallback.md`
-rather than reverting to remdm311.
+After three independent Bocconi env attempts on `ic_text8_jax13`, the
+Stage 1 path is **structurally blocked on Bocconi** by an interaction
+between the Bocconi GPU stack and the upstream `informed-correctors`
+codebase's dependency graph:
+
+1. **`jax[cuda13]` (latest)** — Stage 0 fails. The cuda13 PJRT plugin
+   calls `cublasGetVersion` against an installed cuBLAS wheel that
+   itself fails to initialise against the Bocconi driver stack
+   (driver 580.95.05 advertises CUDA 13.0, but Bocconi exposes no
+   `cuda/13.x` module — only `cuda/12.1` through `cuda/12.8`). cuBLAS
+   returns `INTERNAL_ERROR=14`, which JAX misreports as "Installed
+   version: 14". Job 494409 confirmed this with `nvidia-cublas` 13.4.1.1;
+   job 494410 confirmed it persists after downgrading to
+   `nvidia-cublas==13.0.0.19`.
+2. **`jax[cuda12]` latest (JAX 0.10.0)** — Stage 0 passes (job 494412,
+   1m10s, all six criteria green including the new on-GPU compute
+   probe). Stage 1 then fails at module-load time because upstream
+   `md4/utils.py` imports `distrax`, which depends on `tfp-nightly`,
+   which references `jax.interpreters.xla.pytype_aval_mappings` —
+   removed in JAX 0.10 (also breaks via `md4/models/diffusion/genmd4.py`
+   which directly imports `tensorflow_probability.substrates.jax`).
+   Defensive patches to `utils.py` cover distrax (jobs 494413→494416),
+   but the TFP-substrate-jax import chain has the same problem and
+   patching every offending module is out of scope for a Stage 1 smoke.
+3. **`jax[cuda12]` 0.4.30 (remdm311 path)** — historically attempted
+   first (see "Original remdm311 Stage 1 failure log" below); died with
+   `ExitCode 120:0` after `Using Hollow MD4`, the cuda12-on-cuda13-MIG
+   crash (CLAUDE.md #14).
+
+The three failure modes form an exhaustive coverage: cuda13 toolkit
+absent on Bocconi, recent JAX cuda12 incompatible with upstream-pinned
+TFP/distrax, and older JAX cuda12 incompatible with A100 MIG mode.
+
+**Decision (2026-05-14):** trigger the external-GPU fallback documented
+in `docs/10_external_gpu_text8_fallback.md`. A fresh cloud GPU with a
+matching driver/toolkit will avoid all three Bocconi-specific
+constraints, costs roughly $1.50 for Stage 0 + Stage 1 + Stage 2, and is
+the cleanest path under the no-author-no-admin assumption.
+
+The remdm311-path Stage 1 attempt below is kept as provenance.
 
 #### Original remdm311 Stage 1 failure log
 

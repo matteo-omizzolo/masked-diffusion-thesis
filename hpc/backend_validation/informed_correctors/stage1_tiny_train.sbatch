@@ -63,6 +63,8 @@ import os
 from pathlib import Path
 run_dir = Path(os.environ["RUN_DIR"])
 text8_data_dir = os.environ["TEXT8_DATA_DIR"]
+
+# Patch 1: redirect input_pipeline DATA_DIR away from /root/md4/data_dir.
 path = run_dir / "text8" / "md4" / "input_pipeline.py"
 text = path.read_text()
 old = 'DATA_DIR = "/root/md4/data_dir"'
@@ -70,6 +72,55 @@ new = f'DATA_DIR = {text8_data_dir!r}'
 if old not in text:
     raise SystemExit(f"[stage1] expected DATA_DIR line not found in {path}")
 path.write_text(text.replace(old, new))
+
+# Patch 2: make `import distrax` in utils.py defensive. distrax 0.1.8 (the
+# only published version) is incompatible with jax[cuda12]'s newest JAX
+# (missing jax.interpreters.xla.pytype_aval_mappings). distrax is only
+# used by DiscretizedLogisticMixture (ImageNet code path) which Text8
+# HollowMD4 training never reaches. Both the import AND the class
+# definition that inherits from distrax.Distribution must be guarded,
+# because the class is evaluated at module load time.
+utils_path = run_dir / "text8" / "md4" / "utils.py"
+utils_text = utils_path.read_text()
+
+old_import = "import distrax"
+new_import = (
+    "try:\n"
+    "    import distrax\n"
+    "except Exception as _distrax_exc:  # informed-correctors Text8 patch\n"
+    "    distrax = None\n"
+)
+if old_import not in utils_text:
+    raise SystemExit(
+        f"[stage1] expected 'import distrax' line not found in {utils_path}"
+    )
+utils_text = utils_text.replace(old_import, new_import, 1)
+
+# Find the DiscretizedLogisticMixture class block (between `class
+# DiscretizedLogisticMixture(distrax.Distribution):` and the next
+# `\nclass ` or `\ndef ` at column 0) and wrap it in `if distrax is not
+# None:` so the body parses but only runs when distrax is healthy.
+import re
+match = re.search(
+    r"^class DiscretizedLogisticMixture\(distrax\.Distribution\):.*?(?=^class |^def |\Z)",
+    utils_text,
+    flags=re.MULTILINE | re.DOTALL,
+)
+if not match:
+    raise SystemExit(
+        f"[stage1] DiscretizedLogisticMixture class not found in {utils_path}"
+    )
+class_body = match.group(0)
+indented = "    " + class_body.rstrip("\n").replace("\n", "\n    ") + "\n"
+guarded = (
+    "if distrax is not None:  # informed-correctors Text8 patch\n"
+    + indented
+    + "else:\n"
+    + "    DiscretizedLogisticMixture = None  # type: ignore[assignment]\n\n"
+)
+utils_text = utils_text[: match.start()] + guarded + utils_text[match.end() :]
+utils_path.write_text(utils_text)
+print("[stage1] patched DATA_DIR, distrax import, and DiscretizedLogisticMixture class")
 PY
 
 export PYTHONPATH="$RUN_DIR/text8:${PYTHONPATH:-}"

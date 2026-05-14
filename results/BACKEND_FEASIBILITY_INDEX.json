@@ -1,185 +1,47 @@
 {
   "audit_date": "2026-05-13",
-  "branch": "theory-first-corrector-timing",
-  "commit_sha": "0c39079",
-  "report": "docs/08_backend_feasibility_audit.md",
-  "independent_codex_audit": {
-    "audit_date": "2026-05-13",
-    "report_section": "docs/08_backend_feasibility_audit.md#independent-codex-audit",
-    "scope": "Independent repo/code validation plus small local import smoke checks; no long training, no huge model/checkpoint downloads, no staging or commits.",
-    "recommended_next_action": "Email the informed-correctors authors for the Text8 HollowMD4 checkpoint, exact paper training config, vocabulary file, and sampling/evaluation commands before training from scratch.",
-    "bottom_line": {
-      "informed_correctors_text8": "Scientifically principled second backend, but no public weights found and engineering/training cost should be benchmarked before a full run.",
-      "prism_llada": "Not recommended as a timing-validation backend because it is a token-quality/remasking fine-tuning system with no public PRISM LLaDA checkpoint found."
-    },
-    "claims": [
-      {
-        "claim": "No informed-correctors Text8 weights are available.",
-        "status": "verified",
-        "evidence": "No checkpoint-like files found locally; README and grep/web search did not reveal public Text8 weights."
-      },
-      {
-        "claim": "Text8 training costs 2-5 A100 GPU-days.",
-        "status": "unverified",
-        "evidence": "Local config uses 1M steps, batch 512, seq_len 256, 1000 timesteps, 36 layers, 12 heads, hidden_dim 2048. Runtime requires a measured benchmark."
-      },
-      {
-        "claim": "Hollow transformer gives exact conditionals.",
-        "status": "partially_verified",
-        "evidence": "Architecture structurally excludes x_d from the output at coordinate d; logits are learned model conditionals/proxies, not exact true data conditionals."
-      },
-      {
-        "claim": "Timing control requires replacing jax.lax.fori_loop.",
-        "status": "partially_verified",
-        "evidence": "fori_loop blocks Python schedule membership; a boolean schedule array with jax.lax.cond inside the compiled loop is cleaner than a Python loop for large sweeps."
-      },
-      {
-        "claim": "Timing control is approximately one day engineering.",
-        "status": "partially_contradicted",
-        "evidence": "Current code uses static self.k, ignores sample_step k/temp args, and does not wire config.k. Robust scheduled sampling with CRN tests is estimated at 2-4 days."
-      },
-      {
-        "claim": "PRISM checkpoint paths are private/inaccessible.",
-        "status": "verified",
-        "evidence": "PRISM_llada/generate_samples.py defaults to /n/netscratch/sham_lab/Everyone/jay_llada/llada_PRISM/checkpoint-44000; no local PRISM checkpoint files found."
-      },
-      {
-        "claim": "PRISM remasking head is entangled with training objective.",
-        "status": "verified",
-        "evidence": "RemaskingTrainer.compute_loss trains remasking_conf from one-step sampled xs correctness labels plus unmasking loss."
-      },
-      {
-        "claim": "PRISM timing cannot be separated cleanly from token selection.",
-        "status": "verified",
-        "evidence": "Inference remasks top-k tokens selected by learned quality/confidence; changing times changes a learned token-quality correction loop, not only a fixed corrector schedule."
-      }
-    ],
-    "repos": {
-      "informed_correctors": {
-        "local_path": "external_repos/informed-correctors",
-        "local_commit": "8371dec19404eae279a4eb5ea4e06977d8d173b6",
-        "remote_main": "8371dec19404eae279a4eb5ea4e06977d8d173b6",
-        "branch": "main",
-        "license_audit": "No root LICENSE file found; many source files contain Apache-2.0 headers inherited from DeepMind code.",
-        "weights_available": false,
-        "checkpoint_format": "Orbax CheckpointManager saving train_state and Grain train_iter under <workdir>/checkpoints.",
-        "training_entrypoint": "external_repos/informed-correctors/text8/md4/main.py",
-        "sampling_entrypoint": "external_repos/informed-correctors/text8/md4/sampling.py",
-        "main_risks": [
-          "No public checkpoint found.",
-          "Local environment lacks JAX/Flax/TensorFlow/Grain/Orbax/W&B/ml_collections.",
-          "Text8 data path is hardcoded to /root/md4/data_dir/text8/text8.zip.",
-          "hollow_md4 Text8 config omits vocab_dir even though train.py opens config.vocab_dir.",
-          "Timing schedule requires model/sampler API edits, not just a for-loop swap."
-        ],
-        "terminal_F_primary": "Negative native Text8 invalid-word or invalid-character rate using a fixed training vocabulary.",
-        "terminal_F_backup": "Model-based bits-per-token or ELBO-style self-score under the trained diffusion model."
-      },
-      "prism_llada": {
-        "local_path": "external/PRISM/PRISM_llada",
-        "local_commit": "266d51e886b28ac8bfb416eb8715394aa08a4e0f",
-        "remote_main": "6e5ed6410d3d88fa1231eb78b002e3365be6deaa",
-        "branch": "main",
-        "repo_state": "Local worktree is behind remote main; remote files were inspected via git fetch/git show without checkout.",
-        "license_audit": "No root LICENSE file found.",
-        "base_model": "GSAI-ML/LLaDA-8B-Instruct public HuggingFace dependency.",
-        "prism_weights_available": false,
-        "private_checkpoint_path": "/n/netscratch/sham_lab/Everyone/jay_llada/llada_PRISM/checkpoint-44000",
-        "training_entrypoint": "external/PRISM/PRISM_llada/train.py",
-        "sampling_entrypoint": "external/PRISM/PRISM_llada/sampling.py",
-        "main_risks": [
-          "No public PRISM LLaDA checkpoint found.",
-          "Training/fine-tuning is an 8B LoRA project, not a small validation gate.",
-          "Remasking confidence is trained as token-quality machinery.",
-          "Timing-only diagnostics would be confounded by token selection and code pass@k noise.",
-          "Local environment lacks datasets, peft, evaluate, and wandb."
-        ]
-      }
-    },
-    "smoke_tests": {
-      "informed_correctors_text8": {
-        "path": "results/archive/2026-05-13_repo_cleanup/backend_smoke_informed_correctors_8371dec/SMOKE_LOG.md",
-        "status": "blocked_locally_missing_dependencies",
-        "long_training_launched": false,
-        "huge_downloads": false
-      },
-      "prism_llada": {
-        "path": "results/archive/2026-05-13_repo_cleanup/backend_smoke_prism_266d51e/SMOKE_LOG.md",
-        "status": "partial_sampling_import_ok_training_data_imports_blocked",
-        "long_training_launched": false,
-        "huge_downloads": false
-      }
-    },
-    "hygiene": {
-      "agents_md_changed": false,
-      "files_staged": false,
-      "files_committed": false,
-      "canonical_result_folders_overwritten": false,
-      "long_hpc_jobs_launched": false,
-      "huge_checkpoints_downloaded": false
-    }
+  "bocconi_stage0_stage1_status": {
+    "active_next_step": "External-GPU rental per docs/10_external_gpu_text8_fallback.md",
+    "as_of": "2026-05-14",
+    "stage0": "passes on ic_text8_jax13 with jax[cuda12]==0.10.0 (job 494412)",
+    "stage1": "blocked on Bocconi by exhaustive incompatibility matrix; see CLAUDE.md #14 and docs/09"
   },
+  "branch": "theory-first-corrector-timing",
   "candidates": [
     {
-      "id": "informed_correctors_text8",
-      "name": "informed-correctors / Text8 / HollowMD4",
-      "repo_url": "https://github.com/lindermanlab/informed-correctors",
-      "local_path": "external_repos/informed-correctors",
-      "commit": "8371dec",
-      "framework": "JAX + Flax",
-      "python_min": "3.10",
-      "pretrained_checkpoint": false,
-      "checkpoint_path": null,
-      "training_cost_gpu_days_estimate": "2-5 (1M steps, 1xA100, char-level Text8)",
-      "model_size_params_approx": "~30M",
-      "logit_structure": "hollow_conditional_exact",
-      "logit_note": "p(x_d | x_{-d}, t) by structural masking \u2014 forward/backward stream padding excludes x_d from attending to itself",
-      "timing_separable_inference": true,
-      "timing_separable_training": true,
-      "timing_control_engineering": "1 day \u2014 replace jax.lax.fori_loop with Python for-loop, pass do_correct[i] per step",
-      "inference_cost": "low",
-      "dataset": "Text8 (char-level, 27 tokens, 100M chars, auto-download via tfds)",
-      "terminal_metric_F": "BPC (bits-per-character) + word-level accuracy",
-      "delta_t_extractable": true,
-      "g_pair_extractable": true,
-      "smoke_test_status": "BLOCKED_locally_JAX_missing",
-      "smoke_test_hpc_prognosis": "workable \u2014 jax[cuda] wheel exists, no nvcc needed",
-      "scientific_fit": "HIGH",
-      "hpc_risk": "medium",
-      "recommendation": "PURSUE",
       "blocking_issues": [
         "No pretrained checkpoint \u2014 must train 1M steps",
         "JAX/Flax not installed in project venv (installable on HPC)"
       ],
-      "next_action": "Install JAX env on HPC remdm311, write Python-loop sampler wrapper, submit training sbatch after Codex review"
+      "checkpoint_path": null,
+      "commit": "8371dec",
+      "dataset": "Text8 (char-level, 27 tokens, 100M chars, auto-download via tfds)",
+      "delta_t_extractable": true,
+      "framework": "JAX + Flax",
+      "g_pair_extractable": true,
+      "hpc_risk": "medium",
+      "id": "informed_correctors_text8",
+      "inference_cost": "low",
+      "local_path": "external_repos/informed-correctors",
+      "logit_note": "p(x_d | x_{-d}, t) by structural masking \u2014 forward/backward stream padding excludes x_d from attending to itself",
+      "logit_structure": "hollow_conditional_exact",
+      "model_size_params_approx": "~30M",
+      "name": "informed-correctors / Text8 / HollowMD4",
+      "next_action": "(superseded 2026-05-14) Bocconi path exhausted; active next step is external-GPU rental per docs/10_external_gpu_text8_fallback.md. See hpc_execution_log and bocconi_stage0_stage1_status for the three-attempt diagnostic.",
+      "pretrained_checkpoint": false,
+      "python_min": "3.10",
+      "recommendation": "PURSUE",
+      "repo_url": "https://github.com/lindermanlab/informed-correctors",
+      "scientific_fit": "HIGH",
+      "smoke_test_hpc_prognosis": "workable \u2014 jax[cuda] wheel exists, no nvcc needed",
+      "smoke_test_status": "BLOCKED_locally_JAX_missing",
+      "terminal_metric_F": "BPC (bits-per-character) + word-level accuracy",
+      "timing_control_engineering": "1 day \u2014 replace jax.lax.fori_loop with Python for-loop, pass do_correct[i] per step",
+      "timing_separable_inference": true,
+      "timing_separable_training": true,
+      "training_cost_gpu_days_estimate": "2-5 (1M steps, 1xA100, char-level Text8)"
     },
     {
-      "id": "prism_llada",
-      "name": "PRISM LLaDA",
-      "repo_url": "https://github.com/SeunggeunKimkr/PRISM",
-      "local_path": "external/PRISM/PRISM_llada",
-      "commit": "unknown",
-      "framework": "PyTorch",
-      "python_min": "3.10",
-      "pretrained_checkpoint": false,
-      "checkpoint_path": "/n/netscratch/sham_lab/Everyone/jay_llada/llada_PRISM/checkpoint-44000 (private HPC, inaccessible)",
-      "training_cost_gpu_days_estimate": "GPU-days (LoRA r=256 on 8B LLaDA-Instruct)",
-      "model_size_params_approx": "8B",
-      "logit_structure": "standard_full_lm_logits_plus_remasking_conf_head",
-      "logit_note": "RemaskingHead is a 2-layer MLP trained jointly with correction objective \u2014 not a separable quality signal",
-      "timing_separable_inference": false,
-      "timing_separable_training": false,
-      "timing_control_engineering": "requires new training objective \u2014 not engineering, a new research contribution",
-      "inference_cost": "very_high",
-      "dataset": "OpenCoder-LLM/opc-sft-stage2 (Python code generation)",
-      "terminal_metric_F": "pass@k (MBPP/HumanEval)",
-      "delta_t_extractable": false,
-      "g_pair_extractable": false,
-      "smoke_test_status": "PARTIAL_sampling_logic_accessible_model_blocked",
-      "smoke_test_hpc_prognosis": "high risk \u2014 peft missing, 16GB download, cuda-nvcc in requirements.yaml (CLAUDE.md rule #4 violation)",
-      "scientific_fit": "LOW",
-      "hpc_risk": "high",
-      "recommendation": "DO_NOT_PURSUE",
       "blocking_issues": [
         "Timing entangled with remasking_conf training objective \u2014 not separable without retraining",
         "No public checkpoint",
@@ -187,31 +49,246 @@
         "peft missing from project venv",
         "requirements.yaml specifies cuda-nvcc (triggers HPC sbatch crash)"
       ],
-      "next_action": "none"
+      "checkpoint_path": "/n/netscratch/sham_lab/Everyone/jay_llada/llada_PRISM/checkpoint-44000 (private HPC, inaccessible)",
+      "commit": "unknown",
+      "dataset": "OpenCoder-LLM/opc-sft-stage2 (Python code generation)",
+      "delta_t_extractable": false,
+      "framework": "PyTorch",
+      "g_pair_extractable": false,
+      "hpc_risk": "high",
+      "id": "prism_llada",
+      "inference_cost": "very_high",
+      "local_path": "external/PRISM/PRISM_llada",
+      "logit_note": "RemaskingHead is a 2-layer MLP trained jointly with correction objective \u2014 not a separable quality signal",
+      "logit_structure": "standard_full_lm_logits_plus_remasking_conf_head",
+      "model_size_params_approx": "8B",
+      "name": "PRISM LLaDA",
+      "next_action": "none",
+      "pretrained_checkpoint": false,
+      "python_min": "3.10",
+      "recommendation": "DO_NOT_PURSUE",
+      "repo_url": "https://github.com/SeunggeunKimkr/PRISM",
+      "scientific_fit": "LOW",
+      "smoke_test_hpc_prognosis": "high risk \u2014 peft missing, 16GB download, cuda-nvcc in requirements.yaml (CLAUDE.md rule #4 violation)",
+      "smoke_test_status": "PARTIAL_sampling_logic_accessible_model_blocked",
+      "terminal_metric_F": "pass@k (MBPP/HumanEval)",
+      "timing_control_engineering": "requires new training objective \u2014 not engineering, a new research contribution",
+      "timing_separable_inference": false,
+      "timing_separable_training": false,
+      "training_cost_gpu_days_estimate": "GPU-days (LoRA r=256 on 8B LLaDA-Instruct)"
     }
   ],
+  "commit_sha": "0c39079",
+  "current_operational_plan": {
+    "author_contact_email": "docs/email_informed_correctors_authors.md",
+    "can_train_without_author_reply": "(superseded 2026-05-14) PROBABLY YES on a non-Bocconi GPU; on Bocconi the Stage 1 path is structurally blocked per CLAUDE.md #14.",
+    "huge_downloads": false,
+    "long_training_launched": false,
+    "recommendation": "pursue informed-correctors/Text8; do not pursue PRISM LLaDA for timing validation unless conditions change",
+    "stage0_checker": "scripts/backend_validation/informed_correctors/check_text8_training_feasibility.py",
+    "stage0_env_smoke_sbatch": "hpc/backend_validation/informed_correctors/stage0_env_smoke.sbatch",
+    "stage1_config": "scripts/backend_validation/informed_correctors/hollow_text8_stage1_config.py",
+    "stage1_tiny_train_sbatch": "hpc/backend_validation/informed_correctors/stage1_tiny_train.sbatch",
+    "status_date": "2026-05-13",
+    "training_contingency_doc": "docs/09_informed_correctors_training_contingency.md"
+  },
+  "hpc_execution_log": [
+    {
+      "date": "2026-05-14",
+      "env": "remdm311",
+      "host": "gnode01",
+      "job_id": 494221,
+      "notes": "After installing jax[cuda12]==0.4.30 + flax/orbax/distrax ecosystem + tf-cpu/tf-keras/tensorboard/seaborn/wandb 0.26.1; 14/14 imports OK; legacy DEPENDENCIES list included distrax.",
+      "result": "passed",
+      "stage": "stage0_env_smoke"
+    },
+    {
+      "date": "2026-05-14",
+      "diagnosis": "Silent JIT-compile crash after 'Using Hollow MD4'; cuda12-on-cuda13-MIG interaction.",
+      "elapsed_sec": 230,
+      "env": "remdm311",
+      "exit_code": "120:0",
+      "host": "gnode02",
+      "job_id": 494239,
+      "notes": "See CLAUDE.md #14.",
+      "result": "failed",
+      "stage": "stage1_tiny_train"
+    },
+    {
+      "date": "2026-05-14",
+      "diagnosis": "Same failure as job 494239; XLA_PYTHON_CLIENT_PREALLOCATE=false/MEM_FRACTION=0.5/JAX_PLATFORMS=cuda workaround did not help.",
+      "elapsed_sec": 227,
+      "env": "remdm311",
+      "exit_code": "120:0",
+      "host": "gnode02",
+      "job_id": 494245,
+      "notes": "See CLAUDE.md #14.",
+      "result": "failed",
+      "stage": "stage1_tiny_train"
+    },
+    {
+      "date": "2026-05-14",
+      "diagnosis": "jax[cuda13] PJRT plugin: cuBLAS returns INTERNAL_ERROR=14 because Bocconi has no CUDA-13 toolkit module (only cuda/12.1-12.8 available).",
+      "elapsed_sec": 62,
+      "env": "ic_text8_jax13",
+      "exit_code": "1:0",
+      "host": "compute_node",
+      "job_id": 494409,
+      "notes": "Confirmed by job 494410 after pinning nvidia-cublas==13.0.0.19.",
+      "result": "failed",
+      "stage": "stage0_env_smoke"
+    },
+    {
+      "date": "2026-05-14",
+      "diagnosis": "After switching to jax[cuda12]==0.10.0: all six pass criteria green including the new GPU compute probe (result=262144.0, matches=True, on_gpu=True, device_kinds=['gpu']).",
+      "elapsed_sec": 70,
+      "env": "ic_text8_jax13",
+      "exit_code": "0:0",
+      "host": "compute_node",
+      "job_id": 494412,
+      "notes": "Confirms the strengthened Stage 0 catches GPU-vs-CPU false-pass.",
+      "result": "passed",
+      "stage": "stage0_env_smoke"
+    },
+    {
+      "date": "2026-05-14",
+      "diagnosis": "Upstream md4/models/diffusion/genmd4.py imports tensorflow_probability.substrates.jax, which calls jax.interpreters.xla.pytype_aval_mappings \u2014 removed in JAX 0.10. The defensive patch to utils.py covers distrax + DiscretizedLogisticMixture but does not cover the TFP-substrate-jax import chain via genmd4.",
+      "elapsed_sec": 76,
+      "env": "ic_text8_jax13",
+      "exit_code": "1:0",
+      "host": "compute_node",
+      "job_id": 494416,
+      "notes": "See docs/09 \u00a7Stage 1 \u2014 Bocconi env path documented blocked. Documented stop condition; switch to external-GPU fallback per docs/10.",
+      "result": "failed",
+      "stage": "stage1_tiny_train"
+    }
+  ],
+  "independent_codex_audit": {
+    "audit_date": "2026-05-13",
+    "bottom_line": {
+      "informed_correctors_text8": "Scientifically principled second backend, but no public weights found and engineering/training cost should be benchmarked before a full run.",
+      "prism_llada": "Not recommended as a timing-validation backend because it is a token-quality/remasking fine-tuning system with no public PRISM LLaDA checkpoint found."
+    },
+    "claims": [
+      {
+        "claim": "No informed-correctors Text8 weights are available.",
+        "evidence": "No checkpoint-like files found locally; README and grep/web search did not reveal public Text8 weights.",
+        "status": "verified"
+      },
+      {
+        "claim": "Text8 training costs 2-5 A100 GPU-days.",
+        "evidence": "Local config uses 1M steps, batch 512, seq_len 256, 1000 timesteps, 36 layers, 12 heads, hidden_dim 2048. Runtime requires a measured benchmark.",
+        "status": "unverified"
+      },
+      {
+        "claim": "Hollow transformer gives exact conditionals.",
+        "evidence": "Architecture structurally excludes x_d from the output at coordinate d; logits are learned model conditionals/proxies, not exact true data conditionals.",
+        "status": "partially_verified"
+      },
+      {
+        "claim": "Timing control requires replacing jax.lax.fori_loop.",
+        "evidence": "fori_loop blocks Python schedule membership; a boolean schedule array with jax.lax.cond inside the compiled loop is cleaner than a Python loop for large sweeps.",
+        "status": "partially_verified"
+      },
+      {
+        "claim": "Timing control is approximately one day engineering.",
+        "evidence": "Current code uses static self.k, ignores sample_step k/temp args, and does not wire config.k. Robust scheduled sampling with CRN tests is estimated at 2-4 days.",
+        "status": "partially_contradicted"
+      },
+      {
+        "claim": "PRISM checkpoint paths are private/inaccessible.",
+        "evidence": "PRISM_llada/generate_samples.py defaults to /n/netscratch/sham_lab/Everyone/jay_llada/llada_PRISM/checkpoint-44000; no local PRISM checkpoint files found.",
+        "status": "verified"
+      },
+      {
+        "claim": "PRISM remasking head is entangled with training objective.",
+        "evidence": "RemaskingTrainer.compute_loss trains remasking_conf from one-step sampled xs correctness labels plus unmasking loss.",
+        "status": "verified"
+      },
+      {
+        "claim": "PRISM timing cannot be separated cleanly from token selection.",
+        "evidence": "Inference remasks top-k tokens selected by learned quality/confidence; changing times changes a learned token-quality correction loop, not only a fixed corrector schedule.",
+        "status": "verified"
+      }
+    ],
+    "hygiene": {
+      "agents_md_changed": false,
+      "canonical_result_folders_overwritten": false,
+      "files_committed": false,
+      "files_staged": false,
+      "huge_checkpoints_downloaded": false,
+      "long_hpc_jobs_launched": false
+    },
+    "recommended_next_action": "Email the informed-correctors authors for the Text8 HollowMD4 checkpoint, exact paper training config, vocabulary file, and sampling/evaluation commands before training from scratch. (Superseded 2026-05-14: email sent, treated as non-blocking; active path is external-GPU rental per docs/10.)",
+    "report_section": "docs/08_backend_feasibility_audit.md#independent-codex-audit",
+    "repos": {
+      "informed_correctors": {
+        "branch": "main",
+        "checkpoint_format": "Orbax CheckpointManager saving train_state and Grain train_iter under <workdir>/checkpoints.",
+        "license_audit": "No root LICENSE file found; many source files contain Apache-2.0 headers inherited from DeepMind code.",
+        "local_commit": "8371dec19404eae279a4eb5ea4e06977d8d173b6",
+        "local_path": "external_repos/informed-correctors",
+        "main_risks": [
+          "No public checkpoint found.",
+          "Local environment lacks JAX/Flax/TensorFlow/Grain/Orbax/W&B/ml_collections.",
+          "Text8 data path is hardcoded to /root/md4/data_dir/text8/text8.zip.",
+          "hollow_md4 Text8 config omits vocab_dir even though train.py opens config.vocab_dir.",
+          "Timing schedule requires model/sampler API edits, not just a for-loop swap."
+        ],
+        "remote_main": "8371dec19404eae279a4eb5ea4e06977d8d173b6",
+        "sampling_entrypoint": "external_repos/informed-correctors/text8/md4/sampling.py",
+        "terminal_F_backup": "Model-based bits-per-token or ELBO-style self-score under the trained diffusion model.",
+        "terminal_F_primary": "Negative native Text8 invalid-word or invalid-character rate using a fixed training vocabulary.",
+        "training_entrypoint": "external_repos/informed-correctors/text8/md4/main.py",
+        "weights_available": false
+      },
+      "prism_llada": {
+        "base_model": "GSAI-ML/LLaDA-8B-Instruct public HuggingFace dependency.",
+        "branch": "main",
+        "license_audit": "No root LICENSE file found.",
+        "local_commit": "266d51e886b28ac8bfb416eb8715394aa08a4e0f",
+        "local_path": "external/PRISM/PRISM_llada",
+        "main_risks": [
+          "No public PRISM LLaDA checkpoint found.",
+          "Training/fine-tuning is an 8B LoRA project, not a small validation gate.",
+          "Remasking confidence is trained as token-quality machinery.",
+          "Timing-only diagnostics would be confounded by token selection and code pass@k noise.",
+          "Local environment lacks datasets, peft, evaluate, and wandb."
+        ],
+        "prism_weights_available": false,
+        "private_checkpoint_path": "/n/netscratch/sham_lab/Everyone/jay_llada/llada_PRISM/checkpoint-44000",
+        "remote_main": "6e5ed6410d3d88fa1231eb78b002e3365be6deaa",
+        "repo_state": "Local worktree is behind remote main; remote files were inspected via git fetch/git show without checkout.",
+        "sampling_entrypoint": "external/PRISM/PRISM_llada/sampling.py",
+        "training_entrypoint": "external/PRISM/PRISM_llada/train.py"
+      }
+    },
+    "scope": "Independent repo/code validation plus small local import smoke checks; no long training, no huge model/checkpoint downloads, no staging or commits.",
+    "smoke_tests": {
+      "informed_correctors_text8": {
+        "huge_downloads": false,
+        "long_training_launched": false,
+        "path": "results/archive/2026-05-13_repo_cleanup/backend_smoke_informed_correctors_8371dec/SMOKE_LOG.md",
+        "status": "blocked_locally_missing_dependencies"
+      },
+      "prism_llada": {
+        "huge_downloads": false,
+        "long_training_launched": false,
+        "path": "results/archive/2026-05-13_repo_cleanup/backend_smoke_prism_266d51e/SMOKE_LOG.md",
+        "status": "partial_sampling_import_ok_training_data_imports_blocked"
+      }
+    }
+  },
+  "report": "docs/08_backend_feasibility_audit.md",
   "verdict": {
-    "recommended_backend": "informed_correctors_text8",
-    "rejected_backend": "prism_llada",
-    "rejection_reason": "Timing entangled at training; remasking_conf head trained jointly with correction objective; not separable without new training objective",
-    "recommendation_reason": "Hollow transformer provides structural guarantee p(x_d | x_{-d}, t) \u2014 directly aligned with corrector Gibbs-sampling mechanism; timing toggle is 1-day engineering fix; small char-level model enables fast K=30 experiments once checkpoint exists",
+    "audit_report": "docs/08_backend_feasibility_audit.md",
     "prerequisite_gates": [
       "G0-TEXT8: JAX+flax import smoke + T=4 CPU run on slnode",
       "T8-H: K=10 B=2 T=64 headroom gate after training"
     ],
-    "audit_report": "docs/08_backend_feasibility_audit.md"
-  },
-  "current_operational_plan": {
-    "status_date": "2026-05-13",
-    "recommendation": "pursue informed-correctors/Text8; do not pursue PRISM LLaDA for timing validation unless conditions change",
-    "author_contact_email": "docs/email_informed_correctors_authors.md",
-    "training_contingency_doc": "docs/09_informed_correctors_training_contingency.md",
-    "can_train_without_author_reply": "PROBABLY YES",
-    "stage0_env_smoke_sbatch": "hpc/backend_validation/informed_correctors/stage0_env_smoke.sbatch",
-    "stage1_tiny_train_sbatch": "hpc/backend_validation/informed_correctors/stage1_tiny_train.sbatch",
-    "stage0_checker": "scripts/backend_validation/informed_correctors/check_text8_training_feasibility.py",
-    "stage1_config": "scripts/backend_validation/informed_correctors/hollow_text8_stage1_config.py",
-    "long_training_launched": false,
-    "huge_downloads": false
+    "recommendation_reason": "Hollow transformer provides structural guarantee p(x_d | x_{-d}, t) \u2014 directly aligned with corrector Gibbs-sampling mechanism; timing toggle is 1-day engineering fix; small char-level model enables fast K=30 experiments once checkpoint exists",
+    "recommended_backend": "informed_correctors_text8",
+    "rejected_backend": "prism_llada",
+    "rejection_reason": "Timing entangled at training; remasking_conf head trained jointly with correction objective; not separable without new training objective"
   }
 }

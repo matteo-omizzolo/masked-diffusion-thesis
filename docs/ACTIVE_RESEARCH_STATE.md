@@ -39,17 +39,18 @@ authors or the Bocconi HPC admins will reply in time. The active path below
 is self-sufficient.
 
 - Author email sent 2026-05-14 (informational only; non-blocking).
-- **Primary path — Bocconi `ic_text8_jax13` env (`jax[cuda13]`):**
-  1. `bash hpc/backend_validation/informed_correctors/setup_ic_text8_jax13.sh`
-     on a login node (idempotent).
-  2. Stage 0 sbatch: now includes a JIT compute probe; defaults to the new
-     env.
-  3. Stage 1 sbatch (tiny training-loop only) defaults to the new env.
-- **Fallback path — external GPU rental** if Bocconi remains blocked. See
-  `docs/10_external_gpu_text8_fallback.md`.
-- **Deprecated:** `remdm311` for Text8 training. It is ProSeCo/PyTorch-only
-  and is known to fail Stage 1 under the cuda12-on-cuda13-MIG combination
-  (CLAUDE.md issue #14).
+- **Bocconi path: exhausted (2026-05-14).** Three independent env attempts
+  ruled out the cluster. Stage 0 finally passes on `ic_text8_jax13` with
+  `jax[cuda12]==0.10.0` (job 494412), but Stage 1 then hits an upstream
+  `informed-correctors` + `tensorflow_probability` + JAX 0.10 API-removal
+  cascade that can't be patched within the Stage 1 smoke scope. Full
+  diagnostics in CLAUDE.md known issue #14 and
+  `docs/09 §Stage 1 — Bocconi env path documented blocked`.
+- **Active path — external GPU rental** per
+  `docs/10_external_gpu_text8_fallback.md`. ~$1.50 round-trip for
+  Stage 0+1+2; the strengthened Stage 0 GPU compute probe and the
+  ic_text8_jax13 setup script transfer cleanly to a cloud GPU.
+- **`remdm311`** remains ProSeCo/PyTorch-only.
 
 ## Canonical Result Folders
 

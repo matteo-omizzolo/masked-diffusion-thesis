@@ -172,21 +172,47 @@ config OK, Text8 staged. Exact pinned versions and the install commands are
 recorded in
 `docs/09_informed_correctors_training_contingency.md §Stage 0 environment setup`.
 
-### 14. A100 MIG mode + CUDA-13 driver / JAX 0.4.30 cuda12 plugin
-Stage 1 jobs 494239 and 494245 (2026-05-14, gnode02) both failed with
-`ExitCode=120:0` after ~3m30s of silent JIT compilation following the
-`Using Hollow MD4` log line. No Python traceback. The Bocconi A100 80GB
-cards in the `stud` partition are running in MIG (Multi-Instance GPU)
-mode under CUDA driver 580.95.05 / CUDA 13.0, while JAX 0.4.30's GPU
-allocator is built against CUDA 12. Stage 0 passes because device
-enumeration completes; only compiled-kernel allocation trips the issue.
-Adding `XLA_PYTHON_CLIENT_PREALLOCATE=false` /
-`XLA_PYTHON_CLIENT_MEM_FRACTION=0.5` / `JAX_PLATFORMS=cuda` env vars
-(job 494245) did **not** fix it. The workaround env vars are kept in the
-sbatch as harmless and potentially helpful elsewhere. Resolution requires
-either a non-MIG queue, `jax[cuda13]` wheels, or a CPU fallback. Full
-diagnostic in `docs/09_informed_correctors_training_contingency.md`
-§Stage 1 current blocker.
+### 14. Bocconi Text8 Stage 1 is structurally blocked (2026-05-14)
+Three independent attempts to make Stage 1 pass on Bocconi have failed
+for distinct reasons that together rule out the Bocconi cluster as a
+host for informed-correctors/Text8 training without admin intervention:
+
+1. **`jax[cuda12]` 0.4.30 (remdm311 path).** Stage 0 eventually passed
+   (job 494221); Stage 1 jobs 494239 and 494245 failed with
+   `ExitCode=120:0` after `Using Hollow MD4`, no Python traceback. The
+   Bocconi A100s in the `stud` partition run in MIG mode under driver
+   580.95.05 / CUDA 13.0; the cuda12 PJRT plugin built against CUDA 12
+   crashes silently during compiled-kernel allocation. The
+   `XLA_PYTHON_CLIENT_PREALLOCATE=false`/`MEM_FRACTION=0.5`/`JAX_PLATFORMS=cuda`
+   workaround does not help.
+2. **`jax[cuda13]` 0.10.0 (ic_text8_jax13 path, first attempt).** Stage 0
+   fails. The cuda13 PJRT plugin's `_check_cuda_versions` calls
+   `cublasGetVersion`, which returns `INTERNAL_ERROR=14` because Bocconi
+   exposes no `cuda/13.x` module (only `cuda/12.1`–`cuda/12.8`), and the
+   wheel `nvidia-cublas` 13.4.1.1 cannot link against the available
+   CUDA-12 toolkit at runtime. Pinning `nvidia-cublas==13.0.0.19` does
+   not help.
+3. **`jax[cuda12]` 0.10.0 (ic_text8_jax13 path, second attempt).**
+   Stage 0 **passes** cleanly with the new compute probe (job 494412:
+   13/13 imports OK, GPU compute probe matches=True, hard_fail=False).
+   Stage 1 fails at module-load time because upstream `md4/utils.py`
+   imports `distrax` (and `genmd4.py` imports
+   `tensorflow_probability.substrates.jax`), both of which reference
+   `jax.interpreters.xla.pytype_aval_mappings` — removed in JAX 0.10.
+   Defensive patches cover distrax+DiscretizedLogisticMixture but the
+   TFP chain has the same problem and patching every offending upstream
+   module is out of scope for a Stage 1 smoke (jobs 494413–494416).
+
+The cuda12-vs-cuda13 wheels + MIG vs no-MIG + upstream-pinned
+TFP/distrax + Bocconi toolkit ceiling at 12.8 form an exhaustive
+incompatibility matrix on this cluster.
+
+**Resolution:** trigger the external-GPU fallback documented in
+`docs/10_external_gpu_text8_fallback.md`. A fresh cloud GPU with a
+matching driver/toolkit avoids all three constraints, costs ~$1.50 for
+Stage 0 + Stage 1 + Stage 2, and is the cleanest path under the
+no-author-no-admin assumption. Full diagnostic per attempt in
+`docs/09 §Stage 1 — Bocconi env path documented blocked`.
 
 ---
 

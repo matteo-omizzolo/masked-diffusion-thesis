@@ -8,17 +8,35 @@
 
 ## Current Recommendation After Repo Restructure
 
-The recommendation remains unchanged:
+The scientific recommendation is unchanged:
 
 - pursue informed-correctors/Text8 as the principled second backend;
 - do not pursue PRISM LLaDA for this thesis-specific timing-validation gate unless checkpoint access and timing/token-quality confounds change.
 
-The operational next step is two-track: the author email in `docs/email_informed_correctors_authors.md` was sent on 2026-05-14 (follow up after 7-10 days if no reply), and in parallel the no-author-response stages documented in `docs/09_informed_correctors_training_contingency.md` are being driven independently.
+**Operational state (2026-05-14, revised after the HPC execution sequence):**
 
-Prepared thesis-side files:
+- The author email in `docs/email_informed_correctors_authors.md` was sent
+  on 2026-05-14 and is treated as **non-blocking**.
+- The Bocconi HPC path is **exhausted** after three independent env attempts
+  on `remdm311` and `ic_text8_jax13`. Stage 0 finally passes cleanly with
+  `jax[cuda12]==0.10.0` and the new GPU compute probe (job 494412), but
+  Stage 1 hits an upstream `informed-correctors` + `tensorflow_probability`
+  + JAX 0.10 API-removal cascade that can't be patched within Stage 1's
+  smoke scope (jobs 494413–494416). Full diagnostic in
+  `docs/09 §Stage 1 — Bocconi env path documented blocked` and CLAUDE.md
+  known issue #14.
+- The **active operational path is the external-GPU rental** documented
+  in `docs/10_external_gpu_text8_fallback.md`. A fresh cloud GPU with a
+  matching driver/toolkit avoids all three Bocconi-specific constraints
+  and costs ~$1.50 for Stage 0 + Stage 1 + Stage 2.
+
+Prepared thesis-side files (used by both the Bocconi attempt and the
+external-GPU fallback; the same Stage 0 probe + Stage 1 sbatch +
+setup script transfer cleanly):
 
 - `scripts/backend_validation/informed_correctors/check_text8_training_feasibility.py`
 - `scripts/backend_validation/informed_correctors/hollow_text8_stage1_config.py`
+- `hpc/backend_validation/informed_correctors/setup_ic_text8_jax13.sh`
 - `hpc/backend_validation/informed_correctors/stage0_env_smoke.sbatch`
 - `hpc/backend_validation/informed_correctors/stage1_tiny_train.sbatch`
 
@@ -671,22 +689,25 @@ Email the informed-correctors authors for the Text8 HollowMD4 checkpoint, exact 
 
 This is the highest-value next action because informed-correctors/Text8 is the principled backend, but the repo has no public weights and has enough config rough edges that immediate training would risk wasting engineering time. If weights are unavailable, proceed to Stage 0/1/2 only, then decide whether a full 1M-step run is worth it.
 
-*Update 2026-05-14: the author email was sent and is treated as
-non-blocking. The active execution path no longer depends on either an
-author reply or a Bocconi HPC admin reply. Concretely:
+*Update 2026-05-14 (revised after three Bocconi attempts): the author
+email was sent and is treated as non-blocking. The active execution
+path no longer depends on either an author reply or a Bocconi HPC
+admin reply, and the Bocconi cluster itself is now documented as
+exhausted for Stage 1 of the no-author-response path:
 
-- **Primary**: dedicated `ic_text8_jax13` env (`jax[cuda13]`) set up via
-  `hpc/backend_validation/informed_correctors/setup_ic_text8_jax13.sh`,
-  documented in `docs/09 §Stage 0 environment setup`. The Stage 0 sbatch
-  now runs a JIT compute probe in addition to import / enumeration / data
-  checks.
-- **Fallback**: external GPU rental as documented in
+- **Bocconi: exhausted.** Stage 0 passes on `ic_text8_jax13` with
+  `jax[cuda12]==0.10.0` and the new GPU compute probe (job 494412), but
+  Stage 1 fails because the upstream `md4` codebase imports
+  `tensorflow_probability.substrates.jax` and `distrax`, both of which
+  reference a JAX API removed in 0.10. `jax[cuda13]` does not work
+  either: Bocconi exposes only `cuda/12.x` toolkit modules (jobs 494409,
+  494410). Earlier `jax[cuda12]==0.4.30` on remdm311 hit a separate
+  cuda12-on-cuda13-MIG crash (jobs 494239, 494245). Full diagnostics in
+  CLAUDE.md known issue #14 and `docs/09 §Stage 1 — Bocconi env path
+  documented blocked`.
+- **Active: external GPU rental** per
   `docs/10_external_gpu_text8_fallback.md`.
-- **Deprecated**: `remdm311` for Text8 training (ProSeCo/PyTorch-only).
-  Historical: Stage 0 eventually passed on remdm311 (job 494221) but
-  Stage 1 jobs 494239 and 494245 hit the cuda12-on-cuda13-MIG bug
-  (CLAUDE.md issue #14) — `ic_text8_jax13` uses cuda13 PJRT and sidesteps
-  this.*
+- **`remdm311`** remains ProSeCo/PyTorch-only.*
 
 ## Files Created/Modified by Independent Audit
 

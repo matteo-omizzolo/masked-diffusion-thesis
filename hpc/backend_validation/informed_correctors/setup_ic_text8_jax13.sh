@@ -69,18 +69,22 @@ pip install --upgrade \
 # TensorFlow stack required by clu.metric_writers, tensorflow_datasets, and
 # tensorflow_probability (used by distrax for the JAX substrate). Note:
 # `tf-keras` is needed by tensorflow_probability's lazy-loader validation,
-# and `tensorboard` is needed by clu.metric_writers.
+# and `tensorboard` is needed by clu.metric_writers (the wheel install of
+# `tensorflow` does not always pull tensorboard, so pin it explicitly).
 echo "[setup] installing TensorFlow stack ..."
 pip install --upgrade \
     tensorflow \
     tensorflow-datasets \
     tf-keras \
-    tensorflow-probability
+    tensorflow-probability \
+    tensorboard
 
 # Visualisation / logging used by upstream md4 utilities (utils.py imports
-# seaborn at module load; train.py logs to wandb).
-echo "[setup] installing visualisation / logging ..."
-pip install --upgrade wandb seaborn matplotlib
+# seaborn at module load; train.py logs to wandb). Also `transformers` —
+# upstream input_pipeline.py imports it for the tokenizer path even though
+# Text8 char-level training doesn't need a HF tokenizer.
+echo "[setup] installing visualisation / logging / transformers ..."
+pip install --upgrade wandb seaborn matplotlib transformers
 
 echo "[setup] staging Text8 zip if missing ..."
 mkdir -p "$TEXT8_DATA_DIR/text8"
