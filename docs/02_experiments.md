@@ -19,8 +19,9 @@ The machine-readable index is `results/EXPERIMENT_INDEX.json`.
 | Family | Status | Scripts/HPC | Results |
 |---|---|---|---|
 | Backend feasibility audit | complete exploratory | audit only | `docs/08_backend_feasibility_audit.md`, `results/BACKEND_FEASIBILITY_INDEX.json` |
-| informed-correctors/Text8 Stage 0 | prepared, not run | `hpc/backend_validation/informed_correctors/stage0_env_smoke.sbatch` | future `results/backend_validation/informed_correctors/` |
-| informed-correctors/Text8 Stage 1 | prepared, not run | `hpc/backend_validation/informed_correctors/stage1_tiny_train.sbatch` | future `results/backend_validation/informed_correctors/` |
+| informed-correctors/Text8 Stage 0 on Bocconi | complete environment smoke | `hpc/backend_validation/informed_correctors/stage0_env_smoke.sbatch` | local `results/backend_validation/informed_correctors/` |
+| informed-correctors/Text8 Stage 1 on Bocconi | blocked | `hpc/backend_validation/informed_correctors/stage1_tiny_train.sbatch` | no useful checkpoint |
+| informed-correctors/Text8 external GPU | active next gate | `docs/10_external_gpu_text8_fallback.md` | future external-GPU smoke output |
 | PRISM LLaDA | not pursued | audit only | archived smoke provenance |
 
 ## Archived/Superseded

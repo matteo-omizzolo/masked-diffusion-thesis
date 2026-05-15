@@ -28,9 +28,11 @@ This thesis targets **signal-adaptive corrector scheduling**—deciding when to 
 - Trained checkpoints on OpenWebText (`proseco-owt`) for empirical validation
 - The primary reference implementation for comparing corrector scheduling strategies
 
-**Location:** `external/proseco/`
+**Location:** no active `external/proseco/` checkout. The thesis uses the
+HuggingFace `proseco-owt` snapshot staged under local checkpoints by
+`scripts/proseco/reproduction/stage_proseco_owt.py`.
 
-**Location Type:** Full repository clone (git)
+**Location Type:** staged checkpoint snapshot, not an active submodule
 
 ---
 
@@ -41,3 +43,16 @@ This thesis targets **signal-adaptive corrector scheduling**—deciding when to 
 - **PRISM** (`external/PRISM/`): Prompt-Aware PLM Sampling
 - **SEDD** (`external/sedd/`): Stochastic Exponential Diffusion Discrete Models
 - **RemeDi** (`external/remedi/`): RemeDi with RL (submodule, not integrated)
+
+## Clone-On-Demand Repositories
+
+`lindermanlab/informed-correctors` is intentionally not a tracked submodule.
+Clone it only when running backend-validation smoke/training work:
+
+```bash
+mkdir -p external_repos
+git -C external_repos clone https://github.com/lindermanlab/informed-correctors
+git -C external_repos/informed-correctors checkout 8371dec
+```
+
+`external_repos/` is ignored by git so the root repository remains compact.

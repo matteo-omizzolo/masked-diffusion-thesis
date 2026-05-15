@@ -43,9 +43,10 @@ tier_a:
     params: ~130M
     notes: >
       Co-trained ProSeCo checkpoint used by the thesis mainline. Stage it with
-      scripts/stage_proseco_owt.py; the active backend loads the local snapshot,
-      not an external/ repo checkout. The staging script documents the local
-      flash_attn fallback patch applied to the snapshot file.
+      scripts/proseco/reproduction/stage_proseco_owt.py; the active backend
+      loads the local snapshot, not an external/ repo checkout. The staging
+      script documents the local flash_attn fallback patch applied to the
+      snapshot file.
     action_required: stage snapshot, verify config.json/modeling_proseco.py/model.safetensors
 
   proseco_local_checkout:
@@ -61,6 +62,17 @@ tier_a:
       docs/archive/external_modified_20260506/proseco_manifest.md.
 
 tier_b:
+  informed_correctors_text8:
+    repo: https://github.com/lindermanlab/informed-correctors
+    status: clone_on_demand_backend_validation
+    location: external_repos/informed-correctors/
+    pinned_commit: 8371dec
+    required_for_phase0: false
+    notes: >
+      Ignored clone-on-demand workspace for Text8 HollowMD4 validation. Keep
+      it out of git; clone it locally or on the external GPU when running
+      docs/10_external_gpu_text8_fallback.md.
+
   prism:
     repo: https://github.com/SeunggeunKimkr/PRISM
     status: clean_upstream_submodule_not_current

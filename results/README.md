@@ -5,6 +5,11 @@ They were not moved into `results/canonical/` because the docs, JSON indexes,
 result configs, and scripts already point to those paths and preserving exact
 provenance is more valuable than cosmetic relocation.
 
+Most large local result directories are ignored by git. Treat
+`results/EXPERIMENT_INDEX.json`, `results/BACKEND_FEASIBILITY_INDEX.json`, and
+`docs/04_results_index.md` as the compact source of truth; inspect raw folders
+only when reproducing a specific claim.
+
 Machine-readable indexes:
 
 - `results/EXPERIMENT_INDEX.json`

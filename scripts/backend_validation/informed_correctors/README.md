@@ -18,8 +18,14 @@ sequence is:
    local HollowMD4 config and a copied/locally patched upstream tree.
 3. Later Stage 2 throughput benchmark, only after Stage 0/1 pass.
 
+Utilities:
+
+- `check_text8_training_feasibility.py`
+- `hollow_text8_stage1_config.py`
+- `prepare_text8_upstream_copy.py`
+
 The upstream training code currently assumes `md4/input_pipeline.py::DATA_DIR`
 is `/root/md4/data_dir` and that `config.vocab_dir` points to a pickle file for
 sample word-validity post-processing. The thesis-side Stage 1 job avoids
 modifying the external repo by copying the upstream `text8/` subtree into the
-run directory and patching that copy.
+run directory and patching that copy through `prepare_text8_upstream_copy.py`.

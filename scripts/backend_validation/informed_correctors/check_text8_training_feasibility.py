@@ -19,11 +19,19 @@ from pathlib import Path
 from typing import Any
 
 
+# Required imports that must succeed cleanly. distrax is intentionally
+# NOT in this list: distrax 0.1.8 (the last published version) is
+# incompatible with the recent JAX shipped with `jax[cuda13]`, but distrax
+# is only used by upstream `md4/utils.py::DiscretizedLogisticMixture`,
+# which is an ImageNet-specific code path that Text8 HollowMD4 training
+# never exercises. The Stage 1 sbatch patches the copied upstream tree to
+# make `import distrax` defensive (try/except), so a missing or broken
+# distrax does not block Text8 training. See the Stage 1 sbatch and
+# CLAUDE.md issue #14 for the rationale.
 DEPENDENCIES = [
     "absl",
     "clu",
     "datasets",
-    "distrax",
     "flax",
     "grain",
     "jax",

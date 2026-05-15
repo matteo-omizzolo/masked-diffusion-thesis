@@ -35,8 +35,15 @@ results/**/generated_sequences.json
 results/**/samples_*.json
 results/**/*.pt
 results/**/*.ckpt
+# Local canonical/provenance result directories are preserved on disk and
+# indexed in docs/results JSON, but are not tracked as working-tree changes.
+results/*_0c39079/
+results/*_nogit/
+results/backend_validation/**/upstream_copy/
+results/backend_validation/**/workdir/
 # Large per-seed/per-shard raw JSON and NPZ features (multi-MB each).
-# Summaries (metrics.json, interpretation.md, config.json, manifests) stay tracked.
+# For ignored local result directories, promote curated summaries explicitly
+# with `git add -f` only after deciding they belong in the permanent record.
 results/**/validation_rows.json
 results/**/neighborhood_raw*.json
 results/**/triples_raw*.json

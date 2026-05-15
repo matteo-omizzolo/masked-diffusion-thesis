@@ -6,7 +6,7 @@ Do not commit model weights. See `CLAUDE.md` §HPC for checkpoint staging instru
 
 | File | Description |
 |---|---|
-| `mdlm.ckpt` | MDLM checkpoint (~2.5 GB); used by legacy scripts only |
+| `mdlm.ckpt` | Legacy MDLM checkpoint; not active and safe to omit locally unless rerunning legacy scripts |
 | `proseco_owt/` | ProSeCo-OWT snapshot (staged via `scripts/proseco/reproduction/stage_proseco_owt.py`) |
 
 HPC path: `~/mdm/checkpoints/` on `slogin.hpc.unibocconi.it`.

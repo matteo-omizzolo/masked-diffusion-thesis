@@ -15,13 +15,14 @@ The active framing is:
 Do not overclaim ProSeCo generality. informed-correctors/Text8 is not yet
 validated in this repo.
 
-## Read Next
+## Read Only These First
 
 1. `docs/ACTIVE_RESEARCH_STATE.md`
-2. `docs/00_current_status.md`
-3. `docs/02_experiments.md`
-4. `docs/08_backend_feasibility_audit.md`
-5. `docs/09_informed_correctors_training_contingency.md`
+2. `docs/10_external_gpu_text8_fallback.md`
+3. `docs/05_next_steps.md`
+
+The remaining `docs/00_*` to `docs/09_*` files are reference/provenance unless
+one of the three files above points you there.
 
 ## Active Architecture
 
@@ -31,10 +32,12 @@ validated in this repo.
 - Backend-validation HPC jobs: `hpc/backend_validation/`
 - Tests: `tests/proseco/`
 - Canonical result index: `results/EXPERIMENT_INDEX.json`
+- External upstreams: tracked submodules under `external/`; ignored
+  clone-on-demand workspaces under `external_repos/`
 
 ## Current Next Action
 
-**Working assumption (2026-05-14):** do **not** assume the informed-correctors
+**Working assumption (2026-05-15):** do **not** assume the informed-correctors
 authors or the Bocconi HPC admins will reply in time. The active execution
 plan is engineered to be self-sufficient.
 
@@ -70,19 +73,6 @@ checkpoint is shared.
 
 ## Canonical ProSeCo Result Folders
 
-- `results/phase1_proseco_owt_full/protocol_a/`
-- `results/phase2b_proseco_owt/`
-- `results/phase3a_proseco_owt/`
-- `results/phase1_interaction_diag_nogit/`
-- `results/phase1_schedule_validation_b2_0c39079/`
-- `results/phase1_schedule_validation_b34_0c39079/`
-- `results/set_function_structure_0c39079/`
-- `results/schedule_landscape_geometry_0c39079/`
-- `results/phase4_schedule_neighborhood_0c39079/`
-- `results/state_predictability_0c39079/`
-- `results/state_predictability_pair_0c39079/`
-- `results/state_predictability_enriched_0c39079/`
-- `results/tokenlevel_features_proseco_k30_0c39079/`
-- `results/tokenlevel_state_predictability_k30_0c39079/`
-- `results/saturation_structure_0c39079/`
-- `results/corrector_strength_k30_0c39079/`
+See `docs/04_results_index.md` and `results/EXPERIMENT_INDEX.json`.
+The large local result directories are preserved on disk but intentionally
+ignored by git unless explicitly promoted.

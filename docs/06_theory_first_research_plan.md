@@ -33,6 +33,6 @@ The theory-first pass has served its purpose:
 ## Current Operational Next Step
 
 Email to informed-correctors authors sent 2026-05-14; awaiting reply. In
-parallel, drive the no-author-response Stage 0 / Stage 1 sequence per
-`docs/09_informed_correctors_training_contingency.md`. No full training is
-approved.
+parallel, drive the external-GPU Stage 0 / Stage 1 sequence per
+`docs/10_external_gpu_text8_fallback.md`. The Bocconi JAX path is documented
+blocked; no full training is approved.

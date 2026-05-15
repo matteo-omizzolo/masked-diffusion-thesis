@@ -4,16 +4,23 @@ Current source-of-truth reading order:
 
 1. `START_HERE.md`
 2. `docs/ACTIVE_RESEARCH_STATE.md`
-3. `docs/00_current_status.md`
-4. `docs/01_research_direction.md`
-5. `docs/02_experiments.md`
-6. `docs/03_theory.md`
-7. `docs/04_results_index.md`
-8. `docs/05_next_steps.md`
-9. `docs/07_experiment_log.md`
-10. `docs/08_backend_feasibility_audit.md`
-11. `docs/09_informed_correctors_training_contingency.md`
-12. `docs/10_external_gpu_text8_fallback.md`
+3. `docs/10_external_gpu_text8_fallback.md`
+4. `docs/05_next_steps.md`
+
+Reference/provenance docs:
+
+- `docs/00_current_status.md`
+- `docs/01_research_direction.md`
+- `docs/02_experiments.md`
+- `docs/03_theory.md`
+- `docs/04_results_index.md`
+- `docs/07_experiment_log.md`
+- `docs/08_backend_feasibility_audit.md`
+- `docs/09_informed_correctors_training_contingency.md`
+
+Historical planning doc:
+
+- `docs/06_theory_first_research_plan.md`
 
 Email draft:
 

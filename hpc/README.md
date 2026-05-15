@@ -36,8 +36,13 @@ hpc/
 | Stage 0 | `hpc/backend_validation/informed_correctors/stage0_env_smoke.sbatch` | minutes | imports, JAX/GPU, Text8 data path, config check |
 | Stage 1 | `hpc/backend_validation/informed_correctors/stage1_tiny_train.sbatch` | <1 hour target | tiny HollowMD4 training-loop and checkpoint smoke |
 
-Stage 1 is not a useful checkpoint and should only run after Stage 0 passes.
-No full Text8 training is approved by this file.
+These Bocconi jobs are retained as provenance and reusable scaffolding. As of
+2026-05-14, Stage 0 passes on the dedicated env but Stage 1 is blocked by the
+cluster/JAX/upstream dependency matrix. The active path is the external-GPU
+runbook in `docs/10_external_gpu_text8_fallback.md`.
+
+Stage 1 is not a useful checkpoint. No full Text8 training is approved by this
+file.
 
 ## Cluster Details
 

@@ -148,20 +148,13 @@ if [ ! -f "$TEXT8_WORD_VOCAB_PKL" ]; then
     python -c "import pickle; pickle.dump({'the','of','and','to','in','a','is','that','for','it'}, open('$TEXT8_WORD_VOCAB_PKL','wb'))"
 fi
 
-# Copy + patch upstream tree (never touch external_repos/).
-rsync -a --delete "$IC_REPO/text8/" "$RUN_DIR/text8/"
-RUN_DIR="$RUN_DIR" TEXT8_DATA_DIR="$TEXT8_DATA_DIR" python - <<'PY'
-import os
-from pathlib import Path
-run_dir = Path(os.environ["RUN_DIR"])
-data_dir = os.environ["TEXT8_DATA_DIR"]
-path = run_dir / "text8" / "md4" / "input_pipeline.py"
-text = path.read_text()
-old = 'DATA_DIR = "/root/md4/data_dir"'
-new = f'DATA_DIR = {data_dir!r}'
-assert old in text, "upstream input_pipeline.py shape changed"
-path.write_text(text.replace(old, new))
-PY
+# Copy + patch upstream tree (never touch external_repos/). This applies the
+# same DATA_DIR and distrax/DiscretizedLogisticMixture guards used by the
+# Bocconi sbatch.
+python scripts/backend_validation/informed_correctors/prepare_text8_upstream_copy.py \
+    --external-repo "$IC_REPO" \
+    --run-dir "$RUN_DIR" \
+    --data-dir "$TEXT8_DATA_DIR"
 
 export PYTHONPATH="$RUN_DIR/text8:${PYTHONPATH:-}"
 export WANDB_MODE=offline
